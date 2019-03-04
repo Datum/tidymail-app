@@ -4,15 +4,17 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+
 import {
-    MdcFabModule,
+    MdcTopAppBarModule,
     MdcIconModule,
     MdcMenuModule,
-    MdcButtonModule,
-    MdcTopAppBarModule,
-    MdcTabBarModule ,
-    MdcListModule 
-  } from '@angular-mdc/web';
+    MdcListModule,
+    MdcTabBarModule,
+    MdcDrawerModule,
+    MdcIconButtonModule,
+    MdcButtonModule 
+} from '@angular-mdc/web';
 
 @NgModule({
   declarations: [
@@ -21,13 +23,14 @@ import {
   imports: [
     BrowserModule,
     AppRoutingModule,
-    MdcFabModule,
+    MdcTopAppBarModule,
     MdcIconModule,
     MdcMenuModule,
-    MdcButtonModule,
-    MdcTopAppBarModule ,
-    MdcTabBarModule ,
-    MdcListModule 
+    MdcListModule ,
+    MdcTabBarModule,
+    MdcDrawerModule,
+    MdcIconButtonModule,
+    MdcButtonModule 
   ],
   providers: [],
   bootstrap: [AppComponent]
