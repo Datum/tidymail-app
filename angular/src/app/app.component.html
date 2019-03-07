@@ -1,4 +1,14 @@
-<mdc-top-app-bar class="top-app-bar-with-tabs">
+<div *ngIf="!isLoggedIn">
+    <div>
+        your not logged in. please login
+    </div>
+    <br>
+    <button mdc-button raised (click)="login()">
+        <mdc-icon>account_box</mdc-icon>Login
+      </button>
+</div>
+
+<mdc-top-app-bar class="top-app-bar-with-tabs" *ngIf="isLoggedIn">
     <mdc-top-app-bar-row>
         <mdc-top-app-bar-section align="start" title="Unsubscriber">
             <button mdcTopAppBarNavIcon (click)="drawer.open = !drawer.open">
@@ -35,14 +45,20 @@
 </mdc-top-app-bar>
 
 
-<div class="app-content">
+<div class="app-content" *ngIf="isLoggedIn">
+    <mdc-list avatar twoLine>
+            <mdc-list-item *ngFor="let m of messages">
+                <mdc-list-item-text secondaryText="Secondary text">{{ m.id }}</mdc-list-item-text>
+            </mdc-list-item>
+        </mdc-list>
+
     <mdc-list avatar twoLine>
         <mdc-list-item *ngFor="let mail of mails">
             <mdc-icon mdcListItemGraphic>
                 <img src="{{ mail.icon }}">
             </mdc-icon>
             <mdc-list-item-text secondaryText="Secondary text">{{ mail.title }}</mdc-list-item-text>
-            <!--
+            <!--    
             <a href="#/list-demo/examples" mdcListItemMeta mdcIcon aria-label="View more" title="More info">done</a>Keep in Inbox
             <a href="#/list-demo/examples" mdcListItemMeta mdcIcon aria-label="View more" title="More info">delete</a>Unsubscribe & Delete
             -->

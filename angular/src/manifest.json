@@ -1,10 +1,10 @@
 {
   "manifest_version": 2,
-  "name": "Angular Chrome Extension",
+  "name": "Datum Unsubscriber",
   "short_name": "Angular Chrome Extension",
   "version": "1.0.0",
   "description": "Angular Chrome Extension scaffold project",
-  "permissions": ["tabs"],
+  "permissions": ["tabs","identity"],
   "browser_action": {
     "default_popup": "index.html",
     "default_title": "Angular Chrome Extension"
