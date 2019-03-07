@@ -55,10 +55,44 @@ export class AppComponent implements AfterViewInit {
     getMessages() {
         this._dataService.getMessages()
             .subscribe(resp => {
+                
                 this.messages = resp.messages;
                 this.tabs[0].count = resp.messages.length;
                 this._changeDetector.detectChanges();
+
+
+                //get details
+
+                var index = 0;
+
+                this.loadItem(index, 50);
+            }, error => {
+                //try to relog
+                this.login();
             });
+    }
+
+
+    loadItem(index, maxRows) {
+        this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
+            for(var a = 0; a < msg.payload.headers.length;a++) {
+                if(msg.payload.headers[a].name == "Subject")
+                {
+                    this.messages[index].subject = msg.payload.headers[a].value;
+                }
+
+                if(msg.payload.headers[a].name == "From")
+                {
+                    this.messages[index].from = msg.payload.headers[a].value;
+                }
+            }
+
+            index++;
+            if(index < maxRows) {
+                this._changeDetector.detectChanges();
+                this.loadItem(index, maxRows);
+            } 
+        });
     }
 
     storeToken(accessToken: string) {

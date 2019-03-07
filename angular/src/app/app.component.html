@@ -48,20 +48,21 @@
 <div class="app-content" *ngIf="isLoggedIn">
     <mdc-list avatar twoLine>
             <mdc-list-item *ngFor="let m of messages">
-                <mdc-list-item-text secondaryText="Secondary text">{{ m.id }}</mdc-list-item-text>
+                <mdc-list-item-text secondaryText="{{ m.from }}">{{ m.subject }}</mdc-list-item-text>
             </mdc-list-item>
         </mdc-list>
 
+        <!--
     <mdc-list avatar twoLine>
         <mdc-list-item *ngFor="let mail of mails">
             <mdc-icon mdcListItemGraphic>
                 <img src="{{ mail.icon }}">
             </mdc-icon>
             <mdc-list-item-text secondaryText="Secondary text">{{ mail.title }}</mdc-list-item-text>
-            <!--    
+            
             <a href="#/list-demo/examples" mdcListItemMeta mdcIcon aria-label="View more" title="More info">done</a>Keep in Inbox
             <a href="#/list-demo/examples" mdcListItemMeta mdcIcon aria-label="View more" title="More info">delete</a>Unsubscribe & Delete
-            -->
+            
             <button mdc-button mdcListItemMeta>
                     <mdc-icon>done</mdc-icon>Keep in Inbox
             </button>
@@ -70,6 +71,7 @@
             </button>
         </mdc-list-item>
     </mdc-list>
+-->
 
     <!--
     <div style="text-align:center">
