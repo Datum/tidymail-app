@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, AfterViewInit } from '@angular/core';
 
 import { TAB_ID } from './tab-id.injector';
 
@@ -11,11 +11,15 @@ import { DataService } from './shared';
     styleUrls: ['./app.component.scss']
 })
 // tslint:disable:variable-name
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
     readonly tabId = this._tabId;
     message: string;
-    isLoggedIn:boolean = false;
+    isLoggedIn: boolean = false;
     newCount = 0;
+
+    ngAfterViewInit() {
+        this.loadToken();
+    }
 
 
     messages = [];
@@ -29,9 +33,9 @@ export class AppComponent {
     login() {
 
         var authUrl = "https://accounts.google.com/o/oauth2/auth"
-        + '?response_type=token&client_id=' + "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com"
-        + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly"
-        + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
+            + '?response_type=token&client_id=' + "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com"
+            + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly"
+            + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
 
         var self = this;
 
@@ -39,6 +43,7 @@ export class AppComponent {
             if (redirectUrl) {
                 var parsed = parse(redirectUrl.substr(chrome.identity.getRedirectURL("oauth2").length + 1));
                 self._dataService.setAccessToken(parsed.access_token);
+                self.storeToken(parsed.access_token);
                 self.isLoggedIn = true;
                 self.getMessages();
             } else {
@@ -49,10 +54,27 @@ export class AppComponent {
 
     getMessages() {
         this._dataService.getMessages()
-        .subscribe(resp =>{
-            this.messages = resp.messages;
-            this.tabs[0].count = resp.messages.length;
-            this._changeDetector.detectChanges();
+            .subscribe(resp => {
+                this.messages = resp.messages;
+                this.tabs[0].count = resp.messages.length;
+                this._changeDetector.detectChanges();
+            });
+    }
+
+    storeToken(accessToken: string) {
+        chrome.storage.local.set({ token: accessToken }, function () {
+
+        });
+    }
+
+    loadToken() {
+        var self = this;
+        chrome.storage.local.get(["token"], function (result) {
+            if (result.token !== undefined) {
+                self._dataService.setAccessToken(result.token);
+                self.isLoggedIn = true;
+                self.getMessages();
+            }
         });
     }
 

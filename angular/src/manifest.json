@@ -4,7 +4,7 @@
   "short_name": "Angular Chrome Extension",
   "version": "1.0.0",
   "description": "Angular Chrome Extension scaffold project",
-  "permissions": ["tabs","identity"],
+  "permissions": ["tabs","identity","storage"],
   "browser_action": {
     "default_popup": "index.html",
     "default_title": "Angular Chrome Extension"

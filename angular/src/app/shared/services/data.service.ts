@@ -31,7 +31,7 @@ export class DataService {
     }
 
     getMessages() {
-       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken);
+       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&format=full");
     }
 
     private extractData(res: Response) {
