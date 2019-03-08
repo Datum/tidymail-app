@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Message, MessageList } from '../models';
+import { Message, MessageList, Profile } from '../models';
 
 @Injectable()
 export class DataService {
@@ -31,8 +31,12 @@ export class DataService {
     }
 
     getMessages() {
-       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&format=full");
+       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=unsubscribe");
     }
+
+    getProfile() {
+        return this.http.get<Profile>(this.baseUrl + "/profile?access_token=" + this.accessToken);
+     }
 
     getMessage(id:string) {
         return this.http.get<any>(this.baseUrl + "/messages/" + id + "?access_token=" + this.accessToken + "&format=full");

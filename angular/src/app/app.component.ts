@@ -17,6 +17,8 @@ export class AppComponent implements AfterViewInit {
     isLoggedIn: boolean = false;
     newCount = 0;
 
+    title = "Loading....";
+
     ngAfterViewInit() {
         this.loadToken();
     }
@@ -107,7 +109,12 @@ export class AppComponent implements AfterViewInit {
             if (result.token !== undefined) {
                 self._dataService.setAccessToken(result.token);
                 self.isLoggedIn = true;
-                self.getMessages();
+                self._dataService.getProfile().subscribe(profile => {
+                    self.title = profile.emailAddress;
+                    self.getMessages();
+                });
+
+                
             }
         });
     }

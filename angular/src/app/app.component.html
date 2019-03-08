@@ -10,7 +10,7 @@
 
 <mdc-top-app-bar class="top-app-bar-with-tabs" *ngIf="isLoggedIn">
     <mdc-top-app-bar-row>
-        <mdc-top-app-bar-section align="start" title="Unsubscriber">
+        <mdc-top-app-bar-section align="start" title="{{ title }}">
             <button mdcTopAppBarNavIcon (click)="drawer.open = !drawer.open">
                 <mdc-icon>menu</mdc-icon>
             </button>
