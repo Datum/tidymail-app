@@ -67,7 +67,7 @@ export class AppComponent implements AfterViewInit {
 
                 var index = 0;
 
-                this.loadItem(index, 50);
+                this.loadItem(index, this.messages.length);
             }, error => {
                 //try to relog
                 this.login();

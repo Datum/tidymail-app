@@ -48,7 +48,11 @@
 <div class="app-content" *ngIf="isLoggedIn">
     <mdc-list avatar twoLine>
             <mdc-list-item *ngFor="let m of messages">
-                <mdc-list-item-text secondaryText="{{ m.from }}">{{ m.subject }}</mdc-list-item-text>
+                <mdc-list-item-text *ngIf="m.subject !== undefined" secondaryText="{{ m.from }}">{{ m.subject }}</mdc-list-item-text>
+                <mdc-list-item-text *ngIf="m.subject === undefined" secondaryText="loading...">{{ 'Id: ' +  m.id }}</mdc-list-item-text>
+                <button mdc-button mdcListItemMeta>
+                        <mdc-icon>delete</mdc-icon>
+                </button>
             </mdc-list-item>
         </mdc-list>
 
