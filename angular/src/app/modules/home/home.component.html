@@ -1,0 +1,23 @@
+<mdc-tab-bar>
+    <mdc-tab-scroller>
+      <mdc-tab>
+        <mdc-tab-label>New</mdc-tab-label>
+      </mdc-tab>
+      <mdc-tab>
+        <mdc-tab-label>Unsubscribe</mdc-tab-label>
+      </mdc-tab>
+      <mdc-tab>
+        <mdc-tab-label>Keep</mdc-tab-label>
+      </mdc-tab>
+    </mdc-tab-scroller>
+  </mdc-tab-bar>
+
+  <mdc-list avatar twoLine>
+        <mdc-list-item *ngFor="let m of messages">
+            <mdc-list-item-text *ngIf="m.subject !== undefined" secondaryText="{{ m.unsubscribeURL }}">{{ m.subject }}</mdc-list-item-text>
+            <mdc-list-item-text *ngIf="m.subject === undefined" secondaryText="loading...">{{ 'Id: ' +  m.id }}</mdc-list-item-text>
+            <button mdc-button mdcListItemMeta>
+                    <mdc-icon>delete</mdc-icon>
+            </button>
+        </mdc-list-item>
+    </mdc-list>
