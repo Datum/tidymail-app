@@ -23,7 +23,7 @@
             "polyfills": "angular/src/polyfills.ts",
             "tsConfig": "angular/src/tsconfig.app.json",
             "assets": ["angular/src/manifest.json", "angular/src/assets"],
-            "styles": ["angular/src/styles.scss"],
+            "styles": ["angular/src/styles.scss", "node_modules/bootstrap/dist/css/bootstrap.min.css"],
             "scripts": [],
             "es5BrowserSupport": true
           },

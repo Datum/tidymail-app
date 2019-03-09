@@ -6,6 +6,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 
+import { TopbarModule } from './modules/topbar/topbar.module'
+import { HomeModule } from './modules/home/home.module'
+
 import {
     MdcTopAppBarModule,
     MdcIconModule,
@@ -14,7 +17,8 @@ import {
     MdcTabBarModule,
     MdcDrawerModule,
     MdcIconButtonModule,
-    MdcButtonModule 
+    MdcButtonModule,
+    MdcLinearProgressModule  
 } from '@angular-mdc/web';
 
 
@@ -30,6 +34,8 @@ import {
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
+    HomeModule,
+    TopbarModule,
     MdcTopAppBarModule,
     MdcIconModule,
     MdcMenuModule,
@@ -37,7 +43,8 @@ import {
     MdcTabBarModule,
     MdcDrawerModule,
     MdcIconButtonModule,
-    MdcButtonModule 
+    MdcButtonModule,
+    MdcLinearProgressModule 
   ],
   providers: [DataService],
   bootstrap: [AppComponent]

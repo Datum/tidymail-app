@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Inject, AfterViewInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit } from '@angular/core';
 
 import { TAB_ID } from './tab-id.injector';
 
@@ -11,18 +11,28 @@ import { DataService } from './shared';
     styleUrls: ['./app.component.scss']
 })
 // tslint:disable:variable-name
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements OnInit {
     readonly tabId = this._tabId;
-    message: string;
     isLoggedIn: boolean = false;
-    newCount = 0;
+    isLoaded:boolean = false;
 
-    title = "Loading....";
-
-    ngAfterViewInit() {
-        this.loadToken();
+    ngOnInit() {
+        //check if actual token still valid
+        var self = this;
+        
+        this._dataService.getProfile().subscribe(profile => {
+            //token valid, go on
+            self.isLoggedIn = true;
+            self.isLoaded = true;
+            self._changeDetector.detectChanges();
+        }, error => {
+            this._dataService.login(function() {
+                self.isLoggedIn = true;
+                self.isLoaded = true;
+                self._changeDetector.detectChanges();
+            });
+        });
     }
-
 
     messages = [];
 
@@ -30,29 +40,6 @@ export class AppComponent implements AfterViewInit {
         @Inject(TAB_ID) private _tabId: number,
         private _changeDetector: ChangeDetectorRef,
         private _dataService: DataService) { }
-
-
-    login() {
-
-        var authUrl = "https://accounts.google.com/o/oauth2/auth"
-            + '?response_type=token&client_id=' + "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com"
-            + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly"
-            + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
-
-        var self = this;
-
-        chrome.identity.launchWebAuthFlow({ 'url': authUrl, 'interactive': true }, function (redirectUrl) {
-            if (redirectUrl) {
-                var parsed = parse(redirectUrl.substr(chrome.identity.getRedirectURL("oauth2").length + 1));
-                self._dataService.setAccessToken(parsed.access_token);
-                self.storeToken(parsed.access_token);
-                self.isLoggedIn = true;
-                self.getMessages();
-            } else {
-                alert("launchWebAuthFlow login failed. Is your redirect URL (" + chrome.identity.getRedirectURL("oauth2") + ") configured with your OAuth2 provider?");
-            }
-        });
-    }
 
     getMessages() {
         this._dataService.getMessages()
@@ -67,10 +54,10 @@ export class AppComponent implements AfterViewInit {
 
                 var index = 0;
 
-                this.loadItem(index, this.messages.length);
+                this.loadItem(index, 3);
             }, error => {
                 //try to relog
-                this.login();
+                //this.login();
             });
     }
 
@@ -87,6 +74,33 @@ export class AppComponent implements AfterViewInit {
                 {
                     this.messages[index].from = msg.payload.headers[a].value;
                 }
+
+                if(msg.payload.headers[a].name == "List-Unsubscribe")
+                {
+                    this.messages[index].unsubscribeURL = msg.payload.headers[a].value;
+                }
+            }
+
+            
+
+            //if no unsubscribe header found, try to get from body
+            if(this.messages[index].unsubscribeURL === undefined) {
+                try {
+                    var plainText = atob(msg.payload.body.data);
+
+                    //Extract urls from body
+                    var urls = getURLsFromString(plainText);
+                    var bUnSub = false;
+                    for(var u = 0;u < urls.length;u++) {
+                        var n = urls[u].search("unsubscribe");
+                        if(n != -1) {
+                            
+                            this.messages[index].unsubscribeURL = urls[u];
+                        }
+                    }
+                } catch(error) {
+                    alert(msg.id);
+                }   
             }
 
             index++;
@@ -103,21 +117,6 @@ export class AppComponent implements AfterViewInit {
         });
     }
 
-    loadToken() {
-        var self = this;
-        chrome.storage.local.get(["token"], function (result) {
-            if (result.token !== undefined) {
-                self._dataService.setAccessToken(result.token);
-                self.isLoggedIn = true;
-                self._dataService.getProfile().subscribe(profile => {
-                    self.title = profile.emailAddress;
-                    self.getMessages();
-                });
-
-                
-            }
-        });
-    }
 
     search() {
 
@@ -140,7 +139,7 @@ export class AppComponent implements AfterViewInit {
 
     onClick(): void {
         chrome.tabs.sendMessage(this._tabId, 'request', message => {
-            this.message = message;
+            //this.message = message;
             this._changeDetector.detectChanges();
         });
     }
@@ -186,3 +185,17 @@ function parse(str) {
         return ret;
     }, {});
 }
+
+
+function getURLsFromString(str) {
+    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm; 
+    var m;
+    var arr = [];
+    while ((m = re.exec(str)) !== null) {
+      if (m.index === re.lastIndex) {
+          re.lastIndex++;
+      }
+      arr.push(m[0]);
+    }
+    return arr;
+  }

@@ -13,17 +13,35 @@ export class DataService {
         + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly"
         + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
 
-    isLoggedIn: boolean = false;
     accessToken:string;
 
     constructor(
         private http: HttpClient,
     ) {
-
+        //load actual token
+        chrome.storage.local.get(["token"], function (result) {
+            this.accessToken =  result.token;
+        });
     }
 
-    setAccessToken(token:string) {
-        this.accessToken = token;
+    setAccessToken(token:string, callback:Function) {
+        var self =this;
+        chrome.storage.local.set({ token: token }, function () {
+            self.accessToken = token;
+            callback();
+        });
+    }
+
+    login(callback) {
+        var self = this;
+        chrome.identity.launchWebAuthFlow({ 'url': this.authUrl, 'interactive': true }, function (redirectUrl) {
+            if (redirectUrl) {
+                var parsed = parse(redirectUrl.substr(chrome.identity.getRedirectURL("oauth2").length + 1));
+                self.setAccessToken(parsed.access_token, callback);
+            } else {
+                alert("launchWebAuthFlow login failed. Is your redirect URL (" + chrome.identity.getRedirectURL("oauth2") + ") configured with your OAuth2 provider?");
+            }
+        });
     }
 
     getConfig() {
@@ -31,7 +49,7 @@ export class DataService {
     }
 
     getMessages() {
-       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=unsubscribe");
+       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=list:");
     }
 
     getProfile() {

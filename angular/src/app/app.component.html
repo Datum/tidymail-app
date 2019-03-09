@@ -1,4 +1,12 @@
-<div *ngIf="!isLoggedIn">
+
+
+<div *ngIf="!isLoaded" style="min-width: 200px; padding:20px;">
+    Loading
+    <mdc-linear-progress></mdc-linear-progress>
+</div>
+
+
+<div *ngIf="isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;">
     <div>
         your not logged in. please login
     </div>
@@ -8,6 +16,56 @@
       </button>
 </div>
 
+
+<div *ngIf="isLoaded && isLoggedIn">
+    <topbar></topbar>
+    <home></home>
+</div>
+
+
+
+<!--
+<div class="container">
+    <div class="row">
+      <div class="col">
+        1 of 2
+      </div>
+      <div class="col text-right">
+        2 of 2
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        1 of 3
+      </div>
+      <div class="col">
+        2 of 3
+      </div>
+      <div class="col">
+        3 of 3
+      </div>
+    </div>
+  </div>
+  <div class="alert alert-primary" role="alert">
+    A simple primary alert—check it out!
+  </div>
+
+  -->
+
+<!--
+<div *ngIf="!isLoggedIn">
+    <div>
+        your not logged in. please login
+    </div>
+    <br>
+    <button mdc-button raised (click)="login()">
+        <mdc-icon>account_box</mdc-icon>Login
+      </button>
+</div>
+-->
+
+
+<!--
 <mdc-top-app-bar class="top-app-bar-with-tabs" *ngIf="isLoggedIn">
     <mdc-top-app-bar-row>
         <mdc-top-app-bar-section align="start" title="{{ title }}">
@@ -43,12 +101,13 @@
         </mdc-top-app-bar-section>
     </mdc-top-app-bar-row>
 </mdc-top-app-bar>
+-->
 
-
+<!--
 <div class="app-content" *ngIf="isLoggedIn">
     <mdc-list avatar twoLine>
             <mdc-list-item *ngFor="let m of messages">
-                <mdc-list-item-text *ngIf="m.subject !== undefined" secondaryText="{{ m.from }}">{{ m.subject }}</mdc-list-item-text>
+                <mdc-list-item-text *ngIf="m.subject !== undefined" secondaryText="{{ m.unsubscribeURL }}">{{ m.subject }}</mdc-list-item-text>
                 <mdc-list-item-text *ngIf="m.subject === undefined" secondaryText="loading...">{{ 'Id: ' +  m.id }}</mdc-list-item-text>
                 <button mdc-button mdcListItemMeta>
                         <mdc-icon>delete</mdc-icon>
@@ -87,6 +146,7 @@
     <p>You can easily send messages to the content page with the provided Tab ID!</p>
     <button (click)="onClick()">Click me to test</button>
     <div><strong>{{ message }}</strong></div>
--->
+
 
 </div>
+-->

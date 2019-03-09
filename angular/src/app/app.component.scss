@@ -1,5 +1,9 @@
 @import "~@angular-mdc/theme/material";
 
+.container {
+    min-width: 400px;
+}
+
 .top-app-bar-with-tabs {
     @include mdc-top-app-bar-fill-color(#0076c5);
     @include mdc-top-app-bar-icon-ink-color(#FFFFFF);
