@@ -1,3 +1,9 @@
 export class Message {
-    id:number;
+    id:string;
+    threadId:string;
+    unread:boolean;
+    from:string;
+    subject:string;
+    unsubscribeUrl:string;
+    internalDate:number;
 }

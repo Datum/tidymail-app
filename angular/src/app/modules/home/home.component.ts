@@ -1,7 +1,8 @@
-import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit, NgZone } from '@angular/core';
 
 
 import { DataService } from '../../shared';
+import { toTypeScript } from '@angular/compiler';
 
 
 @Component({
@@ -10,19 +11,50 @@ import { DataService } from '../../shared';
     styleUrls: ['./home.component.scss']
 })
 // tslint:disable:variable-name
-export class HomeComponent implements OnInit  {
-    constructor(private _dataService: DataService,private _changeDetector: ChangeDetectorRef) {}
+export class HomeComponent implements OnInit {
+    constructor(private _dataService: DataService, private _changeDetector: ChangeDetectorRef, private zone: NgZone) { }
 
-    messages:any = [];
+    messages: any = [];
+    messagesGroups: any = [];
+    isLoaded: boolean = false;
+    messageCount: number = 0;
+    loadingText: string = "Connecting...";
 
     ngOnInit() {
-        this.getMessages();
+        var self = this;
+        this._dataService.snyc(function (count) {
+            self.zone.run(() => {
+                self.loadingText = "Searching for emails... (" + count + " found)";
+            });
+        });
+        this._dataService.messagesList.subscribe(function (result) {
+            self.zone.run(() => {
+                self.messages = result;
+                self.loadingText = "Downloading index for emails.... (" + self.messages.length + " indexed)";
+            });
+        });
+
+        this._dataService.messagesGroupList.subscribe(function (result) {
+            self.zone.run(() => {
+                self.messagesGroups = result;
+            });
+        });
+
+        this._dataService.logMessage.subscribe(function (result) {
+            self.zone.run(() => {
+                self.loadingText = "Downloading mail body and analyzing " + result + " emails...";
+            });
+        });
+
     }
 
 
     getMessages() {
-        this._dataService.getMessages()
+
+        /*
             .subscribe(resp => {
+                alert(resp.messages.length);
+                alert(resp.resultSizeEstimate);
                 this.messages = resp.messages;
                 //this.tabs[0].count = resp.messages.length;
                 this._changeDetector.detectChanges();
@@ -32,14 +64,16 @@ export class HomeComponent implements OnInit  {
 
                 var index = 0;
 
-                this.loadItem(index, this.messages.length);
+                //this.loadItem(index, this.messages.length);
             }, error => {
                 //try to relog
                 //this.login();
             });
+            */
     }
 
     loadItem(index, maxRows) {
+        /*
         this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
             for(var a = 0; a < msg.payload.headers.length;a++) {
                 if(msg.payload.headers[a].name == "Subject")
@@ -86,20 +120,21 @@ export class HomeComponent implements OnInit  {
                 this.loadItem(index, maxRows);
             } 
         });
+        */
     }
 }
 
 
 
 function getURLsFromString(str) {
-    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm; 
+    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm;
     var m;
     var arr = [];
     while ((m = re.exec(str)) !== null) {
-      if (m.index === re.lastIndex) {
-          re.lastIndex++;
-      }
-      arr.push(m[0]);
+        if (m.index === re.lastIndex) {
+            re.lastIndex++;
+        }
+        arr.push(m[0]);
     }
     return arr;
-  }
+}

@@ -41,6 +41,7 @@ export class AppComponent implements OnInit {
         private _changeDetector: ChangeDetectorRef,
         private _dataService: DataService) { }
 
+        /*
     getMessages() {
         this._dataService.getMessages()
             .subscribe(resp => {
@@ -54,14 +55,15 @@ export class AppComponent implements OnInit {
 
                 var index = 0;
 
-                this.loadItem(index, 3);
+                //this.loadItem(index, 3);
             }, error => {
                 //try to relog
                 //this.login();
             });
     }
+    */
 
-
+/*
     loadItem(index, maxRows) {
         this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
             for(var a = 0; a < msg.payload.headers.length;a++) {
@@ -110,6 +112,7 @@ export class AppComponent implements OnInit {
             } 
         });
     }
+    */
 
     storeToken(accessToken: string) {
         chrome.storage.local.set({ token: accessToken }, function () {

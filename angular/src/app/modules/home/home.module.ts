@@ -12,7 +12,8 @@ import {
     MdcTabBarModule,
     MdcDrawerModule,
     MdcIconButtonModule,
-    MdcButtonModule 
+    MdcButtonModule,
+    MdcLinearProgressModule
 } from '@angular-mdc/web';
 
 
@@ -30,7 +31,8 @@ import {
         MdcIconModule,
         MdcTabBarModule,
         MdcListModule,
-        MdcButtonModule
+        MdcButtonModule,
+        MdcLinearProgressModule
     ],
     exports: [ HomeComponent ],
     providers: [DataService],
