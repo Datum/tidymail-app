@@ -16,6 +16,7 @@ export class HomeComponent implements OnInit {
 
     messages: any = [];
     messagesGroups: any = [];
+    displayGroups: any = [];
     isLoaded: boolean = false;
     messageCount: number = 0;
     loadingText: string = "Connecting...";
@@ -37,6 +38,12 @@ export class HomeComponent implements OnInit {
         this._dataService.messagesGroupList.subscribe(function (result) {
             self.zone.run(() => {
                 self.messagesGroups = result;
+            });
+        });
+
+        this._dataService.messagesDisplayList.subscribe(function (result) {
+            self.zone.run(() => {
+                self.displayGroups = result;
             });
         });
 

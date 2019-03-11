@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Message, MessageList, Profile, MessageGroup } from '../models';
+import { Message, MessageList, Profile, MessageGroup, DisplayGroup } from '../models';
 
 import { map } from 'rxjs/operators'
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -19,6 +19,9 @@ export class DataService {
     private _messagesGroup: MessageGroup[] = [];
     private _observableMessagesGroupList: BehaviorSubject<MessageGroup[]> = new BehaviorSubject([]);
 
+    private _displayGroup: DisplayGroup[] = [];
+    private _observableDisplayGroupList: BehaviorSubject<DisplayGroup[]> = new BehaviorSubject([]);
+
 
     private _logMessage: string;
     private _observableLogMessage: BehaviorSubject<string> = new BehaviorSubject("");
@@ -26,6 +29,8 @@ export class DataService {
     get messagesList(): Observable<Message[]> { return this._observableMessageList.asObservable() }
 
     get messagesGroupList(): Observable<MessageGroup[]> { return this._observableMessagesGroupList.asObservable() }
+
+    get messagesDisplayList(): Observable<DisplayGroup[]> { return this._observableDisplayGroupList.asObservable() }
 
     get logMessage(): Observable<string> { return this._observableLogMessage.asObservable() }
 
@@ -170,7 +175,6 @@ export class DataService {
 
         //create list with all grouped
         for (var key in group) {
-
             var mg = new MessageGroup();
             mg.name = key;
             mg.messages = group[key];
@@ -179,9 +183,26 @@ export class DataService {
             this._messagesGroup.push(mg);
         }
 
-        this._messagesGroup.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)); 
+        group = {};
+        this._messagesGroup.forEach((item: MessageGroup) => {
+            var firstDomainChar = item.hostname.substring(0,1);
+            group[firstDomainChar] = group[firstDomainChar] || [];
+            group[firstDomainChar].push(item);
+        });
 
-        this._observableMessagesGroupList.next(this._messagesGroup);
+          //create list with all grouped
+        for (var key in group) {
+            var dg = new DisplayGroup();
+            dg.name = key.toUpperCase();
+            dg.messagegroups = group[key];
+            this._displayGroup.push(dg);
+        }
+
+        this._displayGroup.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)); 
+
+
+        this._observableDisplayGroupList.next(this._displayGroup);
+        //this._observableMessagesGroupList.next(this._messagesGroup);
 
     }
 
