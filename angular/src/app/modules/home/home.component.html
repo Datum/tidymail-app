@@ -1,7 +1,7 @@
 <mdc-tab-bar>
     <mdc-tab-scroller>
         <mdc-tab>
-            <mdc-tab-label>New</mdc-tab-label>
+            <mdc-tab-label>New ({{newMailcount}})</mdc-tab-label>
         </mdc-tab>
         <mdc-tab>
             <mdc-tab-label>Unsubscribe</mdc-tab-label>
@@ -27,15 +27,30 @@
     <div *ngFor="let d of _dataService.messagesDisplayList | async">
         <h3 mdcListGroupSubheader>{{ d.name }}</h3>
         <mdc-list avatar twoLine>
-            <mdc-list-item *ngFor="let m of d.messagegroups">
-                <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
-                    style="padding-right:10px;">
-                <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }} <small
-                        style="color:darkgrey"> {{ m.hostname }} </small></mdc-list-item-text>
-                <button mdc-button mdcListItemMeta>
-                    <mdc-icon>delete</mdc-icon>
-                </button>
-            </mdc-list-item>
+            <div *ngFor="let m of d.messagegroups; let i = index">
+                <mdc-list-item>
+                    <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
+                        style="padding-right:10px;">
+                    <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }} <small
+                            style="color:darkgrey"> {{ m.hostname }} </small></mdc-list-item-text>
+                    <button mdc-button mdcListItemMeta>
+                        <mdc-icon>delete</mdc-icon>
+                    </button>
+                </mdc-list-item>
+                
+                <!--
+                <div [attr.id]="'openPanel'+ i" class="collapse">
+                    <mdc-list-item *ngFor="let msg of m.messages" style="margin-left:40px;">
+                        <mdc-list-item-text secondaryText="{{ msg.internalDate  | date:'medium' }}">{{ msg.subject }} <small
+                                style="color:darkgrey"> {{ msg.from }} </small></mdc-list-item-text>
+                        <button mdc-button mdcListItemMeta>
+                            <mdc-icon>delete</mdc-icon>
+                        </button>
+                    </mdc-list-item>
+                </div>
+                -->
+                
+            </div>
         </mdc-list>
         <mdc-list-divider></mdc-list-divider>
     </div>

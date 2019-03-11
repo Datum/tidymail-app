@@ -6,7 +6,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 
-import { TopbarModule } from './modules/topbar/topbar.module'
 import { HomeModule } from './modules/home/home.module'
 
 import {
@@ -35,7 +34,6 @@ import {
     HttpClientModule,
     AppRoutingModule,
     HomeModule,
-    TopbarModule,
     MdcTopAppBarModule,
     MdcIconModule,
     MdcMenuModule,

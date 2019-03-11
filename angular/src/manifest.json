@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
     "name": "Datum Unsubscriber",
-    "short_name": "Angular Chrome Extension",
+    "short_name": "DtUnSubber",
     "version": "1.0.0",
-    "description": "Angular Chrome Extension scaffold project",
+    "description": "Helper extension to unsubscribe newsletters or monetize from it",
     "permissions": [
         "tabs",
         "identity",
@@ -11,7 +11,7 @@
     ],
     "browser_action": {
         "default_popup": "index.html",
-        "default_title": "Angular Chrome Extension"
+        "default_title": "Datum Unsubscriber"
     },
     "content_scripts": [
         {
@@ -23,6 +23,12 @@
             ]
         }
     ],
+    "oauth2": {
+        "client_id": "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com",
+        "scopes": [
+          "https://www.googleapis.com/auth/gmail.readonly"
+        ]
+      },
     "icons": {
         "16": "assets/icon.png"
     },

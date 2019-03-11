@@ -14,24 +14,44 @@ import { DataService } from './shared';
 export class AppComponent implements OnInit {
     readonly tabId = this._tabId;
     isLoggedIn: boolean = false;
-    isLoaded:boolean = false;
+    isLoaded: boolean = false;
 
     ngOnInit() {
         //check if actual token still valid
         var self = this;
-        
-        this._dataService.getProfile().subscribe(profile => {
-            //token valid, go on
-            self.isLoggedIn = true;
-            self.isLoaded = true;
-            self._changeDetector.detectChanges();
-        }, error => {
-            this._dataService.login(function() {
+
+        this._dataService.init(function (config) {
+            if(config.firsttime) {
+                //force login and offline access
+                self._dataService.login(function () {
+                    self.isLoggedIn = true;
+                    self.isLoaded = true;
+                    self._changeDetector.detectChanges();
+                });
+            } else {
                 self.isLoggedIn = true;
                 self.isLoaded = true;
                 self._changeDetector.detectChanges();
+            }
+         
+
+            /*
+            self._dataService.getProfile().subscribe(profile => {
+                //token valid, go on
+                self.isLoggedIn = true;
+                self.isLoaded = true;
+                self._changeDetector.detectChanges();
+            }, error => {
+                self._dataService.login(function () {
+                    self.isLoggedIn = true;
+                    self.isLoaded = true;
+                    self._changeDetector.detectChanges();
+                });
             });
+            */
         });
+
+
     }
 
     messages = [];
@@ -41,78 +61,78 @@ export class AppComponent implements OnInit {
         private _changeDetector: ChangeDetectorRef,
         private _dataService: DataService) { }
 
-        /*
-    getMessages() {
-        this._dataService.getMessages()
-            .subscribe(resp => {
-                
-                this.messages = resp.messages;
-                this.tabs[0].count = resp.messages.length;
-                this._changeDetector.detectChanges();
-
-
-                //get details
-
-                var index = 0;
-
-                //this.loadItem(index, 3);
-            }, error => {
-                //try to relog
-                //this.login();
-            });
-    }
-    */
-
-/*
-    loadItem(index, maxRows) {
-        this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
-            for(var a = 0; a < msg.payload.headers.length;a++) {
-                if(msg.payload.headers[a].name == "Subject")
-                {
-                    this.messages[index].subject = msg.payload.headers[a].value;
-                }
-
-                if(msg.payload.headers[a].name == "From")
-                {
-                    this.messages[index].from = msg.payload.headers[a].value;
-                }
-
-                if(msg.payload.headers[a].name == "List-Unsubscribe")
-                {
-                    this.messages[index].unsubscribeURL = msg.payload.headers[a].value;
-                }
-            }
-
+    /*
+getMessages() {
+    this._dataService.getMessages()
+        .subscribe(resp => {
             
+            this.messages = resp.messages;
+            this.tabs[0].count = resp.messages.length;
+            this._changeDetector.detectChanges();
 
-            //if no unsubscribe header found, try to get from body
-            if(this.messages[index].unsubscribeURL === undefined) {
-                try {
-                    var plainText = atob(msg.payload.body.data);
 
-                    //Extract urls from body
-                    var urls = getURLsFromString(plainText);
-                    var bUnSub = false;
-                    for(var u = 0;u < urls.length;u++) {
-                        var n = urls[u].search("unsubscribe");
-                        if(n != -1) {
-                            
-                            this.messages[index].unsubscribeURL = urls[u];
-                        }
-                    }
-                } catch(error) {
-                    alert(msg.id);
-                }   
-            }
+            //get details
 
-            index++;
-            if(index < maxRows) {
-                this._changeDetector.detectChanges();
-                this.loadItem(index, maxRows);
-            } 
+            var index = 0;
+
+            //this.loadItem(index, 3);
+        }, error => {
+            //try to relog
+            //this.login();
         });
-    }
-    */
+}
+*/
+
+    /*
+        loadItem(index, maxRows) {
+            this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
+                for(var a = 0; a < msg.payload.headers.length;a++) {
+                    if(msg.payload.headers[a].name == "Subject")
+                    {
+                        this.messages[index].subject = msg.payload.headers[a].value;
+                    }
+    
+                    if(msg.payload.headers[a].name == "From")
+                    {
+                        this.messages[index].from = msg.payload.headers[a].value;
+                    }
+    
+                    if(msg.payload.headers[a].name == "List-Unsubscribe")
+                    {
+                        this.messages[index].unsubscribeURL = msg.payload.headers[a].value;
+                    }
+                }
+    
+                
+    
+                //if no unsubscribe header found, try to get from body
+                if(this.messages[index].unsubscribeURL === undefined) {
+                    try {
+                        var plainText = atob(msg.payload.body.data);
+    
+                        //Extract urls from body
+                        var urls = getURLsFromString(plainText);
+                        var bUnSub = false;
+                        for(var u = 0;u < urls.length;u++) {
+                            var n = urls[u].search("unsubscribe");
+                            if(n != -1) {
+                                
+                                this.messages[index].unsubscribeURL = urls[u];
+                            }
+                        }
+                    } catch(error) {
+                        alert(msg.id);
+                    }   
+                }
+    
+                index++;
+                if(index < maxRows) {
+                    this._changeDetector.detectChanges();
+                    this.loadItem(index, maxRows);
+                } 
+            });
+        }
+        */
 
     storeToken(accessToken: string) {
         chrome.storage.local.set({ token: accessToken }, function () {
@@ -191,14 +211,14 @@ function parse(str) {
 
 
 function getURLsFromString(str) {
-    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm; 
+    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm;
     var m;
     var arr = [];
     while ((m = re.exec(str)) !== null) {
-      if (m.index === re.lastIndex) {
-          re.lastIndex++;
-      }
-      arr.push(m[0]);
+        if (m.index === re.lastIndex) {
+            re.lastIndex++;
+        }
+        arr.push(m[0]);
     }
     return arr;
-  }
+}

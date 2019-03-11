@@ -21,11 +21,31 @@ import {
     DataService
   } from '../../shared';
 
+  import {RouterModule} from '@angular/router';
+import { ModuleWithProviders } from '@angular/compiler/src/core';
+import { SettingsComponent } from './settings.component';
+
+
+
+  const dataRouting: ModuleWithProviders = RouterModule.forChild([
+    {
+        path: '',
+        component: HomeComponent,
+    },
+    {
+        path: 'settings',
+        component: SettingsComponent,
+    },
+]);
+
+
 @NgModule({
     declarations: [
-        HomeComponent
+        HomeComponent,
+        SettingsComponent
     ],
     imports: [
+        dataRouting,
         BrowserModule,
         HttpClientModule,
         MdcIconModule,

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Message, MessageList, Profile, MessageGroup, DisplayGroup } from '../models';
+import { Message, MessageList, Profile, MessageGroup, DisplayGroup, UserConfig } from '../models';
 
 import { map } from 'rxjs/operators'
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -35,33 +35,31 @@ export class DataService {
     get logMessage(): Observable<string> { return this._observableLogMessage.asObservable() }
 
     baseUrl: string = "https://www.googleapis.com/gmail/v1/users/me";
+    tokenUrl:string = 'https://www.googleapis.com/oauth2/v4/token';
+    clientid: string = "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com";
+    clientsecret:string = "26OcvwqMmwMe6wF8uOFGPBj0";
+    userconfig:UserConfig;
 
     totalMailAmount: number = 0;
 
     authUrl: string = "https://accounts.google.com/o/oauth2/auth"
-        + '?response_type=token&client_id=' + "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com"
+        + '?response_type=code&access_type=offline&approval_prompt=force&client_id=' + this.clientid
         + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly"
         + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
 
-    accessToken: string;
 
 
     constructor(
         private http: HttpClient,
     ) {
-        //load actual token
-        var self = this;
-        chrome.storage.local.get(["token"], function (result) {
-            self.accessToken = result.token;
-        });
-
-        this.createDatabase();
     }
 
-    setAccessToken(token: string, callback: Function) {
-        var self = this;
-        chrome.storage.local.set({ token: token }, function () {
-            self.accessToken = token;
+    setAccessToken(token: string, refresh_token:string, expires:number, callback: Function) {
+        this.userconfig.access_token = token;
+        this.userconfig.refresh_token = refresh_token;
+        this.userconfig.expires = Math.round(new Date().getTime() / 1000) + expires;
+        this.userconfig.firsttime = false;
+        chrome.storage.local.set({ config: this.userconfig }, function () {
             callback();
         });
     }
@@ -70,12 +68,43 @@ export class DataService {
         var self = this;
         chrome.identity.launchWebAuthFlow({ 'url': this.authUrl, 'interactive': true }, function (redirectUrl) {
             if (redirectUrl) {
+
                 var parsed = parse(redirectUrl.substr(chrome.identity.getRedirectURL("oauth2").length + 1));
-                self.setAccessToken(parsed.access_token, callback);
+                //get tokens from code
+                self.getToken(parsed.code, self.clientid, callback).subscribe(function(result) {
+                    //store tokens and run callback
+                    self.setAccessToken(result.access_token, result.refresh_token, result.expires_in, callback);
+                });
             } else {
                 alert("launchWebAuthFlow login failed. Is your redirect URL (" + chrome.identity.getRedirectURL("oauth2") + ") configured with your OAuth2 provider?");
             }
         });
+        
+    }
+
+
+    refreshToken(refresh_token) {
+        /*
+            client_id: <YOUR_CLIENT_ID>
+            client_secret: <YOUR_CLIENT_SECRET>
+            refresh_token: <REFRESH_TOKEN_FOR_THE_USER>
+            grant_type: refresh_token
+        */
+       return this.http.post<any>(this.tokenUrl, { client_id: this.clientid, client_secret: this.clientsecret, refresh_token: refresh_token, grant_type: "refresh_token"});
+    }
+
+    getToken(code, client_id,  callback) {
+        /*
+
+                {
+        "access_token": "ya29.GluCBcWz5DTsbBTAGvNV2m0eJXSn4rBpXq7wNKw8Ryqp52JAckB9iBvvTnrUIzTSiDv1oQE6NTrDytoYYEhCngBPwyyhhfJJXYBj574rZ5MwnIXZhUbcWrkF8PtD",
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "refresh_token": "1/qK6SZ1UoFciRvVdY6B7u0oZRXiIOvMdhaaB1myjEoV8"
+        }
+
+        */
+        return this.http.post<any>(this.tokenUrl, { code: code, client_id: client_id, client_secret: this.clientsecret, grant_type: "authorization_code", redirect_uri: chrome.identity.getRedirectURL("oauth2") });
     }
 
 
@@ -83,7 +112,7 @@ export class DataService {
     snyc(callback): any {
         var self = this;
         //get mail list for count only and return back in callback
-        this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=tester").subscribe(function (result) {
+        this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.userconfig.access_token + "&q=list:").subscribe(function (result) {
             this.totalMailAmount = result.resultSizeEstimate;
             callback(result.resultSizeEstimate);
             if (result.resultSizeEstimate > 0) {
@@ -102,7 +131,7 @@ export class DataService {
     loadMessageIds(nextPageToken) {
         var self = this;
 
-        var url = this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=list:";
+        var url = this.baseUrl + "/messages?access_token=" + this.userconfig.access_token + "&q=list:";
         if (nextPageToken) {
             url += "&pageToken=" + nextPageToken;
         }
@@ -111,13 +140,13 @@ export class DataService {
             self._messages = self._messages.concat(result.messages);
             self._observableMessageList.next(self._messages);
 
-
             
             //let mailExists = await self.db.mails.get(result.messages[0].id);
-            if (result.nextPageToken /*&& mailExists === undefined*/) {
+            if (result.nextPageToken && !self.bCancel /*&& mailExists === undefined*/) {
                 self.loadMessageIds(result.nextPageToken);
             } else {
                 //finished fetching id's, group them
+                self.bCancel = false;
                 self.getMessageBody();
             }
         });
@@ -131,15 +160,16 @@ export class DataService {
 
             this._observableLogMessage.next(index.toString());
 
-
             if(this.bCancel) {
                 this.bCancel = false;
                 break;
             }
+
+
             let mailExists = await this.db.mails.get(this._messages[index].id);
             if (mailExists === undefined) {
 
-                var msg = await this.http.get<any>(this.baseUrl + "/messages/" + this._messages[index].id + "?access_token=" + this.accessToken).toPromise();
+                var msg = await this.http.get<any>(this.baseUrl + "/messages/" + this._messages[index].id + "?access_token=" + this.userconfig.access_token).toPromise();
                 for (var a = 0; a < msg.payload.headers.length; a++) {
                     if (msg.payload.headers[a].name == "Subject") {
                         this._messages[index].subject = msg.payload.headers[a].value;
@@ -153,6 +183,8 @@ export class DataService {
                         this._messages[index].unsubscribeUrl = msg.payload.headers[a].value;
                     }
                 }
+
+                this._messages[index].internalDate = msg.internalDate;
 
                 //this._observableLogMessage.next(index.toString());
 
@@ -229,12 +261,38 @@ export class DataService {
     }
     */
 
+    init(callback) {
+        this.createDatabase();
+
+        //load actual config
+        var self = this;
+        chrome.storage.local.get(["config"], function (result) {
+            if(result.config !== undefined) {
+                self.userconfig = result.config;
+                //check if token is expired
+                if(self.userconfig.expires < new Date().getTime() / 1000) {
+                    alert('expired, use refresh:' + self.userconfig.refresh_token);
+                    //token expired, refresh
+                    self.refreshToken(self.userconfig.refresh_token).subscribe(result => {
+                        self.setAccessToken(result.access_token, self.userconfig.refresh_token, result.expires_in, callback(self.userconfig));
+                    }, error => {
+                        alert('error:' + error);
+                    });
+                }
+            } else {
+                self.userconfig = new UserConfig();
+                self.userconfig.firsttime = true;
+            }
+            callback(self.userconfig);
+        });
+    }
+
     getProfile() {
-        return this.http.get<Profile>(this.baseUrl + "/profile?access_token=" + this.accessToken);
+        return this.http.get<Profile>(this.baseUrl + "/profile?access_token=" + this.userconfig.access_token);
     }
 
     getMessage(id: string) {
-        return this.http.get(this.baseUrl + "/messages/" + id + "?access_token=" + this.accessToken)
+        return this.http.get(this.baseUrl + "/messages/" + id + "?access_token=" + this.userconfig.access_token)
             .pipe(map((message) => {
                 return new Message();
             }));

@@ -20,14 +20,21 @@ export class HomeComponent implements OnInit {
     isLoaded: boolean = false;
     messageCount: number = 0;
     loadingText: string = "Connecting...";
+    newMailcount:number = 0;
 
     ngOnInit() {
         var self = this;
+        
+        
         this._dataService.snyc(function (count) {
             self.zone.run(() => {
-                self.loadingText = "Searching for emails... (" + count + " found)";
+                self.loadingText = "Searching for emails... (" + count + " estimated)";
+                self.newMailcount = 0;
             });
         });
+        
+        
+        
         this._dataService.messagesList.subscribe(function (result) {
             self.zone.run(() => {
                 self.messages = result;
@@ -49,6 +56,7 @@ export class HomeComponent implements OnInit {
 
         this._dataService.logMessage.subscribe(function (result) {
             self.zone.run(() => {
+                self.newMailcount = parseInt(result);
                 self.loadingText = "Downloading mail body and analyzing " + result + " emails...";
             });
         });
