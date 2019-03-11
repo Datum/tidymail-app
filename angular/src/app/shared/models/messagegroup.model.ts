@@ -5,4 +5,5 @@ export class MessageGroup {
     name: string;
     icon: string;
     hostname:string;
+    subject:string;
 }

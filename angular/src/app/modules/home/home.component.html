@@ -35,7 +35,7 @@
 
         <mdc-list-item *ngFor="let m of _dataService.messagesGroupList | async">
                 <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}" style="padding-right:10px;">
-                <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }}</mdc-list-item-text>
+                <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }} <small style="color:darkgrey"> {{ m.hostname }} </small></mdc-list-item-text>
                 <button mdc-button mdcListItemMeta>
                         <mdc-icon>delete</mdc-icon>
                 </button>

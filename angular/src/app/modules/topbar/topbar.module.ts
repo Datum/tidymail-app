@@ -12,7 +12,8 @@ import {
     MdcTabBarModule,
     MdcDrawerModule,
     MdcIconButtonModule,
-    MdcButtonModule 
+    MdcButtonModule,
+    MdcTypographyModule 
 } from '@angular-mdc/web';
 
 
@@ -24,7 +25,8 @@ import {
         BrowserModule,
         HttpClientModule,
         MdcIconModule,
-        MdcButtonModule
+        MdcButtonModule,
+        MdcTypographyModule 
     ],
     exports: [ TopbarComponent ]
     //providers: [DataService],

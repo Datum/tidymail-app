@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators'
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MdcHeadline1 } from '@angular-mdc/web';
 import Dexie from 'dexie';
+import { typeWithParameters } from '@angular/compiler/src/render3/util';
 
 @Injectable()
 export class DataService {
@@ -101,12 +102,14 @@ export class DataService {
             url += "&pageToken=" + nextPageToken;
         }
 
-        this.http.get<MessageList>(url).subscribe(function (result) {
+        this.http.get<MessageList>(url).subscribe(async function (result) {
             self._messages = self._messages.concat(result.messages);
             self._observableMessageList.next(self._messages);
 
 
-            if (result.nextPageToken) {
+            
+            //let mailExists = await self.db.mails.get(result.messages[0].id);
+            if (result.nextPageToken /*&& mailExists === undefined*/) {
                 self.loadMessageIds(result.nextPageToken);
             } else {
                 //finished fetching id's, group them
@@ -120,6 +123,10 @@ export class DataService {
         //try to get in batch of 25 requests
 
         for (var index = 0; index < this._messages.length; index++) {
+
+            this._observableLogMessage.next(index.toString());
+
+
             if(this.bCancel) {
                 this.bCancel = false;
                 break;
@@ -142,7 +149,7 @@ export class DataService {
                     }
                 }
 
-                this._observableLogMessage.next(index.toString());
+                //this._observableLogMessage.next(index.toString());
 
                 await this.db.mails.add(this._messages[index]);
             }
@@ -158,17 +165,21 @@ export class DataService {
 
         allItems.forEach((item: Message) => {
             group[item.from] = group[item.from] || [];
-            group[item.from].push(a);
+            group[item.from].push(item);
         });
 
         //create list with all grouped
         for (var key in group) {
+
             var mg = new MessageGroup();
             mg.name = key;
             mg.messages = group[key];
             mg.hostname = extractHostname(key);
+            mg.subject = group[key][0].subject;
             this._messagesGroup.push(mg);
         }
+
+        this._messagesGroup.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)); 
 
         this._observableMessagesGroupList.next(this._messagesGroup);
 
@@ -249,6 +260,7 @@ function parse(str) {
 
 function extractHostname(url) {
 
+
     var iStart = url.lastIndexOf('<');
     var iEnd = url.lastIndexOf('>');
 
@@ -258,6 +270,18 @@ function extractHostname(url) {
         if (at != -1) {
             return mail.substr(at + 1);
         }
+    }
+
+    return url;
+}
+
+function extractMail(url) {
+
+    var iStart = url.lastIndexOf('<');
+    var iEnd = url.lastIndexOf('>');
+
+    if (iStart > -1 && iEnd > -1) {
+        var mail = url.substr(iStart + 1, iEnd - iStart - 1);
         return mail;
     }
 
