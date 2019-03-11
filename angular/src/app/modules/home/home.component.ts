@@ -49,6 +49,10 @@ export class HomeComponent implements OnInit {
     }
 
 
+    cancel() {
+        this._dataService.cancelProcess();
+    }
+
     getMessages() {
 
         /*
