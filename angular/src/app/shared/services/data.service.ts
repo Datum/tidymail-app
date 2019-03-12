@@ -217,7 +217,7 @@ export class DataService {
 
         group = {};
         this._messagesGroup.forEach((item: MessageGroup) => {
-            var firstDomainChar = item.hostname.substring(0,1);
+            var firstDomainChar = item.hostname.substring(0,1).toLocaleLowerCase();
             group[firstDomainChar] = group[firstDomainChar] || [];
             group[firstDomainChar].push(item);
         });
@@ -347,7 +347,15 @@ function extractHostname(url) {
         var mail = url.substr(iStart + 1, iEnd - iStart - 1);
         var at = mail.lastIndexOf('@');
         if (at != -1) {
-            return mail.substr(at + 1);
+            var domain = mail.substr(at + 1);
+            var dotCount = domain.split(".").length-1;
+            if(dotCount > 1) {
+                var ii = domain.indexOf('.');
+                if(ii != -1) {
+                    domain = domain.substr(ii + 1);
+                }
+            }
+            return domain;
         }
     }
 
