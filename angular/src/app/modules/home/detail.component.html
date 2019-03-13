@@ -30,6 +30,7 @@
     <mdc-list-item *ngFor="let m of messages; let i = index">
         <mdc-checkbox checked="true"></mdc-checkbox>
         <mdc-list-item-text secondaryText="{{ m.internalDate | date:'medium' }}">{{ m.subject }}</mdc-list-item-text>
+        <mdc-icon mdcListItemMeta *ngIf="m.unread === true">mail</mdc-icon>
     </mdc-list-item>
 </mdc-list>
 
