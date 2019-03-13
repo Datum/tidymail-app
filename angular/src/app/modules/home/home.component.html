@@ -1,4 +1,4 @@
-<mdc-tab-bar>
+<mdc-tab-bar (activated)="tabChanged($event)" [activeTabIndex]="activeTab">
     <mdc-tab-scroller>
         <mdc-tab>
             <mdc-tab-label>New ({{newMailcount}})</mdc-tab-label>
@@ -23,63 +23,9 @@
 
 
 
-<mdc-list-group>
-    <div *ngFor="let d of _dataService.messagesDisplayList | async">
-        <h3 mdcListGroupSubheader>{{ d.name }}</h3>
-        <mdc-list avatar twoLine>
-            <div *ngFor="let m of d.messagegroups; let i = index">
-                <mdc-list-item routerLink="/detail/{{ m.hostname }}">
-                    <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
-                        style="padding-right:10px;">
-                    <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }} <small
-                            style="color:darkgrey"> {{ m.hostname }} </small></mdc-list-item-text>
-                    <div mdcListItemMeta>
-                        <button mdc-button>
-                            DETAILS
-                        </button>
-                    </div>
-
-
-                </mdc-list-item>
-
-                <!--
-                <div [attr.id]="'openPanel'+ i" class="collapse">
-                    <mdc-list-item *ngFor="let msg of m.messages" style="margin-left:40px;">
-                        <mdc-list-item-text secondaryText="{{ msg.internalDate  | date:'medium' }}">{{ msg.subject }} <small
-                                style="color:darkgrey"> {{ msg.from }} </small></mdc-list-item-text>
-                        <button mdc-button mdcListItemMeta>
-                            <mdc-icon>delete</mdc-icon>
-                        </button>
-                    </mdc-list-item>
-                </div>
-                -->
-
-            </div>
-        </mdc-list>
-        <mdc-list-divider></mdc-list-divider>
-    </div>
-</mdc-list-group>
-
-
-
-<mdc-list *ngIf="(_dataService.messagesList | async)?.length > 0;" avatar twoLine>
-    <!--
-        <mdc-list-item *ngFor="let m of _dataService.messagesGroupList | async">
-            <mdc-list-item-text *ngIf="m.subject !== undefined" secondaryText="{{ m.unsubscribeUrl }}">{{ m.name }}</mdc-list-item-text>
-            <mdc-list-item-text *ngIf="m.subject === undefined" secondaryText="loading...">{{ 'Id: ' +  m.name }}</mdc-list-item-text>
-            <button mdc-button mdcListItemMeta>
-                    <mdc-icon>delete</mdc-icon>
-            </button>
-        </mdc-list-item>
-        -->
-
-    <mdc-list-item *ngFor="let m of _dataService.messagesGroupList | async">
-        <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}" style="padding-right:10px;">
-        <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }} <small
-                style="color:darkgrey"> {{ m.hostname }} </small></mdc-list-item-text>
-        <button mdc-button mdcListItemMeta>
-            <mdc-icon>delete</mdc-icon>
-        </button>
-    </mdc-list-item>
-
-</mdc-list>
+<grouped-list *ngIf="activeTab == 0" [groups]="_dataService.messagesDisplayList | async">
+</grouped-list>
+<grouped-list *ngIf="activeTab == 1" [groups]="[]">
+</grouped-list>
+<grouped-list *ngIf="activeTab == 2" [groups]="[]">
+</grouped-list>

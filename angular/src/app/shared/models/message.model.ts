@@ -1,4 +1,15 @@
+enum Status {
+    New,
+    Unsubscribe,
+    Keep,
+}
+
 export class Message {
+
+    constructor() {
+        this.status = Status.New;
+    }
+
     id:string;
     threadId:string;
     unread:boolean;
@@ -7,4 +18,5 @@ export class Message {
     unsubscribeUrl:string;
     internalDate:number;
     hostname:string;
+    status:Status;
 }

@@ -3,6 +3,7 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { HomeComponent } from './home.component';
 import { DetailComponent} from './detail.component';
+import { ListComponent} from './list.component';
 
 
 import {
@@ -50,7 +51,8 @@ import { SettingsComponent } from './settings.component';
     declarations: [
         HomeComponent,
         SettingsComponent,
-        DetailComponent
+        DetailComponent,
+        ListComponent
     ],
     imports: [
         dataRouting,

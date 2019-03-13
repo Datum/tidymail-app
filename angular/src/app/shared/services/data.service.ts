@@ -34,6 +34,7 @@ export class DataService {
 
     get logMessage(): Observable<string> { return this._observableLogMessage.asObservable() }
 
+
     baseUrl: string = "https://www.googleapis.com/gmail/v1/users/me";
     tokenUrl:string = 'https://www.googleapis.com/oauth2/v4/token';
     clientid: string = "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com";
@@ -187,6 +188,7 @@ export class DataService {
                 }
 
                 this._messages[index].internalDate = msg.internalDate;
+                this._messages[index].status = 0;
                 this._messages[index].unread = (msg.labelIds.indexOf("UNREAD") > -1)
 
                 //this._observableLogMessage.next(index.toString());
@@ -247,7 +249,7 @@ export class DataService {
     createDatabase() {
         this.db = new Dexie('DatumUnsubscriberDatabase');
         this.db.version(1).stores({
-            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname'
+            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status'
         });
     }
 

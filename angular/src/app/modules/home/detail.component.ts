@@ -15,6 +15,7 @@ export class DetailComponent implements OnInit {
     constructor(private _dataService: DataService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
 
   
+    activeTab:number = 0;
     messages:any = [];
     domain:string;
 

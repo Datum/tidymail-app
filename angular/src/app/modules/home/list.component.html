@@ -1,0 +1,21 @@
+<mdc-list-group>
+    <div *ngFor="let d of groups">
+        <h3 mdcListGroupSubheader>{{ d.name }}</h3>
+        <mdc-list avatar twoLine>
+            <div *ngFor="let m of d.messagegroups; let i = index">
+                <mdc-list-item routerLink="/detail/{{ m.hostname }}">
+                    <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
+                        style="padding-right:10px;">
+                    <mdc-list-item-text secondaryText="{{ m.messages.length + ' emails' }}">{{ m.name }} <small
+                            style="color:darkgrey"> {{ m.hostname }} </small></mdc-list-item-text>
+                    <div mdcListItemMeta>
+                        <button mdc-button>
+                            DETAILS
+                        </button>
+                    </div>
+                </mdc-list-item>
+            </div>
+        </mdc-list>
+        <mdc-list-divider></mdc-list-divider>
+    </div>
+</mdc-list-group>
