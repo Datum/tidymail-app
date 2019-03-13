@@ -1,3 +1,13 @@
+<button mdc-button routerLink="/">
+    <mdc-icon>chevron_left</mdc-icon>Back
+</button>
 <p>
-  settings works!
+    <button (click)="resetDatabase()" mdc-button outlined>
+        <mdc-icon>delete</mdc-icon>reset database
+    </button>
+</p>
+<p>
+        <button (click)="resetAll()" mdc-button outlined>
+                <mdc-icon>delete</mdc-icon>reset ALL
+            </button>
 </p>

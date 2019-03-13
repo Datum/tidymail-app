@@ -1,7 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { HomeComponent } from './home.component'
+import { HomeComponent } from './home.component';
+import { DetailComponent} from './detail.component';
 
 
 import {
@@ -9,11 +10,13 @@ import {
     MdcIconModule,
     MdcMenuModule,
     MdcListModule,
+    MdcCheckboxModule,
     MdcTabBarModule,
     MdcDrawerModule,
     MdcIconButtonModule,
     MdcButtonModule,
-    MdcLinearProgressModule
+    MdcLinearProgressModule,
+    MdcTypographyModule 
 } from '@angular-mdc/web';
 
 
@@ -36,13 +39,18 @@ import { SettingsComponent } from './settings.component';
         path: 'settings',
         component: SettingsComponent,
     },
+    {
+        path: 'detail/:id',
+        component: DetailComponent,
+    },
 ]);
 
 
 @NgModule({
     declarations: [
         HomeComponent,
-        SettingsComponent
+        SettingsComponent,
+        DetailComponent
     ],
     imports: [
         dataRouting,
@@ -52,7 +60,9 @@ import { SettingsComponent } from './settings.component';
         MdcTabBarModule,
         MdcListModule,
         MdcButtonModule,
-        MdcLinearProgressModule
+        MdcLinearProgressModule,
+        MdcCheckboxModule,
+        MdcTypographyModule 
     ],
     exports: [ HomeComponent ],
     providers: [DataService],

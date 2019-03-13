@@ -22,6 +22,10 @@ export class HomeComponent implements OnInit {
     loadingText: string = "Connecting...";
     newMailcount:number = 0;
 
+    test() {
+        alert('test');
+    }
+
     ngOnInit() {
         var self = this;
         

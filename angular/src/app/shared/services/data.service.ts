@@ -177,6 +177,8 @@ export class DataService {
 
                     if (msg.payload.headers[a].name == "From") {
                         this._messages[index].from = msg.payload.headers[a].value;
+                        this._messages[index].hostname = extractHostname(msg.payload.headers[a].value);
+                        
                     }
 
                     if (msg.payload.headers[a].name == "List-Unsubscribe") {
@@ -185,6 +187,7 @@ export class DataService {
                 }
 
                 this._messages[index].internalDate = msg.internalDate;
+                this._messages[index].unread = (msg.labelIds.indexOf("UNREAD") > -1)
 
                 //this._observableLogMessage.next(index.toString());
 
@@ -239,13 +242,31 @@ export class DataService {
     }
 
 
-    private db: any;
+    public db: any;
 
-    private createDatabase() {
+    createDatabase() {
         this.db = new Dexie('DatumUnsubscriberDatabase');
         this.db.version(1).stores({
-            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate'
+            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname'
         });
+    }
+
+    getMessagesForDomain(domain:string) {
+
+        return this.db.mails.where("hostname").equalsIgnoreCase(domain);
+
+        /*
+        return this.db.mails.orderBy('internalDate').filter(function (m) {
+            return m.hostname === domain;
+        });
+        */
+
+        
+    }
+
+
+    resetDatabase() {
+        return this.db.delete();
     }
 
     getConfig() {
@@ -266,12 +287,12 @@ export class DataService {
 
         //load actual config
         var self = this;
+        
         chrome.storage.local.get(["config"], function (result) {
             if(result.config !== undefined) {
                 self.userconfig = result.config;
                 //check if token is expired
                 if(self.userconfig.expires < new Date().getTime() / 1000) {
-                    alert('expired, use refresh:' + self.userconfig.refresh_token);
                     //token expired, refresh
                     self.refreshToken(self.userconfig.refresh_token).subscribe(result => {
                         self.setAccessToken(result.access_token, self.userconfig.refresh_token, result.expires_in, callback(self.userconfig));
@@ -283,6 +304,9 @@ export class DataService {
                 self.userconfig = new UserConfig();
                 self.userconfig.firsttime = true;
             }
+
+          
+
             callback(self.userconfig);
         });
     }

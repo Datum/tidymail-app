@@ -6,4 +6,5 @@ export class Message {
     subject:string;
     unsubscribeUrl:string;
     internalDate:number;
+    hostname:string;
 }

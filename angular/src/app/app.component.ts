@@ -21,8 +21,10 @@ export class AppComponent implements OnInit {
         var self = this;
 
         this._dataService.init(function (config) {
+            
             if(config.firsttime) {
                 //force login and offline access
+                
                 self._dataService.login(function () {
                     self.isLoggedIn = true;
                     self.isLoaded = true;
@@ -33,6 +35,7 @@ export class AppComponent implements OnInit {
                 self.isLoaded = true;
                 self._changeDetector.detectChanges();
             }
+            
          
 
             /*

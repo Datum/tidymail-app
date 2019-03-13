@@ -1,0 +1,60 @@
+
+
+<button mdc-button routerLink="/">
+    <mdc-icon>chevron_left</mdc-icon>Back
+</button>
+
+<hr>
+
+<div class="row">
+    <div class="col-1">
+        <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + domain}}" style="padding:15px 30px;">
+    </div>
+    <div class="col">
+        <div mdcHeadline4>{{ domain }}</div>
+    </div>
+</div>
+
+<hr>
+
+
+<div>
+    <button mdc-button disabled>KEEP</button>
+    <button mdc-button disabled>UNSUBSCRIBE</button>
+    <button mdc-button disabled>DELETE</button>
+</div>
+
+<hr>
+
+<mdc-list twoLine>
+    <mdc-list-item *ngFor="let m of messages; let i = index">
+        <mdc-checkbox></mdc-checkbox>
+        <mdc-list-item-text secondaryText="{{ m.internalDate | date:'medium' }}">{{ m.subject }}</mdc-list-item-text>
+    </mdc-list-item>
+</mdc-list>
+
+<!--
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">From</th>
+            <th scope="col">Subject</th>
+            <th scope="col">Date</th>
+            <th scope="col">Unread?</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let m of messages; let i = index">
+            <th scope="row">{{ i }}</th>
+            <td>{{ m.from }}</td>
+            <td>{{ m.subject }}</td>
+            <td>{{ m.internalDate | date:'medium' }}</td>
+            <td *ngIf="m.unread">
+                <mdc-icon>check_circle_outline</mdc-icon>
+            </td>
+            <td *ngIf="!m.unread"></td>
+        </tr>
+    </tbody>
+</table>
+-->
