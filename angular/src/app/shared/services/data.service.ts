@@ -206,8 +206,8 @@ export class DataService {
         const allItems: Message[] = await this.db.mails.toArray();
 
         allItems.forEach((item: Message) => {
-            group[item.from] = group[item.from] || [];
-            group[item.from].push(item);
+            group[item.hostname] = group[item.hostname] || [];
+            group[item.hostname].push(item);
         });
 
         //create list with all grouped

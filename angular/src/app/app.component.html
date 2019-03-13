@@ -30,7 +30,11 @@
 
     <hr>
 
-    <router-outlet></router-outlet>
+    <!-- [@myAnimation]="o.isActivated ? o.activatedRoute : ''" -->
+    <div>
+        <router-outlet #o="outlet"></router-outlet>
+    </div>
+
 </div>
 
 
