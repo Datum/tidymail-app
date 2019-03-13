@@ -56,12 +56,13 @@ export class DataService {
     }
 
     setAccessToken(token: string, refresh_token:string, expires:number, callback: Function) {
+        var self = this;
         this.userconfig.access_token = token;
         this.userconfig.refresh_token = refresh_token;
         this.userconfig.expires = Math.round(new Date().getTime() / 1000) + expires;
         this.userconfig.firsttime = false;
         chrome.storage.local.set({ config: this.userconfig }, function () {
-            callback();
+            callback(self.userconfig);
         });
     }
 
