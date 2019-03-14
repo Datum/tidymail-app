@@ -21,7 +21,7 @@ export class GmailService {
 
     authUrl: string = "https://accounts.google.com/o/oauth2/auth"
         + '?response_type=code&access_type=offline&approval_prompt=force&client_id=' + this.clientid
-        + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly"
+        + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify"
         + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
 
     accessToken: string;
@@ -42,17 +42,23 @@ export class GmailService {
 
 
     refreshToken(refresh_token) {
-        return this.http.post<any>(this.tokenUrl, { client_id: this.clientid, client_secret: this.clientsecret, refresh_token: refresh_token, grant_type: "refresh_token" });
+        return this.http.post<any>(this.tokenUrl, { client_id: this.clientid, client_secret: this.clientsecret, refresh_token: refresh_token, grant_type: "refresh_token" }).toPromise();
     }
 
     getToken(code, client_id, callback) {
         return this.http.post<any>(this.tokenUrl, { code: code, client_id: client_id, client_secret: this.clientsecret, grant_type: "authorization_code", redirect_uri: chrome.identity.getRedirectURL("oauth2") });
     }
 
+    delete(msgId:string) {
+        return this.http.post(this.baseUrl + "/messages/" + msgId + "/trash?access_token=" + this.accessToken, null).toPromise();
+    }
+
 
     findFirst(searchTerm = this.defaultSearch) {
-        this.http.get(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=" + searchTerm);
+        return this.http.get(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=" + searchTerm);
     }
+
+    
 
 
     findAll(searchTerm: string, callback, pageCallback = null, lastKnownId: string = null) {
@@ -142,7 +148,10 @@ export class GmailService {
             }
 
             if (msg.payload.headers[a].name == "List-Unsubscribe") {
-                msg.unsubscribeUrl = msg.payload.headers[a].value;
+                msg.unsubscribeUrl =  msg.payload.headers[a].value;
+                if(msg.unsubscribeUrl.substring(0,1) == "<") {
+                    msg.unsubscribeUrl = msg.unsubscribeUrl.substring(1, msg.unsubscribeUrl.length -1);
+                }
             }
         }
 
@@ -158,7 +167,6 @@ export class GmailService {
                 for (var u = 0; u < urls.length; u++) {
                     var n = urls[u].search("unsubscribe");
                     if (n != -1) {
-                        //alert('from url');
                         msg.unsubscribeUrl = urls[u];
                     }
                 }

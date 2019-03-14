@@ -17,7 +17,8 @@ import {
     MdcIconButtonModule,
     MdcButtonModule,
     MdcLinearProgressModule,
-    MdcTypographyModule 
+    MdcTypographyModule,
+    MdcSnackbarModule
 } from '@angular-mdc/web';
 
 
@@ -64,7 +65,8 @@ import { SettingsComponent } from './settings.component';
         MdcButtonModule,
         MdcLinearProgressModule,
         MdcCheckboxModule,
-        MdcTypographyModule 
+        MdcTypographyModule,
+        MdcSnackbarModule
     ],
     exports: [ HomeComponent ],
     providers: [],

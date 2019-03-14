@@ -57,12 +57,9 @@ export class HomeComponent implements OnInit {
             this.userConfig = this._userService.getConfig();
             this._dbService.create();
             await this._dbService.init();
-            //this.unsubscribedMails = this.groupMails(await this._dbService.filterEquals("status",1).toArray());
-            //this.keepMails = this.groupMails(await this._dbService.filterEquals("status",2).toArray());
         } catch(error) {
             alert(error);
         }
-
 
         this._dbService.undhandledMails.subscribe(function(mails) {
             self.undhandledMails = self.groupMails(mails);
@@ -72,44 +69,9 @@ export class HomeComponent implements OnInit {
             self.keepMails = self.groupMails(mails);
         });
 
-
-        this._dbService.newMessage.subscribe(function (msg) {
-            if(msg) {
-                alert(msg.subject);
-            }
+        this._dbService.unsubpMails.subscribe(function(mails) {
+            self.unsubscribedMails = self.groupMails(mails);
         });
-
-
-        //add subscriber for data change, e.g from sync by app component
-
-
-        /*
-        this._dataService.messagesList.subscribe(function (result) {
-            self.zone.run(() => {
-                self.messages = result;
-                self.loadingText = "Downloading index for emails.... (" + self.messages.length + " indexed)";
-            });
-        });
-
-        this._dataService.messagesGroupList.subscribe(function (result) {
-            self.zone.run(() => {
-                self.messagesGroups = result;
-            });
-        });
-
-        this._dataService.messagesDisplayList.subscribe(function (result) {
-            self.zone.run(() => {
-                self.displayGroups = result;
-            });
-        });
-
-        this._dataService.logMessage.subscribe(function (result) {
-            self.zone.run(() => {
-                self.newMailcount = parseInt(result);
-                self.loadingText = "Downloading mail body and analyzing " + result + " emails...";
-            });
-        });
-        */
 
     }
 
@@ -157,96 +119,5 @@ export class HomeComponent implements OnInit {
         return dspGroup;
 
     }
-
-
-
-
-    getMessages() {
-
-        /*
-            .subscribe(resp => {
-                alert(resp.messages.length);
-                alert(resp.resultSizeEstimate);
-                this.messages = resp.messages;
-                //this.tabs[0].count = resp.messages.length;
-                this._changeDetector.detectChanges();
-
-
-                //get details
-
-                var index = 0;
-
-                //this.loadItem(index, this.messages.length);
-            }, error => {
-                //try to relog
-                //this.login();
-            });
-            */
-    }
-
-    loadItem(index, maxRows) {
-        /*
-        this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
-            for(var a = 0; a < msg.payload.headers.length;a++) {
-                if(msg.payload.headers[a].name == "Subject")
-                {
-                    this.messages[index].subject = msg.payload.headers[a].value;
-                }
-
-                if(msg.payload.headers[a].name == "From")
-                {
-                    this.messages[index].from = msg.payload.headers[a].value;
-                }
-
-                if(msg.payload.headers[a].name == "List-Unsubscribe")
-                {
-                    this.messages[index].unsubscribeURL = msg.payload.headers[a].value;
-                }
-            }
-
-            
-
-            //if no unsubscribe header found, try to get from body
-            if(this.messages[index].unsubscribeURL === undefined) {
-                try {
-                    var plainText = atob(msg.payload.body.data);
-
-                    //Extract urls from body
-                    var urls = getURLsFromString(plainText);
-                    var bUnSub = false;
-                    for(var u = 0;u < urls.length;u++) {
-                        var n = urls[u].search("unsubscribe");
-                        if(n != -1) {
-                            
-                            this.messages[index].unsubscribeURL = urls[u];
-                        }
-                    }
-                } catch(error) {
-                    //alert(msg.id);
-                }   
-            }
-
-            index++;
-            if(index < maxRows) {
-                this._changeDetector.detectChanges();
-                this.loadItem(index, maxRows);
-            } 
-        });
-        */
-    }
 }
 
-
-
-function getURLsFromString(str) {
-    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm;
-    var m;
-    var arr = [];
-    while ((m = re.exec(str)) !== null) {
-        if (m.index === re.lastIndex) {
-            re.lastIndex++;
-        }
-        arr.push(m[0]);
-    }
-    return arr;
-}

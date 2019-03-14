@@ -18,9 +18,13 @@ export class DbService {
     private _keepMessages: Message[] = [];
     private _keepMessagesObervable: BehaviorSubject<Message[]> = new BehaviorSubject([]);
 
+    private _unsubMessages: Message[] = [];
+    private _unsubMessagesObervable: BehaviorSubject<Message[]> = new BehaviorSubject([]);
+
     get newMessage(): Observable<Message> { return this._newMessageObervable.asObservable() }
     get undhandledMails(): Observable<Message[]> { return this._undhandledMessagesObervable.asObservable() }
     get keepMails(): Observable<Message[]> { return this._keepMessagesObervable.asObservable() }
+    get unsubpMails(): Observable<Message[]> { return this._unsubMessagesObervable.asObservable() }
 
     
 
@@ -40,7 +44,11 @@ export class DbService {
     }
 
 
-    delete() {
+    delete(msgId:string) {
+        return this.db.mails.delete(msgId);
+    }
+
+    deleteDb()  {
         return this.db.delete();
     }
 
@@ -50,6 +58,9 @@ export class DbService {
 
        this._keepMessages = await this.filterEquals("status",2).toArray();
        this._keepMessagesObervable.next(this._keepMessages);
+
+       this._unsubMessages = await this.filterEquals("status",1).toArray();
+       this._unsubMessagesObervable.next(this._unsubMessages);
     }
 
     addRange(mails) {
@@ -79,6 +90,10 @@ export class DbService {
 
     keep(msgId:string) {
         this.db.mails.update(msgId, { status: 2 });
+    }
+
+    unsubscribe(msgId:string) {
+        this.db.mails.update(msgId, { status: 1 });
     }
 
     refresh() {

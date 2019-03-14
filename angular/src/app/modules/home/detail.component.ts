@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit, NgZone } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
-import { DbService } from '../../shared';
+import { DbService, GmailService } from '../../shared';
 import { toTypeScript } from '@angular/compiler';
 import { KeyEventsPlugin } from '@angular/platform-browser/src/dom/events/key_events';
 import { ObjectUnsubscribedError } from 'rxjs';
@@ -15,7 +15,7 @@ import { refreshDescendantViews } from '@angular/core/src/render3/instructions';
 })
 // tslint:disable:variable-name
 export class DetailComponent implements OnInit {
-    constructor(private _dbService:DbService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
+    constructor(private _dbService:DbService, private _gmailService:GmailService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
 
   
     
@@ -47,12 +47,29 @@ export class DetailComponent implements OnInit {
         }).toArray();
     }
 
-    unsubscribe() {
+    async unsubscribe() {
+        await asyncForEach(this.messages, async (element) => {
+            if(element.isChecked) {
+                if(element.unsubscribeUrl !== undefined) {
+                    window.open(element.unsubscribeUrl);
+                    //alert(element.unsubscribeUrl);
+                }
+                await this._dbService.unsubscribe(element.id);
+            }
+        });
 
+        await this.refresh();
     }
 
-    delete() {
+    async delete() {
+        await asyncForEach(this.messages, async (element) => {
+            if(element.isChecked) {
+                await this._gmailService.delete(element.id);
+                await this._dbService.delete(element.id);
+            }
+        });
 
+        await this.refresh();
     }
 }
 

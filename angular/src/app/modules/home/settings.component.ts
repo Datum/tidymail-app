@@ -3,6 +3,8 @@ import { Component, OnInit } from '@angular/core';
 
 import { DbService, UserService } from '../../shared';
 
+import { MdcSnackbar } from '@angular-mdc/web';
+
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.component.html',
@@ -10,16 +12,16 @@ import { DbService, UserService } from '../../shared';
 })
 export class SettingsComponent implements OnInit {
 
-  constructor(private _dbService:DbService, private _userService:UserService) { }
+  constructor(private _dbService:DbService, private _userService:UserService,private snackbar: MdcSnackbar) { }
 
   ngOnInit() {
   }
 
   resetDatabase() {
     var self = this;
-    this._dbService.delete().then(() => {
+    this._dbService.deleteDb().then(() => {
         self._dbService.create();
-        alert('database recreated. close and re-open extension');
+        this.snackbar.open('Database deleted. Please start new sync.');
     }).catch(error => {
         alert(error);
     });
@@ -27,12 +29,12 @@ export class SettingsComponent implements OnInit {
 
   resetAll() {
     var self = this;
-    this._dbService.delete().then(() => {
+    this._dbService.deleteDb().then(() => {
         self._dbService.create();
         return self._userService.reset();
     }).then(() => {
         //reset successfully done
-        alert('all data reset. close and re-open extension');
+        this.snackbar.open('Database and local configuration deleted. Please restart extension.');
     }).catch(error => {
         alert(error);
     });

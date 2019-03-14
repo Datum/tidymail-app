@@ -74,7 +74,6 @@ export class AppComponent implements OnInit {
                     alert('expired');
                     //token expired, refresh
                     var refreshTokenResult = await this._gmailService.refreshToken(userConfig.refresh_token);
-                    console.log(refreshTokenResult);
                     //store new token
                     await this._userService.storeAccessTokens(refreshTokenResult);
                 }
@@ -119,12 +118,18 @@ export class AppComponent implements OnInit {
                     return;
                 }
 
-                if(self._dbService.exists(element.id)) {
+                if(await self._dbService.exists(element.id) !== undefined) {
                     return;
                 }
 
                 var msg = await self._gmailService.getMessageDetail(element.id);
                 self.statusMessage = 'downloading... ' + iDownloadccount.toString();
+
+                //ignore mails without link...
+                if(msg.unsubscribeUrl === undefined) {
+                    return;
+                }
+
                 await self._dbService.add(msg, iDownloadccount % iupdateFrequence == 0 ? true : false);
                 iDownloadccount++;
             });
