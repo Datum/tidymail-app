@@ -7,6 +7,8 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 import { Message } from '../models';
 
+import base64url from "base64-url";
+
 
 
 @Injectable()
@@ -49,7 +51,7 @@ export class GmailService {
         return this.http.post<any>(this.tokenUrl, { code: code, client_id: client_id, client_secret: this.clientsecret, grant_type: "authorization_code", redirect_uri: chrome.identity.getRedirectURL("oauth2") });
     }
 
-    delete(msgId:string) {
+    delete(msgId: string) {
         return this.http.post(this.baseUrl + "/messages/" + msgId + "/trash?access_token=" + this.accessToken, null).toPromise();
     }
 
@@ -58,12 +60,12 @@ export class GmailService {
         return this.http.get(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=" + searchTerm);
     }
 
-    
+
 
 
     findAll(searchTerm: string, callback, pageCallback = null, lastKnownId: string = null) {
         var r = [];
-        this.loadMessageIds(null, r, callback, pageCallback,lastKnownId);
+        this.loadMessageIds(null, r, callback, pageCallback, lastKnownId);
     }
 
     /*
@@ -148,10 +150,21 @@ export class GmailService {
             }
 
             if (msg.payload.headers[a].name == "List-Unsubscribe") {
-                msg.unsubscribeUrl =  msg.payload.headers[a].value;
-                if(msg.unsubscribeUrl.substring(0,1) == "<") {
-                    msg.unsubscribeUrl = msg.unsubscribeUrl.substring(1, msg.unsubscribeUrl.length -1);
-                }
+                //check if headers is array with url and email to unsubscribe, google separate it by comma
+                var targets = msg.payload.headers[a].value.split(',');
+                targets.forEach(el => {
+                    el = el.trim();
+                    if (el.substring(0, 1) == "<" && el.substring(el.length - 1) == ">") {
+                        el = el.substring(1, el.length - 1);
+                    }
+
+                    if (el.indexOf('mailto:') != -1) {
+                        //it's email
+                        msg.unsubscribeEmail = el;
+                    } else {
+                        msg.unsubscribeUrl = el;
+                    }
+                });
             }
         }
 
@@ -159,15 +172,23 @@ export class GmailService {
         //if no unsubscribe header found, try to get from body
         if (msg.unsubscribeUrl === undefined) {
             try {
-                var plainText = atob(msg.payload.body.data);
+                if (msg.payload.body.data !== undefined) {
+                    alert(msg.payload.body.data);
+                    alert(base64url);
+                    alert(base64url.decode);
+                    var plainText = base64url.decode(msg.payload.body.data);
 
-                //Extract urls from body
-                var urls = getURLsFromString(plainText);
-                var bUnSub = false;
-                for (var u = 0; u < urls.length; u++) {
-                    var n = urls[u].search("unsubscribe");
-                    if (n != -1) {
-                        msg.unsubscribeUrl = urls[u];
+                    alert(plainText);
+
+                    //Extract urls from body
+                    var urls = getURLsFromString(plainText);
+                    var bUnSub = false;
+                    for (var u = 0; u < urls.length; u++) {
+                        var n = urls[u].search("unsub");
+                        if (n != -1) {
+                            alert('[' + u.toString() + ']' + urls[u])
+                            msg.unsubscribeUrl = urls[u];
+                        }
                     }
                 }
             } catch (error) {

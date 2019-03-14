@@ -29,6 +29,19 @@ export class DetailComponent implements OnInit {
         await this.refresh();
        
     }
+    
+    detail(msg) {
+
+        console.log(msg);
+
+        var debugOut = 'id: ' + msg.id + '\n'
+            + 'subject: ' + msg.subject + '\n'
+            + 'from: ' + msg.from + '\n'
+            + 'unsubscribe-email: ' + msg.unsubscribeEmail + '\n'
+            + 'unsubscribe-link: ' + msg.unsubscribeUrl + '\n'
+        alert(debugOut);
+    }
+
 
     async keep() {
         await asyncForEach(this.messages, async (element) => {
@@ -40,19 +53,43 @@ export class DetailComponent implements OnInit {
         await this.refresh();
     }
 
+    latestUnsubEmail:string = '';
+    latestUnsubLink:string = '';
+
     async refresh() {
         var self = this;
-        this.messages = await this._dbService.filterEqualsIgnoreCase("hostname", this.domain).filter(function (msg) {
+        var msgs = await this._dbService.filterEqualsIgnoreCase("hostname", this.domain).filter(function (msg) {
             return msg.status === self.status;
         }).toArray();
+
+        //sort by date
+        msgs.sort((a, b) => (b.internalDate > a.internalDate) ? 1 : ((a.internalDate > b.internalDate) ? -1 : 0));
+
+        this.messages = msgs;
+
+
+        //get latest unsublink and unsubemail
+        for(var i = 0; i < this.messages.length;i++) {
+            if(this.messages[i].unsubscribeUrl !== undefined) {
+                this.latestUnsubLink = this.messages[i].unsubscribeUrl;
+            }
+            if(this.messages[i].unsubscribeEmail !== undefined) {
+                this.latestUnsubEmail = this.messages[i].unsubscribeEmail;
+            }
+
+
+            if(this.latestUnsubEmail != '' && this.latestUnsubLink != '') {
+                break;
+            }
+        }
     }
 
     async unsubscribe() {
         await asyncForEach(this.messages, async (element) => {
             if(element.isChecked) {
                 if(element.unsubscribeUrl !== undefined) {
-                    window.open(element.unsubscribeUrl);
-                    //alert(element.unsubscribeUrl);
+                    //window.open(element.unsubscribeUrl);
+                    alert(element.unsubscribeUrl);
                 }
                 await this._dbService.unsubscribe(element.id);
             }

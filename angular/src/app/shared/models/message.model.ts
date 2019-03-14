@@ -19,6 +19,7 @@ export class Message {
     from:string;
     subject:string;
     unsubscribeUrl:string;
+    unsubscribeEmail:string;
     internalDate:number;
     hostname:string;
     status:Status;

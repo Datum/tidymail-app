@@ -20,9 +20,9 @@ export class HomeComponent implements OnInit {
 
     isLoaded: boolean = false;
     activeTab:number = 0;
-    undhandledMails:DisplayGroup[];
-    unsubscribedMails:DisplayGroup[];
-    keepMails:DisplayGroup[];
+    undhandledMails:DisplayGroup[] = [];
+    unsubscribedMails:DisplayGroup[] = [];
+    keepMails:DisplayGroup[] = [];
     deletedMails:any;
     userConfig:UserConfig;
 

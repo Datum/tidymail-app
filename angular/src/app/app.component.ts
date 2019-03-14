@@ -66,14 +66,16 @@ export class AppComponent implements OnInit {
             if (userConfig.firsttime) {
                 //if first time show auto screen and login
                 var tokenResult = await this._gmailService.login();
+
+                console.log(tokenResult);
                 //store tokens in localStorage
                 await self._userService.storeAccessTokens(tokenResult);
             } else {
                 //check if token still valid
                 if (userConfig.expires < new Date().getTime() / 1000) {
-                    alert('expired');
                     //token expired, refresh
                     var refreshTokenResult = await this._gmailService.refreshToken(userConfig.refresh_token);
+
                     //store new token
                     await this._userService.storeAccessTokens(refreshTokenResult);
                 }

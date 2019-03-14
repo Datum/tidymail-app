@@ -37,7 +37,9 @@ export class UserService {
 
     storeAccessTokens(tokenResult) {
         this.userConfig.access_token = tokenResult.access_token;
-        this.userConfig.refresh_token = tokenResult.refresh_token;
+        if(tokenResult.refresh_token !== undefined) {
+            this.userConfig.refresh_token = tokenResult.refresh_token;
+        }
         this.userConfig.expires = Math.round(new Date().getTime() / 1000) + tokenResult.expires_in;
         this.userConfig.firsttime = false;
 
