@@ -7,7 +7,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 import { Message } from '../models';
 
-import base64url from "base64-url";
+import { Base64 } from 'js-base64';
 
 
 
@@ -173,12 +173,12 @@ export class GmailService {
         if (msg.unsubscribeUrl === undefined) {
             try {
                 if (msg.payload.body.data !== undefined) {
-                    alert(msg.payload.body.data);
-                    alert(base64url);
-                    alert(base64url.decode);
-                    var plainText = base64url.decode(msg.payload.body.data);
-
-                    alert(plainText);
+                    var plainText = '';
+                    try {
+                        plainText = Base64.decode(msg.payload.body.data);
+                    } catch (error) {
+                        console.log(error);
+                    }
 
                     //Extract urls from body
                     var urls = getURLsFromString(plainText);
@@ -186,7 +186,6 @@ export class GmailService {
                     for (var u = 0; u < urls.length; u++) {
                         var n = urls[u].search("unsub");
                         if (n != -1) {
-                            alert('[' + u.toString() + ']' + urls[u])
                             msg.unsubscribeUrl = urls[u];
                         }
                     }

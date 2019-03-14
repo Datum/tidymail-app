@@ -34,11 +34,11 @@ export class DetailComponent implements OnInit {
 
         console.log(msg);
 
-        var debugOut = 'id: ' + msg.id + '\n'
-            + 'subject: ' + msg.subject + '\n'
-            + 'from: ' + msg.from + '\n'
-            + 'unsubscribe-email: ' + msg.unsubscribeEmail + '\n'
-            + 'unsubscribe-link: ' + msg.unsubscribeUrl + '\n'
+        var debugOut = 'id: ' + msg.id + '\n\n'
+            + 'subject: ' + msg.subject + '\n\n'
+            + 'from: ' + msg.from + '\n\n'
+            + 'unsubscribe-email: ' + msg.unsubscribeEmail + '\n\n'
+            + 'unsubscribe-link: ' + msg.unsubscribeUrl + '\n\n'
         alert(debugOut);
     }
 
@@ -88,8 +88,7 @@ export class DetailComponent implements OnInit {
         await asyncForEach(this.messages, async (element) => {
             if(element.isChecked) {
                 if(element.unsubscribeUrl !== undefined) {
-                    //window.open(element.unsubscribeUrl);
-                    alert(element.unsubscribeUrl);
+                    window.open(element.unsubscribeUrl);
                 }
                 await this._dbService.unsubscribe(element.id);
             }

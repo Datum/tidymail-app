@@ -87,7 +87,7 @@ export class AppComponent implements OnInit {
             //set user logged in
             this.isLoggedIn = true;
         } catch (error) {
-            alert(error);
+            console.log(error);
         }
     }
     
