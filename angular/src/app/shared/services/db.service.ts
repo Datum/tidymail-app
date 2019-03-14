@@ -62,6 +62,10 @@ export class DbService {
         });
     }
 
+    exists(msgId:string) {
+        return this.db.mails.get(msgId);
+    }
+
     async add(msg, updateObservable = false) {
         let mailExists = await this.db.mails.get(msg.id);
         if(mailExists === undefined) {

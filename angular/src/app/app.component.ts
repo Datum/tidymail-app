@@ -63,7 +63,6 @@ export class AppComponent implements OnInit {
 
             //create init user 
             var userConfig = await this._userService.initConfig();
-            console.log(userConfig);
             if (userConfig.firsttime) {
                 //if first time show auto screen and login
                 var tokenResult = await this._gmailService.login();
@@ -119,6 +118,11 @@ export class AppComponent implements OnInit {
                 if(self.bCancel) {
                     return;
                 }
+
+                if(self._dbService.exists(element.id)) {
+                    return;
+                }
+
                 var msg = await self._gmailService.getMessageDetail(element.id);
                 self.statusMessage = 'downloading... ' + iDownloadccount.toString();
                 await self._dbService.add(msg, iDownloadccount % iupdateFrequence == 0 ? true : false);
@@ -126,7 +130,7 @@ export class AppComponent implements OnInit {
             });
             self.bCancel = false;
             self.isSyncing = false;
-            this._dbService.refresh();
+            self._dbService.refresh();
         }, function (mailPages) {
             syncCount += mailPages.length;
             self.statusMessage = 'indexing... ' + syncCount.toString();
