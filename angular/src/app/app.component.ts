@@ -109,11 +109,13 @@ export class AppComponent implements OnInit {
             //alert(mailIds.length);
 
             var iDownloadccount = 0;
+            var iProcessCount = 0;
             var iupdateFrequence = 10;
 
             self.bCancel = false;
 
             await asyncForEach(mailIds, async (element) => {
+                iProcessCount++;
                 if(self.bCancel) {
                     return;
                 }
@@ -123,7 +125,7 @@ export class AppComponent implements OnInit {
                 }
 
                 var msg = await self._gmailService.getMessageDetail(element.id);
-                self.statusMessage = 'downloading... ' + iDownloadccount.toString();
+                self.statusMessage = 'processed/ignore... (' + iDownloadccount.toString() + '/' + (iProcessCount - iDownloadccount).toString() + ')';
 
                 //ignore mails without link...
                 if(msg.unsubscribeUrl === undefined) {

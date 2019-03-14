@@ -12,16 +12,13 @@
     </mdc-tab-scroller>
 </mdc-tab-bar>
 
-<!--
-<div *ngIf="(_dataService.messagesDisplayList | async)?.length == 0" style="min-width: 200px; padding:20px;">
-    {{ loadingText }}
+
+<div *ngIf="!isLoaded" class="text-center" style="padding:20px;">
+    loading...
     <mdc-linear-progress></mdc-linear-progress>
     <br>
-    <button mdc-button (click)="cancel()">
-        <mdc-icon>cancel</mdc-icon>Cancel
-    </button>
 </div>
--->
+
 
 
 

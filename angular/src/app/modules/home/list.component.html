@@ -1,3 +1,8 @@
+<div *ngIf="groups.length == 0">
+    <p class="alert alert-info">No items in this list!
+    </p>
+</div>
+
 <mdc-list-group>
     <div *ngFor="let d of groups">
         <h3 mdcListGroupSubheader>{{ d.name }}</h3>

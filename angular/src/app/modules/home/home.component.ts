@@ -18,35 +18,13 @@ import { Message, MessageList, Profile, MessageGroup, DisplayGroup } from '../..
 export class HomeComponent implements OnInit {
     constructor(private _userService:UserService, private _dbService:DbService, private _changeDetector: ChangeDetectorRef, private zone: NgZone) { }
 
-    messages: any = [];
-    messagesGroups: any = [];
-    displayGroups: any = [];
     isLoaded: boolean = false;
-    messageCount: number = 0;
-    loadingText: string = "Connecting...";
-    newMailcount: number = 0;
-
-    test() {
-        alert('test');
-    }
-
     activeTab:number = 0;
-
-    tabChanged(event: MdcTabActivatedEvent): void { 
-        this.activeTab = event.index;
-    }
-
-
-    undhandledMails:DisplayGroup[] = []
-    unsubscribedMails:DisplayGroup[] = [];
-    keepMails:DisplayGroup[] = [];
+    undhandledMails:DisplayGroup[];
+    unsubscribedMails:DisplayGroup[];
+    keepMails:DisplayGroup[];
     deletedMails:any;
-
-
     userConfig:UserConfig;
-
-
-    undhandledMailsCount:number;
 
     async ngOnInit() {
 
@@ -63,6 +41,7 @@ export class HomeComponent implements OnInit {
 
         this._dbService.undhandledMails.subscribe(function(mails) {
             self.undhandledMails = self.groupMails(mails);
+            self.isLoaded = true;
         });
 
         this._dbService.keepMails.subscribe(function(mails) {
@@ -75,6 +54,9 @@ export class HomeComponent implements OnInit {
 
     }
 
+    tabChanged(event: MdcTabActivatedEvent): void { 
+        this.activeTab = event.index;
+    }
 
     groupMails(msgList) {
         
