@@ -22,7 +22,7 @@ import {
 
 
 import {
-    DataService
+    
   } from '../../shared';
 
   import {RouterModule} from '@angular/router';
@@ -41,7 +41,7 @@ import { SettingsComponent } from './settings.component';
         component: SettingsComponent,
     },
     {
-        path: 'detail/:id',
+        path: 'detail/:id/:status',
         component: DetailComponent,
     },
 ]);
@@ -67,6 +67,6 @@ import { SettingsComponent } from './settings.component';
         MdcTypographyModule 
     ],
     exports: [ HomeComponent ],
-    providers: [DataService],
+    providers: [],
 })
 export class HomeModule { }

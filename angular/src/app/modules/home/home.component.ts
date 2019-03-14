@@ -1,10 +1,12 @@
 import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit, NgZone } from '@angular/core';
 
 
-import { DataService } from '../../shared';
+import { DbService, UserService, UserConfig } from '../../shared';
 import { toTypeScript } from '@angular/compiler';
 
 import { MdcTabActivatedEvent } from '@angular-mdc/web';
+
+import { Message, MessageList, Profile, MessageGroup, DisplayGroup } from '../../shared/models'
 
 
 @Component({
@@ -14,7 +16,7 @@ import { MdcTabActivatedEvent } from '@angular-mdc/web';
 })
 // tslint:disable:variable-name
 export class HomeComponent implements OnInit {
-    constructor(private _dataService: DataService, private _changeDetector: ChangeDetectorRef, private zone: NgZone) { }
+    constructor(private _userService:UserService, private _dbService:DbService, private _changeDetector: ChangeDetectorRef, private zone: NgZone) { }
 
     messages: any = [];
     messagesGroups: any = [];
@@ -30,23 +32,58 @@ export class HomeComponent implements OnInit {
 
     activeTab:number = 0;
 
-    tabChanged(event: MdcTabActivatedEvent): void {
+    tabChanged(event: MdcTabActivatedEvent): void { 
         this.activeTab = event.index;
     }
 
-    ngOnInit() {
+
+    undhandledMails:DisplayGroup[] = []
+    unsubscribedMails:DisplayGroup[] = [];
+    keepMails:DisplayGroup[] = [];
+    deletedMails:any;
+
+
+    userConfig:UserConfig;
+
+
+    undhandledMailsCount:number;
+
+    async ngOnInit() {
+
         var self = this;
 
+        try {
+            //get config
+            this.userConfig = this._userService.getConfig();
+            this._dbService.create();
+            await this._dbService.init();
+            //this.unsubscribedMails = this.groupMails(await this._dbService.filterEquals("status",1).toArray());
+            //this.keepMails = this.groupMails(await this._dbService.filterEquals("status",2).toArray());
+        } catch(error) {
+            alert(error);
+        }
 
-        this._dataService.snyc(function (count) {
-            self.zone.run(() => {
-                self.loadingText = "Searching for emails... (" + count + " estimated)";
-                self.newMailcount = 0;
-            });
+
+        this._dbService.undhandledMails.subscribe(function(mails) {
+            self.undhandledMails = self.groupMails(mails);
+        });
+
+        this._dbService.keepMails.subscribe(function(mails) {
+            self.keepMails = self.groupMails(mails);
         });
 
 
+        this._dbService.newMessage.subscribe(function (msg) {
+            if(msg) {
+                alert(msg.subject);
+            }
+        });
 
+
+        //add subscriber for data change, e.g from sync by app component
+
+
+        /*
         this._dataService.messagesList.subscribe(function (result) {
             self.zone.run(() => {
                 self.messages = result;
@@ -72,13 +109,57 @@ export class HomeComponent implements OnInit {
                 self.loadingText = "Downloading mail body and analyzing " + result + " emails...";
             });
         });
+        */
 
     }
 
 
-    cancel() {
-        this._dataService.cancelProcess();
+    groupMails(msgList) {
+        
+        var group = {};
+        var self = this;
+        var msgGroup = [];
+        var dspGroup = [];
+
+
+        msgList.forEach((item: Message) => {
+            group[item.hostname] = group[item.hostname] || [];
+            group[item.hostname].push(item);
+        });
+
+        //create list with all grouped
+        for (var key in group) {
+            var mg = new MessageGroup();
+            mg.name = key;
+            mg.messages = group[key];
+            mg.hostname = group[key][0].hostname;
+            mg.subject = group[key][0].subject;
+            msgGroup.push(mg);
+        }
+
+        group = {};
+        msgGroup.forEach((item: MessageGroup) => {
+            var firstDomainChar = item.hostname.substring(0, 1).toLocaleLowerCase();
+            group[firstDomainChar] = group[firstDomainChar] || [];
+            group[firstDomainChar].push(item);
+        });
+
+        //create list with all grouped
+        for (var key in group) {
+            var dg = new DisplayGroup();
+            dg.name = key.toUpperCase();
+            dg.messagegroups = group[key];
+            dspGroup.push(dg);
+        }
+
+        dspGroup.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+
+        return dspGroup;
+
     }
+
+
+
 
     getMessages() {
 

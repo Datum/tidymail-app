@@ -1,17 +1,18 @@
 <mdc-tab-bar (activated)="tabChanged($event)" [activeTabIndex]="activeTab">
     <mdc-tab-scroller>
         <mdc-tab>
-            <mdc-tab-label>New ({{newMailcount}})</mdc-tab-label>
+            <mdc-tab-label>New ({{undhandledMails.length}})</mdc-tab-label>
         </mdc-tab>
         <mdc-tab>
-            <mdc-tab-label>Unsubscribe</mdc-tab-label>
+            <mdc-tab-label>Unsubscribe ({{ unsubscribedMails.length }})</mdc-tab-label>
         </mdc-tab>
         <mdc-tab>
-            <mdc-tab-label>Keep</mdc-tab-label>
+            <mdc-tab-label>Keep ({{ keepMails.length }})</mdc-tab-label>
         </mdc-tab>
     </mdc-tab-scroller>
 </mdc-tab-bar>
 
+<!--
 <div *ngIf="(_dataService.messagesDisplayList | async)?.length == 0" style="min-width: 200px; padding:20px;">
     {{ loadingText }}
     <mdc-linear-progress></mdc-linear-progress>
@@ -20,12 +21,13 @@
         <mdc-icon>cancel</mdc-icon>Cancel
     </button>
 </div>
+-->
 
 
 
-<grouped-list *ngIf="activeTab == 0" [groups]="_dataService.messagesDisplayList | async">
+<grouped-list *ngIf="activeTab == 0" [groups]="undhandledMails" [status]="activeTab">
 </grouped-list>
-<grouped-list *ngIf="activeTab == 1" [groups]="[]">
+<grouped-list *ngIf="activeTab == 1" [groups]="unsubscribedMails" [status]="activeTab">
 </grouped-list>
-<grouped-list *ngIf="activeTab == 2" [groups]="[]">
+<grouped-list *ngIf="activeTab == 2" [groups]="keepMails" [status]="activeTab">
 </grouped-list>

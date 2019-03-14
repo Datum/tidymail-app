@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 
-import { DataService } from '../../shared';
+import { DbService, UserService } from '../../shared';
 
 @Component({
   selector: 'app-settings',
@@ -10,14 +10,15 @@ import { DataService } from '../../shared';
 })
 export class SettingsComponent implements OnInit {
 
-  constructor(private _dataService: DataService) { }
+  constructor(private _dbService:DbService, private _userService:UserService) { }
 
   ngOnInit() {
   }
 
   resetDatabase() {
-    this._dataService.resetDatabase().then(() => {
-        this._dataService.createDatabase();
+    var self = this;
+    this._dbService.delete().then(() => {
+        self._dbService.create();
         alert('database recreated. close and re-open extension');
     }).catch(error => {
         alert(error);
@@ -25,11 +26,13 @@ export class SettingsComponent implements OnInit {
   }
 
   resetAll() {
-    this._dataService.resetDatabase().then(() => {
-        this._dataService.createDatabase();
-        chrome.storage.local.remove(["config"], function() {
-            alert('all data removed. close and re-open extension');
-        });
+    var self = this;
+    this._dbService.delete().then(() => {
+        self._dbService.create();
+        return self._userService.reset();
+    }).then(() => {
+        //reset successfully done
+        alert('all data reset. close and re-open extension');
     }).catch(error => {
         alert(error);
     });

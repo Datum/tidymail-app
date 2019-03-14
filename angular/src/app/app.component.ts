@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit } from '@an
 import { TAB_ID } from './tab-id.injector';
 
 
-import { DataService } from './shared';
+import { GmailService, DbService, UserService } from './shared';
 
 
 import {
@@ -14,7 +14,7 @@ import {
     animate,
     group,
     animateChild
-  } from '@angular/animations';
+} from '@angular/animations';
 
 @Component({
     selector: 'app-root',
@@ -48,52 +48,97 @@ export class AppComponent implements OnInit {
     readonly tabId = this._tabId;
     isLoggedIn: boolean = false;
     isLoaded: boolean = false;
+    isSyncing: boolean = false;
+    statusMessage: string = "";
 
-    ngOnInit() {
+    async ngOnInit() {
         //check if actual token still valid
         var self = this;
 
-        this._dataService.init(function (config) {
-            if(config.firsttime) {
-                //force login and offline access
-                self._dataService.login(function () {
-                    self.isLoggedIn = true;
-                    self.isLoaded = true;
-                    self._changeDetector.detectChanges();
-                });
+
+        try {
+
+            //create/init database
+            this._dbService.create();
+
+            //create init user 
+            var userConfig = await this._userService.initConfig();
+            console.log(userConfig);
+            if (userConfig.firsttime) {
+                //if first time show auto screen and login
+                var tokenResult = await this._gmailService.login();
+                //store tokens in localStorage
+                await self._userService.storeAccessTokens(tokenResult);
             } else {
-                self.isLoggedIn = true;
-                self.isLoaded = true;
-                self._changeDetector.detectChanges();
+                //check if token still valid
+                if (userConfig.expires < new Date().getTime() / 1000) {
+                    alert('expired');
+                    //token expired, refresh
+                    var refreshTokenResult = await this._gmailService.refreshToken(userConfig.refresh_token);
+                    console.log(refreshTokenResult);
+                    //store new token
+                    await this._userService.storeAccessTokens(refreshTokenResult);
+                }
+
+                //init gmailService with tokens
+                this._gmailService.setAccessToken(userConfig.access_token);
             }
-            
-         
 
-            /*
-            self._dataService.getProfile().subscribe(profile => {
-                //token valid, go on
-                self.isLoggedIn = true;
-                self.isLoaded = true;
-                self._changeDetector.detectChanges();
-            }, error => {
-                self._dataService.login(function () {
-                    self.isLoggedIn = true;
-                    self.isLoaded = true;
-                    self._changeDetector.detectChanges();
-                });
-            });
-            */
-        });
-
-
+            //set user logged in
+            this.isLoggedIn = true;
+        } catch (error) {
+            alert(error);
+        }
     }
-
+    
     messages = [];
+    bCancel:boolean = false;
 
     constructor(
         @Inject(TAB_ID) private _tabId: number,
         private _changeDetector: ChangeDetectorRef,
-        private _dataService: DataService) { }
+        private _gmailService: GmailService,
+        private _userService: UserService,
+        private _dbService: DbService, ) { }
+
+
+    async sync() {
+        var self = this;
+        var lastId = await this._dbService.getLastMailId();
+        var syncCount = 0;
+        this.isSyncing = true;
+        this._gmailService.findAll("list:", async function (mailIds) {
+            //alert(mailIds.length);
+
+            var iDownloadccount = 0;
+            var iupdateFrequence = 10;
+
+            self.bCancel = false;
+
+            await asyncForEach(mailIds, async (element) => {
+                if(self.bCancel) {
+                    return;
+                }
+                var msg = await self._gmailService.getMessageDetail(element.id);
+                self.statusMessage = 'downloading... ' + iDownloadccount.toString();
+                await self._dbService.add(msg, iDownloadccount % iupdateFrequence == 0 ? true : false);
+                iDownloadccount++;
+            });
+            self.bCancel = false;
+            self.isSyncing = false;
+            this._dbService.refresh();
+        }, function (mailPages) {
+            syncCount += mailPages.length;
+            self.statusMessage = 'indexing... ' + syncCount.toString();
+        }, lastId !== undefined ? lastId : null);
+    }
+
+
+
+    cancel() {
+        this.bCancel = true;
+        this._gmailService.cancelProcess();
+    }
 
     /*
 getMessages() {
@@ -255,4 +300,10 @@ function getURLsFromString(str) {
         arr.push(m[0]);
     }
     return arr;
+}
+
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array);
+    }
 }

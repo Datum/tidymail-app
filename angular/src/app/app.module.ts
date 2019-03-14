@@ -23,7 +23,9 @@ import {
 
 
 import {
-    DataService
+    GmailService,
+    DbService,
+    UserService,
   } from './shared';
 
 @NgModule({
@@ -46,7 +48,7 @@ import {
     MdcButtonModule,
     MdcLinearProgressModule 
   ],
-  providers: [DataService],
+  providers: [GmailService, DbService, UserService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

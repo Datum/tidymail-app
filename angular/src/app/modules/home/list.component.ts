@@ -11,6 +11,7 @@ import { DisplayGroup } from '../../shared/models';
 // tslint:disable:variable-name
 export class ListComponent {
     @Input() groups: DisplayGroup[];
+    @Input() status: number;
 }
 
 

@@ -8,6 +8,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { MdcHeadline1 } from '@angular-mdc/web';
 import Dexie from 'dexie';
 import { typeWithParameters } from '@angular/compiler/src/render3/util';
+import { applySourceSpanToExpressionIfNeeded } from '@angular/compiler/src/output/output_ast';
 
 @Injectable()
 export class DataService {
@@ -36,10 +37,10 @@ export class DataService {
 
 
     baseUrl: string = "https://www.googleapis.com/gmail/v1/users/me";
-    tokenUrl:string = 'https://www.googleapis.com/oauth2/v4/token';
+    tokenUrl: string = 'https://www.googleapis.com/oauth2/v4/token';
     clientid: string = "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com";
-    clientsecret:string = "26OcvwqMmwMe6wF8uOFGPBj0";
-    userconfig:UserConfig;
+    clientsecret: string = "26OcvwqMmwMe6wF8uOFGPBj0";
+    userconfig: UserConfig;
 
     totalMailAmount: number = 0;
 
@@ -55,7 +56,7 @@ export class DataService {
     ) {
     }
 
-    setAccessToken(token: string, refresh_token:string, expires:number, callback: Function) {
+    setAccessToken(token: string, refresh_token: string, expires: number, callback: Function) {
         var self = this;
         this.userconfig.access_token = token;
         this.userconfig.refresh_token = refresh_token;
@@ -73,7 +74,7 @@ export class DataService {
 
                 var parsed = parse(redirectUrl.substr(chrome.identity.getRedirectURL("oauth2").length + 1));
                 //get tokens from code
-                self.getToken(parsed.code, self.clientid, callback).subscribe(function(result) {
+                self.getToken(parsed.code, self.clientid, callback).subscribe(function (result) {
                     //store tokens and run callback
                     self.setAccessToken(result.access_token, result.refresh_token, result.expires_in, callback);
                 });
@@ -81,7 +82,7 @@ export class DataService {
                 alert("launchWebAuthFlow login failed. Is your redirect URL (" + chrome.identity.getRedirectURL("oauth2") + ") configured with your OAuth2 provider?");
             }
         });
-        
+
     }
 
 
@@ -92,10 +93,10 @@ export class DataService {
             refresh_token: <REFRESH_TOKEN_FOR_THE_USER>
             grant_type: refresh_token
         */
-       return this.http.post<any>(this.tokenUrl, { client_id: this.clientid, client_secret: this.clientsecret, refresh_token: refresh_token, grant_type: "refresh_token"});
+        return this.http.post<any>(this.tokenUrl, { client_id: this.clientid, client_secret: this.clientsecret, refresh_token: refresh_token, grant_type: "refresh_token" });
     }
 
-    getToken(code, client_id,  callback) {
+    getToken(code, client_id, callback) {
         /*
 
                 {
@@ -108,6 +109,51 @@ export class DataService {
         */
         return this.http.post<any>(this.tokenUrl, { code: code, client_id: client_id, client_secret: this.clientsecret, grant_type: "authorization_code", redirect_uri: chrome.identity.getRedirectURL("oauth2") });
     }
+
+
+    private getDisplayGroup(messageList) {
+
+        var group = {};
+        var msgGroups:MessageGroup[];
+        var dspGroups:DisplayGroup[];
+        var self = this;
+
+        //groupings
+        messageList.forEach((item: Message) => {
+            group[item.hostname] = group[item.hostname] || [];
+            group[item.hostname].push(item);
+        });
+
+        //create list with all grouped
+        for (var key in group) {
+            var mg = new MessageGroup();
+            mg.name = key;
+            mg.messages = group[key];
+            mg.hostname = extractHostname(key);
+            mg.subject = group[key][0].subject;
+            msgGroups.push(mg);
+        }
+
+        group = {};
+        msgGroups.forEach((item: MessageGroup) => {
+            var firstDomainChar = item.hostname.substring(0, 1).toLocaleLowerCase();
+            group[firstDomainChar] = group[firstDomainChar] || [];
+            group[firstDomainChar].push(item);
+        });
+
+        //create list with all grouped
+        for (var key in group) {
+            var dg = new DisplayGroup();
+            dg.name = key.toUpperCase();
+            dg.messagegroups = group[key];
+            dspGroups.push(dg);
+        }
+
+        dspGroups.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+
+        return dspGroups;
+    }
+
 
 
 
@@ -128,7 +174,7 @@ export class DataService {
         this.bCancel = true;
     }
 
-    private bCancel:boolean = false;
+    private bCancel: boolean = false;
 
     loadMessageIds(nextPageToken) {
         var self = this;
@@ -142,7 +188,7 @@ export class DataService {
             self._messages = self._messages.concat(result.messages);
             self._observableMessageList.next(self._messages);
 
-            
+
             //let mailExists = await self.db.mails.get(result.messages[0].id);
             if (result.nextPageToken && !self.bCancel /*&& mailExists === undefined*/) {
                 self.loadMessageIds(result.nextPageToken);
@@ -162,7 +208,7 @@ export class DataService {
 
             this._observableLogMessage.next(index.toString());
 
-            if(this.bCancel) {
+            if (this.bCancel) {
                 this.bCancel = false;
                 break;
             }
@@ -180,13 +226,36 @@ export class DataService {
                     if (msg.payload.headers[a].name == "From") {
                         this._messages[index].from = msg.payload.headers[a].value;
                         this._messages[index].hostname = extractHostname(msg.payload.headers[a].value);
-                        
+
                     }
 
                     if (msg.payload.headers[a].name == "List-Unsubscribe") {
                         this._messages[index].unsubscribeUrl = msg.payload.headers[a].value;
                     }
                 }
+
+
+                //if no unsubscribe header found, try to get from body
+                if (this._messages[index].unsubscribeUrl === undefined) {
+                    try {
+                        var plainText = atob(msg.payload.body.data);
+
+                        //Extract urls from body
+                        var urls = getURLsFromString(plainText);
+                        var bUnSub = false;
+                        for (var u = 0; u < urls.length; u++) {
+                            var n = urls[u].search("unsubscribe");
+                            if (n != -1) {
+                                alert('from url');
+                                this._messages[index].unsubscribeUrl = urls[u];
+                            }
+                        }
+                    } catch (error) {
+                        alert(error);
+                    }
+                }
+
+                alert(this._messages[index].unsubscribeUrl);
 
                 this._messages[index].internalDate = msg.internalDate;
                 this._messages[index].status = 0;
@@ -223,12 +292,12 @@ export class DataService {
 
         group = {};
         this._messagesGroup.forEach((item: MessageGroup) => {
-            var firstDomainChar = item.hostname.substring(0,1).toLocaleLowerCase();
+            var firstDomainChar = item.hostname.substring(0, 1).toLocaleLowerCase();
             group[firstDomainChar] = group[firstDomainChar] || [];
             group[firstDomainChar].push(item);
         });
 
-          //create list with all grouped
+        //create list with all grouped
         for (var key in group) {
             var dg = new DisplayGroup();
             dg.name = key.toUpperCase();
@@ -236,7 +305,7 @@ export class DataService {
             this._displayGroup.push(dg);
         }
 
-        this._displayGroup.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)); 
+        this._displayGroup.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
 
 
         this._observableDisplayGroupList.next(this._displayGroup);
@@ -254,48 +323,32 @@ export class DataService {
         });
     }
 
-    getMessagesForDomain(domain:string) {
-
+    getMessagesForDomain(domain: string) {
         return this.db.mails.where("hostname").equalsIgnoreCase(domain);
+    }
 
-        /*
-        return this.db.mails.orderBy('internalDate').filter(function (m) {
-            return m.hostname === domain;
-        });
-        */
-
-        
+    getMessagesWithStatus(status: number) {
+        alert(status);
+        return this.db.mails.where("status").equals(status);
     }
 
 
     resetDatabase() {
-        return this.db.delete();
+
     }
 
-    getConfig() {
-        //return this.http.get(this.configUrl);
-    }
-
-
-    /*
-    getMessages(nextPageToken:number = null, result:Message[] = null) {
-       return this.http.get<MessageList>(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=list:").subscribe(function(result) {
-
-       });
-    }
-    */
 
     init(callback) {
         this.createDatabase();
 
         //load actual config
         var self = this;
-        
+
         chrome.storage.local.get(["config"], function (result) {
-            if(result.config !== undefined) {
+            if (result.config !== undefined) {
                 self.userconfig = result.config;
                 //check if token is expired
-                if(self.userconfig.expires < new Date().getTime() / 1000) {
+                if (self.userconfig.expires < new Date().getTime() / 1000) {
                     //token expired, refresh
                     self.refreshToken(self.userconfig.refresh_token).subscribe(result => {
                         self.setAccessToken(result.access_token, self.userconfig.refresh_token, result.expires_in, callback(self.userconfig));
@@ -307,8 +360,6 @@ export class DataService {
                 self.userconfig = new UserConfig();
                 self.userconfig.firsttime = true;
             }
-
-          
 
             callback(self.userconfig);
         });
@@ -375,10 +426,10 @@ function extractHostname(url) {
         var at = mail.lastIndexOf('@');
         if (at != -1) {
             var domain = mail.substr(at + 1);
-            var dotCount = domain.split(".").length-1;
-            if(dotCount > 1) {
+            var dotCount = domain.split(".").length - 1;
+            if (dotCount > 1) {
                 var ii = domain.indexOf('.');
-                if(ii != -1) {
+                if (ii != -1) {
                     domain = domain.substr(ii + 1);
                 }
             }
@@ -400,4 +451,17 @@ function extractMail(url) {
     }
 
     return url;
+}
+
+function getURLsFromString(str) {
+    var re = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%\/.\w-]*)?\??(?:[-+=&;%@.\w]*)#?\w*)?)/gm;
+    var m;
+    var arr = [];
+    while ((m = re.exec(str)) !== null) {
+        if (m.index === re.lastIndex) {
+            re.lastIndex++;
+        }
+        arr.push(m[0]);
+    }
+    return arr;
 }

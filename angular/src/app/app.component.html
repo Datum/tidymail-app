@@ -1,7 +1,11 @@
+<!--
+
 <div *ngIf="!isLoaded" style="min-width: 200px; padding:20px;">
     Loading
     <mdc-linear-progress></mdc-linear-progress>
 </div>
+-->
+
 
 
 <div *ngIf="isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;">
@@ -15,11 +19,24 @@
 </div>
 
 
-<div *ngIf="isLoaded && isLoggedIn">
+<div *ngIf="isLoggedIn">
 
     <div class="row">
         <div class="col">
             <img src="assets/logo.png" style="padding-left:10px; padding-top:8px;">
+        </div>
+        <div class="col text-center" style="margin-top:8px;">
+            <div *ngIf="isSyncing">
+                {{ statusMessage }} <mdc-icon (click)="cancel()" inline clickable>cancel</mdc-icon>
+
+                <mdc-linear-progress></mdc-linear-progress>
+                
+            </div>
+            <div *ngIf="!isSyncing">
+                <button mdc-button (click)="sync()">
+                    <mdc-icon>sync</mdc-icon>Sync Now
+                </button>
+            </div>
         </div>
         <div class="col text-right">
             <button mdc-button routerLink="/settings" style="margin-right:10px; margin-top:8px;">

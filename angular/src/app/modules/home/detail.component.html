@@ -19,16 +19,16 @@
 
 
 <div>
-    <button mdc-button>KEEP</button>
-    <button mdc-button>UNSUBSCRIBE</button>
-    <button mdc-button>DELETE</button>
+    <button mdc-button (click)="keep()">KEEP</button>
+    <button mdc-button (click)="unsubscribe()">UNSUBSCRIBE</button>
+    <button mdc-button (click)="delete()">DELETE</button>
 </div>
 
 <hr>
 
 <mdc-list twoLine>
     <mdc-list-item *ngFor="let m of messages; let i = index">
-        <mdc-checkbox checked="true"></mdc-checkbox>
+        <mdc-checkbox [checked]="m.isChecked" (change)="m.isChecked = !m.isChecked"></mdc-checkbox>
         <mdc-list-item-text secondaryText="{{ m.internalDate | date:'medium' }}">{{ m.subject }}</mdc-list-item-text>
         <mdc-icon mdcListItemMeta *ngIf="m.unread === true">mail</mdc-icon>
     </mdc-list-item>

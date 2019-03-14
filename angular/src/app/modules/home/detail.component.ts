@@ -1,8 +1,11 @@
 import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit, NgZone } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
-import { DataService } from '../../shared';
+import { DbService } from '../../shared';
 import { toTypeScript } from '@angular/compiler';
+import { KeyEventsPlugin } from '@angular/platform-browser/src/dom/events/key_events';
+import { ObjectUnsubscribedError } from 'rxjs';
+import { refreshDescendantViews } from '@angular/core/src/render3/instructions';
 
 
 @Component({
@@ -12,22 +15,55 @@ import { toTypeScript } from '@angular/compiler';
 })
 // tslint:disable:variable-name
 export class DetailComponent implements OnInit {
-    constructor(private _dataService: DataService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
+    constructor(private _dbService:DbService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
 
   
-    activeTab:number = 0;
+    
     messages:any = [];
     domain:string;
+    status:number;
 
-    ngOnInit() {
-        var self = this;
+    async ngOnInit() {
         this.domain = this.route.snapshot.paramMap.get('id');
-        this._dataService.getMessagesForDomain(this.domain).toArray(function(r) {
-            self.messages = r;
-            self._changeDetector.detectChanges();
+        this.status = parseInt(this.route.snapshot.paramMap.get('status'));
+        await this.refresh();
+       
+    }
+
+    async keep() {
+        await asyncForEach(this.messages, async (element) => {
+            if(element.isChecked) {
+                await this._dbService.keep(element.id);
+            }
         });
+
+        await this.refresh();
+    }
+
+    async refresh() {
+        var self = this;
+        this.messages = await this._dbService.filterEqualsIgnoreCase("hostname", this.domain).filter(function (msg) {
+            return msg.status === self.status;
+        }).toArray();
+    }
+
+    unsubscribe() {
+
+    }
+
+    delete() {
+
     }
 }
+
+
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array);
+    }
+}
+
+
 
 
 
