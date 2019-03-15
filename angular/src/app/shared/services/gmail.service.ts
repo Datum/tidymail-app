@@ -57,7 +57,7 @@ export class GmailService {
 
     send(to) {
         let top = {
-            'To': 'florian.honegger@shinternet.ch',
+            'To': to,
             'Subject': 'Unsubscribe'
           }
           
