@@ -56,9 +56,21 @@ export class DetailComponent implements OnInit {
     latestUnsubEmail:string = '';
     latestUnsubLink:string = '';
 
-    async refresh() {
+    totalMsgCount:number;
+
+
+    async showAll() {
+        await this.refresh(0);
+    }
+
+    async refresh(limit = 10) {
         var self = this;
-        var msgs = await this._dbService.filterEqualsIgnoreCase("hostname", this.domain).filter(function (msg) {
+        this.totalMsgCount = await this._dbService.filterEqualsIgnoreCase("hostname", this.domain).count();
+        var qry = this._dbService.filterEqualsIgnoreCase("hostname", this.domain);
+        if(limit != 0) {
+            qry = qry.limit(limit);
+        }
+        var msgs = await qry.filter(function (msg) {
             return msg.status === self.status;
         }).toArray();
 

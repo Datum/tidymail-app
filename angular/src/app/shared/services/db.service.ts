@@ -67,7 +67,6 @@ export class DbService {
         mails.forEach(element => {
             var p = new Message();
             p.id = element.id;
-            p.subject = "TEst";
             this._undhandledMessages.push(p);
             this._undhandledMessagesObervable.next(this._undhandledMessages);
         });
@@ -81,7 +80,10 @@ export class DbService {
         let mailExists = await this.db.mails.get(msg.id);
         if(mailExists === undefined) {
             await this.db.mails.add(msg);
-            this._undhandledMessages.push(msg);
+            //if not ignored
+            if(msg.status != 4) {
+                this._undhandledMessages.push(msg);
+            }
             if(updateObservable) {
                 this._undhandledMessagesObervable.next(this._undhandledMessages);
             }

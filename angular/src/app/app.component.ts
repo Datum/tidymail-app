@@ -111,35 +111,34 @@ export class AppComponent implements OnInit {
             //alert(mailIds.length);
 
             var iDownloadccount = 0;
-            var iProcessCount = 0;
             var iupdateFrequence = 10;
 
             self.bCancel = false;
 
             await asyncForEach(mailIds, async (element) => {
-                iProcessCount++;
                 if(self.bCancel) {
                     return;
                 }
 
+                self.statusMessage = iDownloadccount.toString() + ' processed...';
+
                 if(await self._dbService.exists(element.id) !== undefined) {
+                    console.log('exists...')
                     return;
                 }
 
                 var msg = await self._gmailService.getMessageDetail(element.id);
-                self.statusMessage = 'processed/ignore... (' + iDownloadccount.toString() + '/' + (iProcessCount - iDownloadccount).toString() + ')';
-
-                //ignore mails without link...
-                if(msg.unsubscribeUrl === undefined) {
-                    return;
-                }
+                //set ignore mails without link...
+                msg.unsubscribeUrl === undefined ? msg.status = 4 : msg.status = 0;
 
                 await self._dbService.add(msg, iDownloadccount % iupdateFrequence == 0 ? true : false);
                 iDownloadccount++;
             });
             self.bCancel = false;
             self.isSyncing = false;
+            self._gmailService.cancelProcess(false); //Enable
             self._dbService.refresh();
+
         }, function (mailPages) {
             syncCount += mailPages.length;
             self.statusMessage = 'indexing... ' + syncCount.toString();

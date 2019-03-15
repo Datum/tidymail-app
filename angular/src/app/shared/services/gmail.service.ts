@@ -38,10 +38,9 @@ export class GmailService {
         this.accessToken = token;
     }
 
-    cancelProcess() {
-        this.bCancel = true;
+    cancelProcess(bCancel = true) {
+        this.bCancel = bCancel;
     }
-
 
     refreshToken(refresh_token) {
         return this.http.post<any>(this.tokenUrl, { client_id: this.clientid, client_secret: this.clientsecret, refresh_token: refresh_token, grant_type: "refresh_token" }).toPromise();

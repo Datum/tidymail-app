@@ -3,6 +3,7 @@ enum Status {
     Unsubscribe,
     Keep,
     Deleted,
+    Ignore,
 }
 
 export class Message {
@@ -26,4 +27,5 @@ export class Message {
     payload:any;
     labelIds:any;
     isChecked:boolean;
+
 }
