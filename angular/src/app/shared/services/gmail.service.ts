@@ -131,7 +131,7 @@ export class GmailService {
             //check if list contains last know id, if yes, cancel indexing
             if (lastKnownId) {
                 if (list.filter(e => e.id === lastKnownId).length > 0) {
-                    self.bCancel = true;
+                    //self.bCancel = true;
                 }
             }
 

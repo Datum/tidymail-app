@@ -81,11 +81,17 @@ export class DbService {
         if(mailExists === undefined) {
             await this.db.mails.add(msg);
             //if not ignored
-            if(msg.status != 4) {
+            if(msg.status != 4 && msg.status != 1) {
                 this._undhandledMessages.push(msg);
             }
+
+            if(msg.status == 1) {
+                this._unsubMessages.push(msg);
+            }
+
             if(updateObservable) {
                 this._undhandledMessagesObervable.next(this._undhandledMessages);
+                this._unsubMessagesObervable.next(this._unsubMessages);
             }
         }
     }
