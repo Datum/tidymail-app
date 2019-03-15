@@ -107,6 +107,11 @@ export class AppComponent implements OnInit {
         var lastId = await this._dbService.getLastMailId();
         var syncCount = 0;
         this.isSyncing = true;
+
+        var msgUnsubs = await this._dbService.filterEquals("status", 1).toArray();
+        var ignores = msgUnsubs.map(function(obj) { return obj.hostname; });
+        ignores = ignores.filter(function(v,i) { return ignores.indexOf(v) == i; });
+
         this._gmailService.findAll("list:", async function (mailIds) {
             //alert(mailIds.length);
 
@@ -114,22 +119,26 @@ export class AppComponent implements OnInit {
             var iupdateFrequence = 10;
 
             self.bCancel = false;
+            self.statusMessage = ' processeing...';
 
-            await asyncForEach(mailIds, async (element) => {
+            await asyncForEach(mailIds.reverse(), async (element) => {
                 if(self.bCancel) {
+                    return;
+                }
+
+                if(await self._dbService.exists(element.id) !== undefined) {
                     return;
                 }
 
                 self.statusMessage = iDownloadccount.toString() + ' processed...';
 
-                if(await self._dbService.exists(element.id) !== undefined) {
-                    console.log('exists...')
-                    return;
-                }
-
                 var msg = await self._gmailService.getMessageDetail(element.id);
                 //set ignore mails without link...
                 msg.unsubscribeUrl === undefined ? msg.status = 4 : msg.status = 0;
+                //set unsubscribe status for mails already done
+                if(ignores.indexOf(msg.hostname) >= 0) {
+                    msg.status = 1;
+                }
 
                 await self._dbService.add(msg, iDownloadccount % iupdateFrequence == 0 ? true : false);
                 iDownloadccount++;
@@ -142,7 +151,7 @@ export class AppComponent implements OnInit {
         }, function (mailPages) {
             syncCount += mailPages.length;
             self.statusMessage = 'indexing... ' + syncCount.toString();
-        }, lastId !== undefined ? lastId : null);
+        }, lastId !== undefined ? lastId.id : null);
     }
 
 

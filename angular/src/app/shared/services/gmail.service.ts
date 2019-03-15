@@ -139,7 +139,7 @@ export class GmailService {
                 if (callPageCallback) {
                     callPageCallback(result.messages);
                 }
-                self.loadMessageIds(result.nextPageToken, list, callback, callPageCallback);
+                self.loadMessageIds(result.nextPageToken, list, callback, callPageCallback,lastKnownId);
             } else {
                 callback(list);
             }
