@@ -51,6 +51,18 @@ export class AppComponent implements OnInit {
     isSyncing: boolean = false;
     statusMessage: string = "";
 
+
+    async login() {
+        //login
+        var tokenResult = await this._gmailService.login();
+
+        //store tokens in localStorage
+        await this._userService.storeAccessTokens(tokenResult);
+
+        //set user logged in
+        this.isLoggedIn = true;
+    }
+
     async ngOnInit() {
         //check if actual token still valid
         var self = this;
@@ -65,11 +77,11 @@ export class AppComponent implements OnInit {
             var userConfig = await this._userService.initConfig();
             if (userConfig.firsttime) {
                 //if first time show auto screen and login
-                var tokenResult = await this._gmailService.login();
+                //var tokenResult = await this._gmailService.login();
 
-                console.log(tokenResult);
+                //console.log(tokenResult);
                 //store tokens in localStorage
-                await self._userService.storeAccessTokens(tokenResult);
+                //await self._userService.storeAccessTokens(tokenResult);
             } else {
                 //check if token still valid
                 if (userConfig.expires < new Date().getTime() / 1000) {
@@ -82,17 +94,17 @@ export class AppComponent implements OnInit {
 
                 //init gmailService with tokens
                 this._gmailService.setAccessToken(userConfig.access_token);
-            }
 
-            //set user logged in
-            this.isLoggedIn = true;
+                //set user logged in
+                this.isLoggedIn = true;
+            }
         } catch (error) {
             console.log(error);
         }
     }
-    
+
     messages = [];
-    bCancel:boolean = false;
+    bCancel: boolean = false;
 
     constructor(
         @Inject(TAB_ID) private _tabId: number,
@@ -109,8 +121,8 @@ export class AppComponent implements OnInit {
         this.isSyncing = true;
 
         var msgUnsubs = await this._dbService.filterEquals("status", 1).toArray();
-        var ignores = msgUnsubs.map(function(obj) { return obj.hostname; });
-        ignores = ignores.filter(function(v,i) { return ignores.indexOf(v) == i; });
+        var ignores = msgUnsubs.map(function (obj) { return obj.hostname; });
+        ignores = ignores.filter(function (v, i) { return ignores.indexOf(v) == i; });
 
         this._gmailService.findAll("list:", async function (mailIds) {
             //alert(mailIds.length);
@@ -122,11 +134,11 @@ export class AppComponent implements OnInit {
             self.statusMessage = ' processeing...';
 
             await asyncForEach(mailIds.reverse(), async (element) => {
-                if(self.bCancel) {
+                if (self.bCancel) {
                     return;
                 }
 
-                if(await self._dbService.exists(element.id) !== undefined) {
+                if (await self._dbService.exists(element.id) !== undefined) {
                     return;
                 }
 
@@ -136,7 +148,7 @@ export class AppComponent implements OnInit {
                 //set ignore mails without link...
                 msg.unsubscribeUrl === undefined ? msg.status = 4 : msg.status = 0;
                 //set unsubscribe status for mails already done
-                if(ignores.indexOf(msg.hostname) >= 0) {
+                if (ignores.indexOf(msg.hostname) >= 0) {
                     msg.status = 1;
                 }
 

@@ -14,7 +14,7 @@
 
 
 <div *ngIf="!isLoaded" class="text-center" style="padding:20px;">
-    loading...
+    loading database...
     <mdc-linear-progress></mdc-linear-progress>
     <br>
 </div>
@@ -22,9 +22,9 @@
 
 
 
-<grouped-list *ngIf="activeTab == 0" [groups]="undhandledMails" [status]="activeTab">
+<grouped-list *ngIf="isLoaded && activeTab == 0" [groups]="undhandledMails" [status]="activeTab">
 </grouped-list>
-<grouped-list *ngIf="activeTab == 1" [groups]="unsubscribedMails" [status]="activeTab">
+<grouped-list *ngIf="isLoaded && activeTab == 1" [groups]="unsubscribedMails" [status]="activeTab">
 </grouped-list>
-<grouped-list *ngIf="activeTab == 2" [groups]="keepMails" [status]="activeTab">
+<grouped-list *ngIf="isLoaded && activeTab == 2" [groups]="keepMails" [status]="activeTab">
 </grouped-list>

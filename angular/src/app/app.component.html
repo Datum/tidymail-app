@@ -8,14 +8,29 @@
 
 
 
-<div *ngIf="isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;">
+<div *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px; text-align:center;">
     <div>
-        your not logged in. please login
+        <img src="assets/logo.png">
     </div>
-    <br>
-    <button mdc-button raised (click)="login()">
-        <mdc-icon>account_box</mdc-icon>Login
-    </button>
+    <hr>
+    <div style="text-transform:uppercase; font-size:1.2em;">
+        Welcome to Datum Unsubscriber Extension
+    </div>
+    <hr>
+    <div>
+        No account is linked yet. Please login with Google to link your account.
+    </div>
+    <div style="color:darkgray">
+        <small>
+            By confirming, you will give the extension access to READ,WRITE,MODIFY your email box.
+        </small>
+    </div>
+    <hr>
+    <div class="text-center">
+        <button mdc-button raised (click)="login()">
+            <mdc-icon>account_box</mdc-icon>Login
+        </button>
+    </div>
 </div>
 
 
@@ -30,7 +45,7 @@
                 {{ statusMessage }} <mdc-icon (click)="cancel()" inline clickable>cancel</mdc-icon>
 
                 <mdc-linear-progress></mdc-linear-progress>
-                
+
             </div>
             <div *ngIf="!isSyncing">
                 <button mdc-button (click)="sync()">
