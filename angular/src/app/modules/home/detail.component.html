@@ -15,31 +15,32 @@
         <div mdcHeadline4>{{ domain }}</div>
     </div>
     <div class="col-2">
-            <mdc-chip-set>
-                    <mdc-chip>
-                      <mdc-chip-icon leading>mail</mdc-chip-icon>
-                      <mdc-chip-text>{{ totalMsgCount }}</mdc-chip-text>
-                    </mdc-chip>
-                  </mdc-chip-set>
+        <mdc-chip-set>
+            <mdc-chip>
+                <mdc-chip-icon leading>mail</mdc-chip-icon>
+                <mdc-chip-text>{{ totalMsgCount }}</mdc-chip-text>
+            </mdc-chip>
+        </mdc-chip-set>
     </div>
 </div>
-<hr style="margin-top:15px;">
+<hr style="margin-top:10px;">
 <div class="row link-row">
     <div class="col">
-        <a target="_blank" href="{{ latestUnsubLink }}">Open Unsubscribe-Link</a>
+        <a *ngIf="latestUnsubEmail !== ''" (click)="sendUnsubscribeMail()" style="cursor:pointer;">Unsubscribe to ALL</a>
     </div>
     <div class="col text-right">
-        <a target="_blank" href="{{ latestUnsubEmail }}">Send Unsubscribe-Email</a>
+        <a target="_blank" href="{{ latestUnsubLink }}">Open Unsubscribe-Link</a>
     </div>
+
 </div>
 
 <hr>
 
 
 <div>
-    <button mdc-button (click)="keep()">KEEP</button>
-    <button mdc-button (click)="unsubscribe()">UNSUBSCRIBE</button>
-    <button mdc-button (click)="delete()">DELETE</button>
+    <button mdc-button (click)="keep()">KEEP (0)</button>
+    <button mdc-button (click)="unsubscribe()">UNSUBSCRIBE (0)</button>
+    <button mdc-button (click)="delete()">DELETE (0)</button>
     <div *ngIf="totalMsgCount > 10" class="float-right" style="padding:5px;">
         <small>only 10 items displayed. <a (click)="showAll()"><b>show all</b></a> </small>
     </div>

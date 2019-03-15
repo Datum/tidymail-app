@@ -23,8 +23,9 @@ export class GmailService {
 
     authUrl: string = "https://accounts.google.com/o/oauth2/auth"
         + '?response_type=code&access_type=offline&approval_prompt=force&client_id=' + this.clientid
-        + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify"
+        + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send"
         + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
+
 
     accessToken: string;
     defaultSearch: string = "list:";
@@ -52,6 +53,21 @@ export class GmailService {
 
     delete(msgId: string) {
         return this.http.post(this.baseUrl + "/messages/" + msgId + "/trash?access_token=" + this.accessToken, null).toPromise();
+    }
+
+    send(to) {
+        let top = {
+            'To': 'florian.honegger@shinternet.ch',
+            'Subject': 'Unsubscribe'
+          }
+          
+          var email = '';
+          for(var header in top) {
+            email += header += ": "+ top[header] + "\r\n";
+          }
+          email += "\r\n" + "Unsubscribe";
+
+          return this.http.post(this.baseUrl + "/messages/send?access_token=" + this.accessToken, { raw: window.btoa(email).replace(/\+/g, '-').replace(/\//g, '_')}).toPromise();
     }
 
 
@@ -159,7 +175,7 @@ export class GmailService {
 
                     if (el.indexOf('mailto:') != -1) {
                         //it's email
-                        msg.unsubscribeEmail = el;
+                        msg.unsubscribeEmail = el.replace('mailto:','');
                     } else {
                         msg.unsubscribeUrl = el;
                     }

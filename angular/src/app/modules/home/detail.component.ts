@@ -8,6 +8,8 @@ import { ObjectUnsubscribedError } from 'rxjs';
 import { refreshDescendantViews } from '@angular/core/src/render3/instructions';
 
 
+import { MdcSnackbar } from '@angular-mdc/web';
+
 @Component({
     selector: 'detail',
     templateUrl: './detail.component.html',
@@ -15,7 +17,7 @@ import { refreshDescendantViews } from '@angular/core/src/render3/instructions';
 })
 // tslint:disable:variable-name
 export class DetailComponent implements OnInit {
-    constructor(private _dbService:DbService, private _gmailService:GmailService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
+    constructor(private _dbService:DbService, private snackbar: MdcSnackbar, private _gmailService:GmailService, private _changeDetector: ChangeDetectorRef, private zone: NgZone, private route: ActivatedRoute) { }
 
   
     
@@ -96,6 +98,19 @@ export class DetailComponent implements OnInit {
         }
     }
 
+    async sendUnsubscribeMail() {
+
+        await this._gmailService.send(this.latestUnsubEmail);
+
+        this.snackbar.open('Unsubscription email sent. All emails will be marked as unsubscribed.');
+
+        await asyncForEach(this.messages, async (element) => {
+            await this._dbService.unsubscribe(element.id);
+        });
+
+        await this.refresh();
+    }
+
     async unsubscribe() {
         await asyncForEach(this.messages, async (element) => {
             if(element.isChecked) {
@@ -120,6 +135,8 @@ export class DetailComponent implements OnInit {
         await this.refresh();
     }
 }
+
+
 
 
 async function asyncForEach(array, callback) {
