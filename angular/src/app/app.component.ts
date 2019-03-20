@@ -6,6 +6,8 @@ import { TAB_ID } from './tab-id.injector';
 import { GmailService, DbService, UserService } from './shared';
 
 
+
+
 import {
     transition,
     trigger,
@@ -15,6 +17,7 @@ import {
     group,
     animateChild
 } from '@angular/animations';
+import { ReturnStatement } from '@angular/compiler';
 
 @Component({
     selector: 'app-root',
@@ -53,20 +56,34 @@ export class AppComponent implements OnInit {
 
 
     async login() {
+
+        
         //login
         var tokenResult = await this._gmailService.login();
+
+
+        //console.log(tokenResult);
+        //alert(tokenResult);
 
         //store tokens in localStorage
         await this._userService.storeAccessTokens(tokenResult);
 
         //set user logged in
         this.isLoggedIn = true;
+        
     }
+
+
+
+ 
+
 
     async ngOnInit() {
         //check if actual token still valid
         var self = this;
 
+
+        
 
         try {
 
@@ -77,11 +94,11 @@ export class AppComponent implements OnInit {
             var userConfig = await this._userService.initConfig();
             if (userConfig.firsttime) {
                 //if first time show auto screen and login
-                //var tokenResult = await this._gmailService.login();
+                var tokenResult = await this._gmailService.login();
 
                 //console.log(tokenResult);
                 //store tokens in localStorage
-                //await self._userService.storeAccessTokens(tokenResult);
+                await self._userService.storeAccessTokens(tokenResult);
             } else {
                 //check if token still valid
                 if (userConfig.expires < new Date().getTime() / 1000) {
@@ -101,6 +118,8 @@ export class AppComponent implements OnInit {
         } catch (error) {
             console.log(error);
         }
+
+        
     }
 
     messages = [];
@@ -118,7 +137,11 @@ export class AppComponent implements OnInit {
         var self = this;
         var lastId = await this._dbService.getLastMailId();
         var syncCount = 0;
+
         this.isSyncing = true;
+
+        var existsing = [];
+        var ignoreIds = [];
 
         var msgUnsubs = await this._dbService.filterEquals("status", 1).toArray();
         var ignores = msgUnsubs.map(function (obj) { return obj.hostname; });
@@ -129,11 +152,13 @@ export class AppComponent implements OnInit {
 
             var iDownloadccount = 0;
             var iupdateFrequence = 10;
+            var workCount = 0;
 
             self.bCancel = false;
             self.statusMessage = ' processeing...';
 
-            await asyncForEach(mailIds.reverse(), async (element) => {
+            await asyncForEach(mailIds, async (element) => {
+                workCount++;
                 if (self.bCancel) {
                     return;
                 }
@@ -142,9 +167,71 @@ export class AppComponent implements OnInit {
                     return;
                 }
 
-                self.statusMessage = iDownloadccount.toString() + ' processed...';
+                self.statusMessage = iDownloadccount.toString() + "/" + (workCount-iDownloadccount).toString() + ' processed/ignored';
+
+
+                if(ignoreIds.indexOf(element.id) != -1) {
+                    //alert('ignoore)');
+                    return;
+                }
 
                 var msg = await self._gmailService.getMessageDetail(element.id);
+
+                //Google <no-reply@accounts.google.com>
+                var iFind = msg.from.indexOf('<');
+                if(iFind != -1) {
+                    var msgFromName = msg.from.substring(0,iFind).trim().replace('"','');
+                    var msgFromEmail = msg.from.substring(iFind + 1, msg.from.length - 1);
+
+                    //get all ids with this from and from name
+                    /*
+                    var msgIds = self._gmailService.findMsgFrom(msgFromEmail, msgFromName, function(msgIds) {
+                        //alert(msgIds.length);
+                    });
+                    */
+
+
+                    //from:"info@twitter.com" from:"Twitter for Business "
+                    var rlMsgIdsList = [];
+                    var rlMsgIds = await self._gmailService.loadMessageIdsWithQuery(null, "from:\""+msgFromEmail+"\" from:\"" + msgFromName + "\"");
+                    rlMsgIdsList = rlMsgIdsList.concat(rlMsgIds.messages);
+                    var nxtPageToken = rlMsgIds.nextPageToken;
+                    while(nxtPageToken) {
+                        var rlMsgIds2 = await self._gmailService.loadMessageIdsWithQuery(nxtPageToken, "from:\""+msgFromEmail+"\" from:\"" + msgFromName + "\"");
+                        rlMsgIdsList = rlMsgIdsList.concat(rlMsgIds2.messages);
+                        nxtPageToken = rlMsgIds2.nextPageToken;
+                    }
+
+
+                    console.log(msgFromName);
+                    console.log(msgFromEmail);
+                    console.log(rlMsgIdsList);
+
+                    if(rlMsgIdsList.length > 0) {
+                        if(rlMsgIdsList[0] == undefined) {
+                            console.log('ignore undefined');
+                            return;
+                        }
+                    }
+
+                    var result = rlMsgIdsList.map(function(e) {return e.id;});
+
+                    ignoreIds = ignoreIds.concat(result);
+
+
+                    //if same from / email already exists ignore
+                    /*
+                    if(existsing.indexOf(msgFromName+msgFromEmail) != -1) {
+                        //alert('ignoore)');
+                        return;
+                    }
+                    */
+
+                    //existsing.push(msgFromName+msgFromEmail);
+
+                    
+                }
+
                 //set ignore mails without link...
                 msg.unsubscribeUrl === undefined ? msg.status = 4 : msg.status = 0;
                 //set unsubscribe status for mails already done

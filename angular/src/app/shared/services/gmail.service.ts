@@ -10,21 +10,31 @@ import { Message } from '../models';
 import { Base64 } from 'js-base64';
 
 
+declare const gapi: any;
+
+
 
 @Injectable()
 export class GmailService {
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) {
+        this.googleInit();
+    }
 
     baseUrl: string = "https://www.googleapis.com/gmail/v1/users/me";
     tokenUrl: string = 'https://www.googleapis.com/oauth2/v4/token';
     clientid: string = "187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com";
     clientsecret: string = "26OcvwqMmwMe6wF8uOFGPBj0";
+    redirectUri:string = window.location.origin;
 
+    /*
     authUrl: string = "https://accounts.google.com/o/oauth2/auth"
         + '?response_type=code&access_type=offline&approval_prompt=force&client_id=' + this.clientid
         + '&scope=' + "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send"
         + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
+        */
+
+    authUrl: string = "";
 
 
     accessToken: string;
@@ -48,7 +58,7 @@ export class GmailService {
     }
 
     getToken(code, client_id, callback) {
-        return this.http.post<any>(this.tokenUrl, { code: code, client_id: client_id, client_secret: this.clientsecret, grant_type: "authorization_code", redirect_uri: chrome.identity.getRedirectURL("oauth2") });
+        return this.http.post<any>(this.tokenUrl, { code: code, client_id: client_id, client_secret: this.clientsecret, grant_type: "authorization_code", redirect_uri: this.redirectUri });
     }
 
     delete(msgId: string) {
@@ -59,15 +69,15 @@ export class GmailService {
         let top = {
             'To': to,
             'Subject': 'Unsubscribe'
-          }
-          
-          var email = '';
-          for(var header in top) {
-            email += header += ": "+ top[header] + "\r\n";
-          }
-          email += "\r\n" + "Unsubscribe";
+        }
 
-          return this.http.post(this.baseUrl + "/messages/send?access_token=" + this.accessToken, { raw: window.btoa(email).replace(/\+/g, '-').replace(/\//g, '_')}).toPromise();
+        var email = '';
+        for (var header in top) {
+            email += header += ": " + top[header] + "\r\n";
+        }
+        email += "\r\n" + "Unsubscribe";
+
+        return this.http.post(this.baseUrl + "/messages/send?access_token=" + this.accessToken, { raw: window.btoa(email).replace(/\+/g, '-').replace(/\//g, '_') }).toPromise();
     }
 
 
@@ -91,7 +101,70 @@ export class GmailService {
     */
 
 
+    public auth2: any;
+
+    public googleInit() {
+        gapi.load('auth2', () => {
+            this.auth2 = gapi.auth2.init({
+                apiKey: 'AIzaSyCTnt6qZLuAq_6V454Y5-giXXBzm6S-fLA',
+                client_id: '187423944392-87r99e4mn2bdhr1q7e3gjg2v5hohp08a.apps.googleusercontent.com',
+                cookiepolicy: 'single_host_origin',
+                scope: 'profile email'
+            });
+            //this.attachSignin(document.getElementById('googleBtn'));
+        });
+    }
+    public attachSignin(element) {
+        var self = this;
+        this.auth2.attachClickHandler(element, {},
+            (googleUser) => {
+
+                let profile = googleUser.getBasicProfile();
+                console.log('Token || ' + googleUser.getAuthResponse().id_token);
+                console.log('ID: ' + profile.getId());
+                console.log('Name: ' + profile.getName());
+                console.log('Image URL: ' + profile.getImageUrl());
+                console.log('Email: ' + profile.getEmail());
+                //YOUR CODE HERE
+
+                //init gmailService with tokens
+                //self._gmailService.setAccessToken(googleUser.getAuthResponse().access_token);
+
+                //set user logged in
+                //self.isLoggedIn = true;
+
+                //self._changeDetector.detectChanges();
+
+
+
+            }, (error) => {
+                alert(JSON.stringify(error, undefined, 2));
+            });
+    }
+
+
     login() {
+        var self = this;
+        return new Promise<any>(
+            (resolve, reject) => {
+                this.auth2.grantOfflineAccess()
+                .then((res) => {
+                    self.getToken(res.code, self.clientid, null).subscribe(function (result) {
+                        //store tokens and run callback
+                        self.accessToken = result.access_token;
+                        resolve(result);
+                    });
+                }).catch(error =>  {
+                    reject(error);
+                });
+            }
+        )
+
+
+       
+       
+
+        /*
         return new Promise<any>(
             (resolve, reject) => {
                 var self = this;
@@ -110,12 +183,27 @@ export class GmailService {
                 });
             }
         )
+        */
 
 
 
     }
 
 
+    findMsgFrom(msgFromEmail, msgFrom, callback) {
+        var r = [];
+        this.loadMessageIds(null, r, callback);
+    }
+
+
+    loadMessageIdsWithQuery(nextPageToken, query) {
+        var url = this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=" + query;
+        if (nextPageToken) {
+            url += "&pageToken=" + nextPageToken;
+        }
+
+        return this.http.get<any>(url).toPromise();
+    }
 
     private loadMessageIds(nextPageToken, list, callback, callPageCallback = null, lastKnownId: string = null) {
         var self = this;
@@ -139,7 +227,7 @@ export class GmailService {
                 if (callPageCallback) {
                     callPageCallback(result.messages);
                 }
-                self.loadMessageIds(result.nextPageToken, list, callback, callPageCallback,lastKnownId);
+                self.loadMessageIds(result.nextPageToken, list, callback, callPageCallback, lastKnownId);
             } else {
                 callback(list);
             }
@@ -175,7 +263,7 @@ export class GmailService {
 
                     if (el.indexOf('mailto:') != -1) {
                         //it's email
-                        msg.unsubscribeEmail = el.replace('mailto:','');
+                        msg.unsubscribeEmail = el.replace('mailto:', '');
                     } else {
                         msg.unsubscribeUrl = el;
                     }

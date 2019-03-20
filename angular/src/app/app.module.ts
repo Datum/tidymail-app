@@ -9,6 +9,9 @@ import { AppComponent } from './app.component';
 
 import { HomeModule } from './modules/home/home.module'
 
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+
+
 import {
     MdcTopAppBarModule,
     MdcIconModule,
@@ -34,6 +37,7 @@ import {
   ],
   imports: [
     BrowserModule,
+    NgbModule.forRoot(),
     /*BrowserAnimationsModule,*/
     HttpClientModule,
     AppRoutingModule,
@@ -46,7 +50,7 @@ import {
     MdcDrawerModule,
     MdcIconButtonModule,
     MdcButtonModule,
-    MdcLinearProgressModule 
+    MdcLinearProgressModule
   ],
   providers: [GmailService, DbService, UserService],
   bootstrap: [AppComponent]

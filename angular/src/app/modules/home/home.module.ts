@@ -32,6 +32,8 @@ import { ModuleWithProviders } from '@angular/compiler/src/core';
 import { SettingsComponent } from './settings.component';
 
 
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+
 
   const dataRouting: ModuleWithProviders = RouterModule.forChild([
     {
@@ -59,6 +61,7 @@ import { SettingsComponent } from './settings.component';
     imports: [
         dataRouting,
         BrowserModule,
+        NgbModule,
         HttpClientModule,
         MdcIconModule,
         MdcTabBarModule,

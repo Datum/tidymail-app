@@ -17,19 +17,14 @@ export class UserService {
         var self = this;
         return new Promise<UserConfig>(
             (resolve, reject) => {
-                chrome.storage.local.get(["config"], function (result) {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    }
-                    if (result.config !== undefined) {
-                        self.userConfig = result.config;
-                    } else {
-                        self.userConfig = new UserConfig();
-                        self.userConfig.firsttime = true;
-                    }
-
-                    resolve(self.userConfig);
-                });
+                var config = localStorage.getItem('config');
+                if(config == null) {
+                    self.userConfig = new UserConfig();
+                    self.userConfig.firsttime = true;
+                } else {
+                    self.userConfig = JSON.parse(config);
+                }
+                resolve(self.userConfig);
             }
         )
     }
@@ -45,12 +40,8 @@ export class UserService {
 
         return new Promise<UserConfig>(
             (resolve, reject) => {
-                chrome.storage.local.set({ config: this.userConfig }, function () {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    }
-                    resolve(this.userConfig);
-                });
+                localStorage.setItem('config', JSON.stringify(this.userConfig));
+                resolve(this.userConfig);
             }
         )
     }
@@ -58,12 +49,8 @@ export class UserService {
     reset() {
         return new Promise(
             (resolve, reject) => {
-                chrome.storage.local.remove(["config"], function () {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    }
-                    resolve();
-                });
+                localStorage.removeItem('config');
+                resolve();
             }
         )
     }
