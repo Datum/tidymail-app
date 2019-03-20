@@ -43,11 +43,6 @@ export class DbService {
         });
     }
 
-
-    delete(msgId:string) {
-        return this.db.mails.delete(msgId);
-    }
-
     deleteDb()  {
         return this.db.delete();
     }
@@ -96,12 +91,37 @@ export class DbService {
         }
     }
 
+    delete(msgId:string) {
+        return this.db.mails.update(msgId, { status: 3 });
+    }
+
     keep(msgId:string) {
-        this.db.mails.update(msgId, { status: 2 });
+        return this.db.mails.update(msgId, { status: 2 });
     }
 
     unsubscribe(msgId:string) {
-        this.db.mails.update(msgId, { status: 1 });
+        return this.db.mails.update(msgId, { status: 1 });
+    }
+
+    deleteAll(hostname:string) {
+        var allMessagesToDelete = this.filterEqualsIgnoreCase("hostname",hostname).toArray();
+        allMessagesToDelete.forEach(element => {
+            this.db.mails.update(element.id, { status: 3 });
+        });
+    }
+
+    keepAll(hostname:string) {
+        var allMessagesToKeep = this.filterEqualsIgnoreCase("hostname",hostname).toArray();
+        allMessagesToKeep.forEach(element => {
+            this.db.mails.update(element.id, { status: 2 });
+        });
+    }
+
+    unsubscribeAll(hostname:string) {
+        var allMessagesToUnsubscribe = this.filterEqualsIgnoreCase("hostname",hostname).toArray();
+        allMessagesToUnsubscribe.forEach(element => {
+            this.db.mails.update(element.id, { status: 1 });
+        });
     }
 
     refresh() {

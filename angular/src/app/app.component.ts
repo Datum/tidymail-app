@@ -183,13 +183,6 @@ export class AppComponent implements OnInit {
                     var msgFromName = msg.from.substring(0,iFind).trim().replace('"','');
                     var msgFromEmail = msg.from.substring(iFind + 1, msg.from.length - 1);
 
-                    //get all ids with this from and from name
-                    /*
-                    var msgIds = self._gmailService.findMsgFrom(msgFromEmail, msgFromName, function(msgIds) {
-                        //alert(msgIds.length);
-                    });
-                    */
-
 
                     //from:"info@twitter.com" from:"Twitter for Business "
                     var rlMsgIdsList = [];
@@ -203,10 +196,6 @@ export class AppComponent implements OnInit {
                     }
 
 
-                    console.log(msgFromName);
-                    console.log(msgFromEmail);
-                    console.log(rlMsgIdsList);
-
                     if(rlMsgIdsList.length > 0) {
                         if(rlMsgIdsList[0] == undefined) {
                             console.log('ignore undefined');
@@ -218,6 +207,7 @@ export class AppComponent implements OnInit {
 
                     ignoreIds = ignoreIds.concat(result);
 
+                    msg.ignoredCount = result.length;
 
                     //if same from / email already exists ignore
                     /*

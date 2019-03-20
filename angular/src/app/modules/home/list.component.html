@@ -13,36 +13,43 @@
                     [attr.aria-controls]="'collapse' + a + i">
                     <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
                         style="padding-right:10px;">
-                    <mdc-list-item-text
-                        secondaryText="{{ m.unreadCount + '/' + m.messages.length + ' unread emails' }}">{{ m.name }}
+                    <mdc-list-item-text secondaryText="{{ m.messages.length + ' newsletter(s)' }}">{{ m.name }}
                         <small style="color:darkgrey"> {{ m.hostname }} </small>
                     </mdc-list-item-text>
 
-                    <!--
-                    <button mdc-button mdcListItemMeta [attr.data-toggle]="collapse" [attr.data-target]="'#collapse' + i" [attr.aria-expanded]="false"
-                    [attr.aria-controls]="'collapse' + i">
-                        KEEP
-                    </button>
-                    <button mdc-button mdcListItemMeta>
-                        UNSUBSCRIBE
-                    </button>
-                    -->
-                    <button mdc-button mdcListItemMeta>
-                        DETAILS
-                    </button>
+                    <div mdcListItemMeta>
+                        <button mdc-button (click)="keepAll(m.hostname)">
+                            KEEP ALL
+                        </button>
+                        <button mdc-button (click)="unsubscribeAll(m.hostname)">
+                            UNSUBSCRIBE ALL
+                        </button>
+                        <button mdc-button (click)="deleteAll(m.hostname)">
+                            DELETE ALL
+                        </button>
+                    </div>
+
                 </mdc-list-item>
                 <div [attr.id]="'collapse' + a + i" [ngbCollapse]="m.isCollapsed">
-                        <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index">
-                            <mdc-list-item-text secondaryText="{{ msg.internalDate | date:'medium' }}">{{ msg.from }}
-                            </mdc-list-item-text>
-                            <button mdc-button mdcListItemMeta>
+                    <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index">
+                        <mdc-list-item-text
+                            secondaryText="{{ msg.ignoredCount + ' mails, last from:' +  (msg.internalDate | date:'medium') }}">
+                            {{ msg.from }}
+                        </mdc-list-item-text>
+                        <div mdcListItemMeta>
+                            <button mdc-button (click)="keep(msg.id)">
                                 KEEP
                             </button>
-                            <button mdc-button mdcListItemMeta>
+                            <button mdc-button (click)="unsubscribe(msg.id)">
                                 UNSUBSCRIBE
                             </button>
-                        </mdc-list-item>
-                    
+                            <button mdc-button (click)="delete(msg.id)">
+                                DELETE
+                            </button>
+                        </div>
+
+                    </mdc-list-item>
+
                 </div>
             </div>
         </mdc-list>
