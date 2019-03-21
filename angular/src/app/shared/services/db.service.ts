@@ -176,30 +176,34 @@ export class DbService {
     async deleteAll(hostname: string) {
         var allMessagesToDelete = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
         allMessagesToDelete.forEach(async element => {
-            if(element.status = 0) {
-                await this.db.mails.update(element.id, { status: 3 });
+            if(element.status == 0) {
+                this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != element.id; });
+                this.db.mails.update(element.id, { status: 3 });
+               
             }
            
         });
-
-        this.init();
+        this.refresh();
     }
 
     async keepAll(hostname: string) {
         var allMessagesToKeep = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
         allMessagesToKeep.forEach(async element => {
-            if(element.status = 0) {
-                await this.db.mails.update(element.id, { status: 2 });
+            if(element.status == 0) {
+                var msg = this._undhandledMessages.filter(function (el) { return el.id == element.id; });
+                this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != element.id; });
+                this._keepMessages.push(msg[0]);
+                this.db.mails.update(element.id, { status: 2 });
+ 
             }
         });
-
-        this.init();
+        this.refresh();
     }
 
     async unsubscribeAll(hostname: string) {
         var allMessagesToUnsubscribe = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
         allMessagesToUnsubscribe.forEach(async element => {
-            if(element.status = 0) {
+            if(element.status == 0) {
                 await this.db.mails.update(element.id, { status: 1 });
             }
         });

@@ -82,12 +82,17 @@ export class GmailService {
         }
         email += "\r\n" + "Unsubscribe";
 
-        return this.http.post(this.baseUrl + "/messages/send?access_token=" + this.accessToken, { raw: window.btoa(email).replace(/\+/g, '-').replace(/\//g, '_') }).toPromise();
+        return this.http.post<any>(this.baseUrl + "/messages/send?access_token=" + this.accessToken, { raw: window.btoa(email).replace(/\+/g, '-').replace(/\//g, '_') }).toPromise();
     }
 
 
     findFirst(searchTerm = this.defaultSearch) {
         return this.http.get(this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=" + searchTerm);
+    }
+
+
+    unsubscribeUrl(url) {
+        return this.http.get<any>(url);
     }
 
 

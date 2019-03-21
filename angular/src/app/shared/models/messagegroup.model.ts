@@ -14,6 +14,7 @@ export class MessageGroup {
     from:string;
     ids:string[];
     isCollapsed:boolean;
+    status:string;
 
     get unreadCount():number {
         return this.messages.filter((obj) => obj.unread === true).length

@@ -16,15 +16,16 @@
                     <mdc-list-item-text secondaryText="{{ m.messages.length + ' newsletter(s)' }}">{{ m.name }}
                         <small style="color:darkgrey"> {{ m.hostname }} </small>
                     </mdc-list-item-text>
+                    <div class="delete-info mdc-list-item__secondary-text">{{ m.status }}</div>
 
-                    <div mdcListItemMeta>
-                        <button mdc-button (click)="keepAll(m.hostname,$event)">
+                    <div mdcListItemMeta *ngIf="status == 0">
+                        <button mdc-button (click)="keepAll(m.hostname,m,$event)">
                             KEEP ALL
                         </button>
-                        <button mdc-button (click)="unsubscribeAll(m.hostname, $event)">
+                        <button mdc-button (click)="unsubscribeAll(m.hostname, m,$event)">
                             UNSUBSCRIBE ALL
                         </button>
-                        <button mdc-button (click)="deleteAll(m.hostname, $event)">
+                        <button mdc-button (click)="deleteAll(m.hostname, m, $event)">
                             DELETE ALL
                         </button>
                     </div>
@@ -36,7 +37,7 @@
                             secondaryText="{{ msg.ignoredCount + ' mails, last from:' +  (msg.internalDate | date:'medium') }}">
                             {{ msg.from }}
                         </mdc-list-item-text>
-                        <div mdcListItemMeta>
+                        <div mdcListItemMeta *ngIf="status == 0">
                             <button mdc-button (click)="keep(msg.id)" data-loading-text="loading...">
                                 KEEP
                             </button>

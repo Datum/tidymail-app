@@ -33,40 +33,41 @@ export class ListComponent {
     }
 
     async unsubscribe(id) {
-
         var msg = await this._dbService.exists(id);
-        console.log(msg);
 
         if(msg.unsubscribeEmail !== undefined) {
-            await this._gmailService.send(msg.unsubscribeEmail);
+            var result = await this._gmailService.send(msg.unsubscribeEmail);
             await this._dbService.unsubscribe(id);
+            await this._gmailService.delete(result.id);
 
-            this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail);
+            this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
         } else {
-            window.open(msg.unsubscribeUrl);
-
+            await this._gmailService.unsubscribeUrl(msg.unsubscribeUrl);
             await this._dbService.unsubscribe(id);
+
+            this.snackbar.open('Unsubscription requested.');
         }
     }
 
 
 
-    async keepAll(hostname,event) {
+    async keepAll(hostname,mg, event) {
         event.stopPropagation(); 
         await this._dbService.keepAll(hostname);
     }
 
-    async deleteAll(hostname,event) {
+    async deleteAll(hostname,mg, event) {
         event.stopPropagation(); 
         var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname",hostname).toArray();
         for(var i = 0; i < allMessagesToDelete.length;i++) {
+            mg.status = 'delete ' + i + ' of ' + allMessagesToDelete.length;
             await this._gmailService.delete(allMessagesToDelete[i].id);
         }
 
         await this._dbService.deleteAll(hostname);
     }
 
-    async unsubscribeAll(hostname,event) {
+    async unsubscribeAll(hostname,mg, event) {
         event.stopPropagation(); 
         await this._dbService.unsubscribeAll(hostname);
     }
