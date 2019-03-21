@@ -27,5 +27,6 @@ export class Message {
     payload:any;
     labelIds:any;
     isChecked:boolean;
+    ignoredCount:number;
 
 }

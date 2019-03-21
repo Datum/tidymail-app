@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 
 import { UserConfig } from '../models';
 
+import SimpleCrypto from "simple-crypto-js";
+
 
 
 @Injectable()
@@ -17,40 +19,46 @@ export class UserService {
         var self = this;
         return new Promise<UserConfig>(
             (resolve, reject) => {
-                chrome.storage.local.get(["config"], function (result) {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    }
-                    if (result.config !== undefined) {
-                        self.userConfig = result.config;
-                    } else {
-                        self.userConfig = new UserConfig();
-                        self.userConfig.firsttime = true;
-                    }
+                var config = localStorage.getItem('config');
+                if(config == null) {
 
-                    resolve(self.userConfig);
-                });
+                    var randomsecret = SimpleCrypto.generateRandom();
+                    alert(randomsecret);
+
+                    self.userConfig = new UserConfig();
+                    self.userConfig.firsttime = true;
+                    self.userConfig.secret = randomsecret;
+                } else {
+                    self.userConfig = JSON.parse(config);
+                }
+                resolve(self.userConfig);
             }
         )
     }
 
 
+    encrypt(str:string) {
+        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+        return simpleCrypto.encrypt(str).toString();
+    }
+
+    decrypt(enc:string) {
+        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+        return simpleCrypto.decrypt(enc).toString();
+    }
+
     storeAccessTokens(tokenResult) {
-        this.userConfig.access_token = tokenResult.access_token;
+        this.userConfig.access_token = this.encrypt(tokenResult.access_token);
         if(tokenResult.refresh_token !== undefined) {
-            this.userConfig.refresh_token = tokenResult.refresh_token;
+            this.userConfig.refresh_token = this.encrypt(tokenResult.refresh_token);
         }
         this.userConfig.expires = Math.round(new Date().getTime() / 1000) + tokenResult.expires_in;
         this.userConfig.firsttime = false;
 
         return new Promise<UserConfig>(
             (resolve, reject) => {
-                chrome.storage.local.set({ config: this.userConfig }, function () {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    }
-                    resolve(this.userConfig);
-                });
+                localStorage.setItem('config', JSON.stringify(this.userConfig));
+                resolve(this.userConfig);
             }
         )
     }
@@ -58,12 +66,8 @@ export class UserService {
     reset() {
         return new Promise(
             (resolve, reject) => {
-                chrome.storage.local.remove(["config"], function () {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    }
-                    resolve();
-                });
+                localStorage.removeItem('config');
+                resolve();
             }
         )
     }
