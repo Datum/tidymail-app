@@ -38,7 +38,7 @@ export class GmailService {
 
 
     accessToken: string;
-    defaultSearch: string = "list:";
+    defaultSearch: string = "label:^unsub";
 
 
     //used to cancel long running processes
@@ -66,6 +66,11 @@ export class GmailService {
     }
 
     send(to) {
+        //check if email is valud
+        if(to.indexOf('?') != -1) {
+            to = to.substring(0, to.indexOf('?'));
+        }
+
         let top = {
             'To': to,
             'Subject': 'Unsubscribe'
@@ -88,7 +93,7 @@ export class GmailService {
 
 
 
-    findAll(searchTerm: string, callback, pageCallback = null, lastKnownId: string = null) {
+    findAll(callback, pageCallback = null, lastKnownId: string = null) {
         var r = [];
         this.loadMessageIds(null, r, callback, pageCallback, lastKnownId);
     }
@@ -208,7 +213,7 @@ export class GmailService {
     private loadMessageIds(nextPageToken, list, callback, callPageCallback = null, lastKnownId: string = null) {
         var self = this;
 
-        var url = this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=list:";
+        var url = this.baseUrl + "/messages?access_token=" + this.accessToken + "&q=" + this.defaultSearch;
         if (nextPageToken) {
             url += "&pageToken=" + nextPageToken;
         }

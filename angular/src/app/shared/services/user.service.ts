@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 
 import { UserConfig } from '../models';
 
+import SimpleCrypto from "simple-crypto-js";
+
 
 
 @Injectable()
@@ -19,8 +21,13 @@ export class UserService {
             (resolve, reject) => {
                 var config = localStorage.getItem('config');
                 if(config == null) {
+
+                    var randomsecret = SimpleCrypto.generateRandom();
+                    alert(randomsecret);
+
                     self.userConfig = new UserConfig();
                     self.userConfig.firsttime = true;
+                    self.userConfig.secret = randomsecret;
                 } else {
                     self.userConfig = JSON.parse(config);
                 }
@@ -30,10 +37,20 @@ export class UserService {
     }
 
 
+    encrypt(str:string) {
+        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+        return simpleCrypto.encrypt(str).toString();
+    }
+
+    decrypt(enc:string) {
+        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+        return simpleCrypto.decrypt(enc).toString();
+    }
+
     storeAccessTokens(tokenResult) {
-        this.userConfig.access_token = tokenResult.access_token;
+        this.userConfig.access_token = this.encrypt(tokenResult.access_token);
         if(tokenResult.refresh_token !== undefined) {
-            this.userConfig.refresh_token = tokenResult.refresh_token;
+            this.userConfig.refresh_token = this.encrypt(tokenResult.refresh_token);
         }
         this.userConfig.expires = Math.round(new Date().getTime() / 1000) + tokenResult.expires_in;
         this.userConfig.firsttime = false;

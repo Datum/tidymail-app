@@ -18,13 +18,13 @@
                     </mdc-list-item-text>
 
                     <div mdcListItemMeta>
-                        <button mdc-button (click)="keepAll(m.hostname)">
+                        <button mdc-button (click)="keepAll(m.hostname,$event)">
                             KEEP ALL
                         </button>
-                        <button mdc-button (click)="unsubscribeAll(m.hostname)">
+                        <button mdc-button (click)="unsubscribeAll(m.hostname, $event)">
                             UNSUBSCRIBE ALL
                         </button>
-                        <button mdc-button (click)="deleteAll(m.hostname)">
+                        <button mdc-button (click)="deleteAll(m.hostname, $event)">
                             DELETE ALL
                         </button>
                     </div>
@@ -37,13 +37,13 @@
                             {{ msg.from }}
                         </mdc-list-item-text>
                         <div mdcListItemMeta>
-                            <button mdc-button (click)="keep(msg.id)">
+                            <button mdc-button (click)="keep(msg.id)" data-loading-text="loading...">
                                 KEEP
                             </button>
-                            <button mdc-button (click)="unsubscribe(msg.id)">
+                            <button mdc-button (click)="unsubscribe(msg.id)" data-loading-text="loading...">
                                 UNSUBSCRIBE
                             </button>
-                            <button mdc-button (click)="delete(msg.id)">
+                            <button mdc-button (click)="delete(msg.id)" data-loading-text="loading..."> 
                                 DELETE
                             </button>
                         </div>

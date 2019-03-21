@@ -39,12 +39,25 @@ export class HomeComponent implements OnInit {
             alert(error);
         }
 
+
+/*
+        this._dbService.newM.subscribe(function(mails) {
+            self.undhandledMails = self.groupDisplay(mails);
+            self.isLoaded = true;
+        });
+        */
+
+        
+
+
         this._dbService.undhandledMails.subscribe(function(mails) {
             self.undhandledMails = self.groupMails(mails);
             self.isLoaded = true;
         });
+        
 
         this._dbService.keepMails.subscribe(function(mails) {
+            console.log(mails);
             self.keepMails = self.groupMails(mails);
         });
 
@@ -56,6 +69,29 @@ export class HomeComponent implements OnInit {
 
     tabChanged(event: MdcTabActivatedEvent): void { 
         this.activeTab = event.index;
+    }
+
+
+    groupDisplay(msgList) {
+        var group = {};
+        var dspGroup = [];
+        msgList.forEach((item: MessageGroup) => {
+            var firstDomainChar = item.hostname.substring(0, 1).toLocaleLowerCase();
+            group[firstDomainChar] = group[firstDomainChar] || [];
+            group[firstDomainChar].push(item);
+        });
+
+        //create list with all grouped
+        for (var key in group) {
+            var dg = new DisplayGroup();
+            dg.name = key.toUpperCase();
+            dg.messagegroups = group[key];
+            dspGroup.push(dg);
+        }
+
+        dspGroup.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+
+        return dspGroup;
     }
 
     groupMails(msgList) {

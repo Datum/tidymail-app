@@ -5,6 +5,7 @@ import { TAB_ID } from './tab-id.injector';
 
 import { GmailService, DbService, UserService } from './shared';
 
+import { Message } from './shared/models';
 
 
 
@@ -82,9 +83,6 @@ export class AppComponent implements OnInit {
         //check if actual token still valid
         var self = this;
 
-
-        
-
         try {
 
             //create/init database
@@ -103,14 +101,14 @@ export class AppComponent implements OnInit {
                 //check if token still valid
                 if (userConfig.expires < new Date().getTime() / 1000) {
                     //token expired, refresh
-                    var refreshTokenResult = await this._gmailService.refreshToken(userConfig.refresh_token);
+                    var refreshTokenResult = await this._gmailService.refreshToken(this._userService.decrypt(userConfig.refresh_token));
 
                     //store new token
                     await this._userService.storeAccessTokens(refreshTokenResult);
                 }
 
                 //init gmailService with tokens
-                this._gmailService.setAccessToken(userConfig.access_token);
+                this._gmailService.setAccessToken(this._userService.decrypt(userConfig.access_token));
 
                 //set user logged in
                 this.isLoggedIn = true;
@@ -134,6 +132,7 @@ export class AppComponent implements OnInit {
 
 
     async sync() {
+
         var self = this;
         var lastId = await this._dbService.getLastMailId();
         var syncCount = 0;
@@ -147,37 +146,35 @@ export class AppComponent implements OnInit {
         var ignores = msgUnsubs.map(function (obj) { return obj.hostname; });
         ignores = ignores.filter(function (v, i) { return ignores.indexOf(v) == i; });
 
-        this._gmailService.findAll("list:", async function (mailIds) {
-            //alert(mailIds.length);
+        this._gmailService.findAll(async function (mailIds) {
 
             var iDownloadccount = 0;
             var iupdateFrequence = 10;
             var workCount = 0;
 
             self.bCancel = false;
-            self.statusMessage = ' processeing...';
+            self.statusMessage = 'syncing...';
 
             await asyncForEach(mailIds, async (element) => {
                 workCount++;
+
+                //if cancel flag set, return (break not possbile in async)
                 if (self.bCancel) {
                     return;
                 }
 
+                //check if id already known, if yes return
                 if (await self._dbService.exists(element.id) !== undefined) {
                     return;
                 }
 
+                //update ui status test
                 self.statusMessage = iDownloadccount.toString() + "/" + (workCount-iDownloadccount).toString() + ' processed/ignored';
 
-
-                if(ignoreIds.indexOf(element.id) != -1) {
-                    //alert('ignoore)');
-                    return;
-                }
-
+                //get complete message from gmail api
                 var msg = await self._gmailService.getMessageDetail(element.id);
 
-                //Google <no-reply@accounts.google.com>
+                //get all emails with same from, and add ids in db, so they can be ignored, only last msg is relevant
                 var iFind = msg.from.indexOf('<');
                 if(iFind != -1) {
                     var msgFromName = msg.from.substring(0,iFind).trim().replace('"','');
@@ -205,16 +202,23 @@ export class AppComponent implements OnInit {
 
                     var result = rlMsgIdsList.map(function(e) {return e.id;});
 
+                    for(var a = 0; a < result.length;a++) {
+                        if(result[a] == msg.id) {
+                            continue;
+                        }
+                        var msgIgnore = new Message();
+                        msgIgnore.status = 4
+                        msgIgnore.id = result[a];
+                        msgIgnore.hostname = msg.hostname;
+                        await self._dbService.add(msgIgnore, false);
+                    }
+
                     ignoreIds = ignoreIds.concat(result);
 
                     msg.ignoredCount = result.length;
 
                     //if same from / email already exists ignore
-                    /*
-                    if(existsing.indexOf(msgFromName+msgFromEmail) != -1) {
-                        //alert('ignoore)');
-                        return;
-                    }
+                    /* }
                     */
 
                     //existsing.push(msgFromName+msgFromEmail);

@@ -11,6 +11,8 @@ export class MessageGroup {
     icon: string;
     hostname:string;
     subject:string;
+    from:string;
+    ids:string[];
     isCollapsed:boolean;
 
     get unreadCount():number {

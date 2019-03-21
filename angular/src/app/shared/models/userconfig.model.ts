@@ -5,4 +5,5 @@ export class UserConfig {
     firsttime:boolean;
     email:string;
     lastAccess:number;
+    secret:string;
 }
