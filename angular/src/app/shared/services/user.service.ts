@@ -23,7 +23,6 @@ export class UserService {
                 if(config == null) {
 
                     var randomsecret = SimpleCrypto.generateRandom();
-                    alert(randomsecret);
 
                     self.userConfig = new UserConfig();
                     self.userConfig.firsttime = true;
