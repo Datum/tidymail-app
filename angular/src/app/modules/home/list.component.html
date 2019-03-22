@@ -18,14 +18,14 @@
                     </mdc-list-item-text>
                     <div class="delete-info mdc-list-item__secondary-text">{{ m.status }}</div>
 
-                    <div mdcListItemMeta *ngIf="status == 0">
-                        <button mdc-button (click)="keepAll(m.hostname,m,$event)">
+                    <div mdcListItemMeta>
+                        <button *ngIf="status == 0" mdc-button (click)="keepAll(m.hostname,a,i,$event)">
                             KEEP ALL
                         </button>
-                        <button mdc-button (click)="unsubscribeAll(m.hostname, m,$event)">
+                        <button *ngIf="status == 0" mdc-button (click)="unsubscribeAll(m.hostname, m,$event)">
                             UNSUBSCRIBE ALL
                         </button>
-                        <button mdc-button (click)="deleteAll(m.hostname, m, $event)">
+                        <button  *ngIf="status == 0"mdc-button (click)="deleteAll(m.hostname, m, $event)">
                             DELETE ALL
                         </button>
                     </div>
@@ -33,18 +33,22 @@
                 </mdc-list-item>
                 <div [attr.id]="'collapse' + a + i" [ngbCollapse]="m.isCollapsed">
                     <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index">
-                        <mdc-list-item-text
-                            secondaryText="{{ msg.ignoredCount + ' mails, last from:' +  (msg.internalDate | date:'medium') }}">
+                        <mdc-list-item-text *ngIf="status != 1"
+                            secondaryText="{{ msg.ignoredCount + ' mails, last from: ' +  (msg.internalDate | date:'medium') }}">
                             {{ msg.from }}
                         </mdc-list-item-text>
-                        <div mdcListItemMeta *ngIf="status == 0">
-                            <button mdc-button (click)="keep(msg.id)" data-loading-text="loading...">
+                        <mdc-list-item-text *ngIf="status == 1"
+                            secondaryText="{{ msg.ignoredCount + ' mails, unsubscribed at: ' +  (msg.unsubscribeDate | date:'medium') }}">
+                            {{ msg.from }}
+                        </mdc-list-item-text>
+                        <div mdcListItemMeta>
+                            <button *ngIf="status == 0" mdc-button (click)="keep(msg.id)">
                                 KEEP
                             </button>
-                            <button mdc-button (click)="unsubscribe(msg.id)" data-loading-text="loading...">
+                            <button *ngIf="status == 0" mdc-button (click)="unsubscribe(msg.id)">
                                 UNSUBSCRIBE
                             </button>
-                            <button mdc-button (click)="delete(msg.id)" data-loading-text="loading..."> 
+                            <button *ngIf="status == 0" mdc-button (click)="delete(msg.id)">
                                 DELETE
                             </button>
                         </div>

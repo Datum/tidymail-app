@@ -45,7 +45,7 @@ export class DbService {
 
         //create table with index fields
         this.db.version(1).stores({
-            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status',
+            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status,unsubscribeDate',
             mailgroups: '++id,hostname,from,*ids,status',
             messageGroups: '++id, hostname'
         });
@@ -169,7 +169,7 @@ export class DbService {
         var msg = this._undhandledMessages.filter(function (el) { return el.id == msgId; });
         this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != msgId; });
         this._unsubMessages.push(msg[0]);
-        this.db.mails.update(msgId, { status: 1 });
+        this.db.mails.update(msgId, { status: 1, unsubscribeDate: Date.now() });
         this.refresh();
     }
 
@@ -201,14 +201,16 @@ export class DbService {
     }
 
     async unsubscribeAll(hostname: string) {
-        var allMessagesToUnsubscribe = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
-        allMessagesToUnsubscribe.forEach(async element => {
+        var allMessagesToKeep = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
+        allMessagesToKeep.forEach(async element => {
             if(element.status == 0) {
-                await this.db.mails.update(element.id, { status: 1 });
+                var msg = this._undhandledMessages.filter(function (el) { return el.id == element.id; });
+                this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != element.id; });
+                this._unsubMessages.push(msg[0]);
+                this.db.mails.update(element.id, { status: 1, unsubscribeDate: Date.now() });
             }
         });
-
-        this.init();
+        this.refresh();
     }
 
     refresh() {

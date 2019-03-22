@@ -28,5 +28,6 @@ export class Message {
     labelIds:any;
     isChecked:boolean;
     ignoredCount:number;
+    unsubscribeDate:number;
 
 }
