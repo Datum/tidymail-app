@@ -54,6 +54,7 @@ export class AppComponent implements OnInit {
     isLoaded: boolean = false;
     isSyncing: boolean = false;
     statusMessage: string = "";
+    progress:number = 0;
 
 
     async login() {
@@ -151,6 +152,11 @@ export class AppComponent implements OnInit {
             var iDownloadccount = 0;
             var iupdateFrequence = 10;
             var workCount = 0;
+            var totalCount = mailIds.length;
+
+            //250
+
+
 
             self.bCancel = false;
             self.statusMessage = 'syncing...';
@@ -169,7 +175,8 @@ export class AppComponent implements OnInit {
                 }
 
                 //update ui status test
-                self.statusMessage = iDownloadccount.toString() + "/" + (workCount-iDownloadccount).toString() + ' processed/ignored';
+                self.statusMessage = iDownloadccount.toString() + ' imported (' + Math.round((workCount / totalCount) * 100) + '%)';
+                self.progress = (Math.round((workCount / totalCount) * 100)) / 100;
 
                 //get complete message from gmail api
                 var msg = await self._gmailService.getMessageDetail(element.id);
