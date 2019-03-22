@@ -51,9 +51,16 @@ export class ListComponent {
 
 
 
-    async keepAll(hostname,mg, event) {
+    async keepAll(hostname,dgIndex, mgIndex, event) {
         event.stopPropagation(); 
         await this._dbService.keepAll(hostname);
+
+        //this.groups[dgIndex].messagegroups.splice( mgIndex, 1 );
+        /*
+        if(this.groups[dgIndex].messagegroups.length == 0) {
+            delete this.groups[dgIndex];
+        }
+        */
     }
 
     async deleteAll(hostname,mg, event) {
