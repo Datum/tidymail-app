@@ -19,14 +19,17 @@
                     <div class="delete-info mdc-list-item__secondary-text">{{ m.status }}</div>
 
                     <div mdcListItemMeta>
-                        <button *ngIf="status == 0" mdc-button (click)="keepAll(m.hostname,a,i,$event)">
-                            KEEP ALL
+                        <button *ngIf="status == 0" mdc-button (click)="keepAll(m.hostname,m,$event)">
+                            <span [hidden]="m.keepLoading">KEEP ALL</span>
+                            <span [hidden]="!m.keepLoading">{{ m.statusText }}</span>
                         </button>
                         <button *ngIf="status == 0" mdc-button (click)="unsubscribeAll(m.hostname, m,$event)">
-                            UNSUBSCRIBE ALL
+                            <span [hidden]="m.unsubLoading">UNSUBSCRIBE ALL</span>
+                            <span [hidden]="!m.unsubLoading">{{ m.statusText }}</span>
                         </button>
                         <button  *ngIf="status == 0"mdc-button (click)="deleteAll(m.hostname, m, $event)">
-                            DELETE ALL
+                            <span [hidden]="m.deleteLoading">DELETE ALL</span>
+                            <span [hidden]="!m.deleteLoading">{{ m.statusText }}</span>
                         </button>
                     </div>
 

@@ -19,6 +19,10 @@ export class ListComponent {
     @Input() status: number;
 
 
+    loading:boolean = false;
+    statusText:string = 'Loading...';
+
+
     
     constructor(private _dbService:DbService, private snackbar: MdcSnackbar, private _gmailService:GmailService) { }
 
@@ -51,9 +55,15 @@ export class ListComponent {
 
 
 
-    async keepAll(hostname,dgIndex, mgIndex, event) {
+    async keepAll(hostname,mg, event) {
+
+        mg.keepLoading = true;
+        mg.statusText = "Loading...";
+
         event.stopPropagation(); 
         await this._dbService.keepAll(hostname);
+
+        mg.keepLoading = false;;
 
         //this.groups[dgIndex].messagegroups.splice( mgIndex, 1 );
         /*
@@ -64,19 +74,31 @@ export class ListComponent {
     }
 
     async deleteAll(hostname,mg, event) {
+
+        mg.deleteLoading = true;
+
+        mg.statusText = "Loading...";
+
         event.stopPropagation(); 
         var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname",hostname).toArray();
         for(var i = 0; i < allMessagesToDelete.length;i++) {
-            mg.status = 'delete ' + i + ' of ' + allMessagesToDelete.length;
+            mg.statusText = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
             await this._gmailService.delete(allMessagesToDelete[i].id);
         }
 
         await this._dbService.deleteAll(hostname);
+
+        mg.deleteLoading = false;
     }
 
     async unsubscribeAll(hostname,mg, event) {
+        mg.unsubLoading = true;
+        mg.statusText = "Loading...";
+
         event.stopPropagation(); 
         await this._dbService.unsubscribeAll(hostname);
+
+        mg.unsubLoading = false;
     }
 }
 

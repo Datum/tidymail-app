@@ -4,6 +4,9 @@ export class MessageGroup {
 
     constructor() {
         this.isCollapsed = true;
+        this.keepLoading = false;
+        this.unsubLoading = false;
+        this.deleteLoading = false;
     }
 
     messages : Message[];
@@ -15,6 +18,10 @@ export class MessageGroup {
     ids:string[];
     isCollapsed:boolean;
     status:string;
+    statusText:string;
+    keepLoading:boolean;
+    unsubLoading:boolean;
+    deleteLoading:boolean;
 
     get unreadCount():number {
         return this.messages.filter((obj) => obj.unread === true).length
