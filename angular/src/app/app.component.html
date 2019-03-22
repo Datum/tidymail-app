@@ -44,9 +44,7 @@
         <div class="col text-center" style="margin-top:8px;">
             <div *ngIf="isSyncing">
                 {{ statusMessage }} <mdc-icon (click)="cancel()" inline clickable>cancel</mdc-icon>
-
-                <mdc-linear-progress></mdc-linear-progress>
-
+                <mdc-linear-progress [progress]="progress"></mdc-linear-progress>
             </div>
             <div *ngIf="!isSyncing">
                 <button mdc-button (click)="sync()">

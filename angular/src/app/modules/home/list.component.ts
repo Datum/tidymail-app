@@ -96,6 +96,48 @@ export class ListComponent {
         mg.statusText = "Loading...";
 
         event.stopPropagation(); 
+
+        var allMessagesToUnsubscribe = await this._dbService.filterEqualsIgnoreCase("hostname",hostname).toArray();
+        for(var i = 0; i < allMessagesToUnsubscribe.length;i++) {
+            mg.statusText = 'Unsubscribe ' + i + ' of ' + allMessagesToUnsubscribe.length;
+            
+            if(allMessagesToUnsubscribe[i].unsubscribeEmail !== undefined) {
+                var result = await this._gmailService.send(allMessagesToUnsubscribe[i].unsubscribeEmail);
+                //await this._dbService.unsubscribe(id);
+                await this._gmailService.delete(result.id);
+    
+                //this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
+            } else {
+                await this._gmailService.unsubscribeUrl(allMessagesToUnsubscribe[i].unsubscribeUrl);
+                //await this._dbService.unsubscribe(id);
+    
+                //this.snackbar.open('Unsubscription requested.');
+            }
+        }
+
+
+
+        /*
+
+         var msg = await this._dbService.exists(id);
+
+        if(msg.unsubscribeEmail !== undefined) {
+            var result = await this._gmailService.send(msg.unsubscribeEmail);
+            await this._dbService.unsubscribe(id);
+            await this._gmailService.delete(result.id);
+
+            this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
+        } else {
+            await this._gmailService.unsubscribeUrl(msg.unsubscribeUrl);
+            await this._dbService.unsubscribe(id);
+
+            this.snackbar.open('Unsubscription requested.');
+        }
+
+        */
+
+        this.snackbar.open('Unsubscription for ' + hostname + ' requested.');
+        
         await this._dbService.unsubscribeAll(hostname);
 
         mg.unsubLoading = false;

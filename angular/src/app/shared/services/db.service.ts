@@ -62,7 +62,6 @@ export class DbService {
 
     async init() {
         this._undhandledMessages = await this.filterEquals("status", 0).toArray();
-        console.log(this._undhandledMessages.length);
         this._undhandledMessagesObervable.next(this._undhandledMessages);
 
         this._keepMessages = await this.filterEquals("status", 2).toArray();
