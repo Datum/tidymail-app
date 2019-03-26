@@ -6,4 +6,10 @@ export class UserConfig {
     email:string;
     lastAccess:number;
     secret:string;
+    username:string;
+    password:string;
+    imapurl:string;
+    imapport:number;
+    isGmailProvider:boolean;
+    modseq:string;
 }

@@ -11,6 +11,7 @@ export class Message {
     constructor() {
         this.status = Status.New;
         this.isChecked = false;
+        this.ignoredCount = 0;
     }
 
 

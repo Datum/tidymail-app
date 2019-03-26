@@ -6,8 +6,12 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+import { FormsModule } from '@angular/forms';
+
 
 import { HomeModule } from './modules/home/home.module'
+
+import { DialogAlert } from './dialog-alert';
 
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
@@ -21,7 +25,10 @@ import {
     MdcDrawerModule,
     MdcIconButtonModule,
     MdcButtonModule,
-    MdcLinearProgressModule  
+    MdcLinearProgressModule,
+    MdcRadioModule,
+    MdcFormFieldModule,
+    MdcDialogModule 
 } from '@angular-mdc/web';
 
 
@@ -29,14 +36,17 @@ import {
     GmailService,
     DbService,
     UserService,
+    ImapService,
   } from './shared';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DialogAlert
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     NgbModule.forRoot(),
     /*BrowserAnimationsModule,*/
     HttpClientModule,
@@ -50,9 +60,13 @@ import {
     MdcDrawerModule,
     MdcIconButtonModule,
     MdcButtonModule,
-    MdcLinearProgressModule
+    MdcLinearProgressModule,
+    MdcRadioModule,
+    MdcFormFieldModule,
+    MdcDialogModule 
   ],
-  providers: [GmailService, DbService, UserService],
-  bootstrap: [AppComponent]
+  providers: [GmailService, DbService, UserService,ImapService],
+  bootstrap: [AppComponent],
+  entryComponents: [DialogAlert]
 })
 export class AppModule { }

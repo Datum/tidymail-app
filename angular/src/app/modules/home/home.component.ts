@@ -101,6 +101,10 @@ export class HomeComponent implements OnInit {
         var dspGroup = [];
 
 
+        //console.log(msgList);
+
+
+        
         msgList.forEach((item: Message) => {
             group[item.hostname] = group[item.hostname] || [];
             group[item.hostname].push(item);
@@ -132,6 +136,7 @@ export class HomeComponent implements OnInit {
         }
 
         dspGroup.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+        
 
 
         return dspGroup;

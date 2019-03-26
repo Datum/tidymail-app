@@ -3,9 +3,23 @@ import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit } from '@an
 import { TAB_ID } from './tab-id.injector';
 
 
-import { GmailService, DbService, UserService } from './shared';
+import { GmailService, DbService, UserService, ImapService } from './shared';
 
 import { Message } from './shared/models';
+
+import { DialogAlert } from './dialog-alert';
+
+
+
+import { MdcDialog, MdcDialogRef, MDC_DIALOG_DATA } from '@angular-mdc/web';
+
+
+
+
+import {
+    mimeWordEncode, mimeWordDecode,
+    mimeWordsEncode, mimeWordsDecode
+  } from 'emailjs-mime-codec'
 
 
 
@@ -54,34 +68,92 @@ export class AppComponent implements OnInit {
     isLoaded: boolean = false;
     isSyncing: boolean = false;
     statusMessage: string = "";
-    progress:number = 0;
+    progress: number = 0;
 
+    imap_username: string;// = "florian@datum.org";
+    imap_password: string;// = "meblmmoxaxwejrov";
+
+    //imap_username: string = "florian.honegger@shinternet.ch";// "florian@datum.org";
+    //imap_password: string = "tinetta,.12";// "meblmmoxaxwejrov";
+    imap_host: string = 'mail.shinternet.ch';
+    imap_port: string = '993';
+
+
+    selectedMailProvider: string;
+    //providers: string[] = ['Gmail', 'Other'];
+    providers: string[] = ['Gmail', 'Other'];
+
+
+    userConfig:any;
+
+
+    providerSelectionChanged() {
+        console.log(this.selectedMailProvider);
+    }
+
+
+    showAlert(msg) {
+        const dialogRef = this.dialog.open(DialogAlert, {
+            escapeToClose: false,
+            clickOutsideToClose: false,
+            buttonsStacked: false,
+            id: 'my-dialog',
+            data: { label: msg }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            console.log(result);
+        });
+    }
 
     async login() {
 
-        
-        //login
-        var tokenResult = await this._gmailService.login();
+        var self = this;
 
+        if (this.selectedMailProvider != "Gmail") {
+            if (this.imap_host == '' || this.imap_port == '') {
+                alert('empty host / port');
+            }
+        } else {
+            this.imap_host = 'imap.gmail.com';
+            this.imap_port = "993";
+        }
 
-        //console.log(tokenResult);
-        //alert(tokenResult);
+        if (this.imap_password == '' || this.imap_username == '') {
+            alert('empty username/password');
+            return;
+        }
 
-        //store tokens in localStorage
-        await this._userService.storeAccessTokens(tokenResult);
+        //init imap service with credentials
+        this._imapService.init(this.imap_username, this.imap_password, this.imap_host, this.imap_port, true, async function (pem) {
 
-        //set user logged in
-        this.isLoggedIn = true;
-        
+            //try to open 
+            try {
+                //open imap client
+                await self._imapService.open();
+
+                //check if host is gmail (supports gmail search, etc)
+                var isProviderGmail = await self._imapService.isGmail();
+
+                //if successfull , store to localStorage
+                await self._userService.storeImapSettings(self.imap_host, self.imap_port, self.imap_username, self.imap_password, isProviderGmail);
+
+                //close client
+                //await self._imapService.close();
+
+                //set user logged in
+                self.isLoggedIn = true;
+
+            } catch (error) {
+                self.showAlert(error);
+            }
+        });
     }
 
 
 
- 
-
-
+    //main app init
     async ngOnInit() {
-        //check if actual token still valid
         var self = this;
 
         try {
@@ -91,34 +163,30 @@ export class AppComponent implements OnInit {
 
             //create init user 
             var userConfig = await this._userService.initConfig();
+            this.userConfig = userConfig;
             if (userConfig.firsttime) {
                 //if first time show auto screen and login
-                var tokenResult = await this._gmailService.login();
+                //var tokenResult = await this._gmailService.login();
 
                 //console.log(tokenResult);
                 //store tokens in localStorage
-                await self._userService.storeAccessTokens(tokenResult);
+                //await self._userService.storeAccessTokens(tokenResult);
             } else {
-                //check if token still valid
-                if (userConfig.expires < new Date().getTime() / 1000) {
-                    //token expired, refresh
-                    var refreshTokenResult = await this._gmailService.refreshToken(this._userService.decrypt(userConfig.refresh_token));
+    
 
-                    //store new token
-                    await this._userService.storeAccessTokens(refreshTokenResult);
-                }
-
-                //init gmailService with tokens
-                this._gmailService.setAccessToken(this._userService.decrypt(userConfig.access_token));
-
-                //set user logged in
-                this.isLoggedIn = true;
+                //init the imap client
+                this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
+                    
+                    //open imap for further processing
+                    await self._imapService.open();
+                    
+                    //var boxes = await self._imapService.getMailBoxes();
+                    self.isLoggedIn = true;
+                });
             }
         } catch (error) {
-            console.log(error);
+            this.showAlert(error);
         }
-
-        
     }
 
     messages = [];
@@ -129,10 +197,165 @@ export class AppComponent implements OnInit {
         private _changeDetector: ChangeDetectorRef,
         private _gmailService: GmailService,
         private _userService: UserService,
+        private _imapService: ImapService,
+        public dialog: MdcDialog,
         private _dbService: DbService, ) { }
 
 
+    /* sync the mails from imap to local */
     async sync() {
+        var self = this;
+
+
+        try {
+
+            //set sync mode for UI
+            self.isSyncing = true;
+
+
+            //get total stats about mailbox, mainly for modseq for further searches....
+            var mb = await this._imapService.selectMailBox();
+
+
+            /* {
+            exists: 2303
+flags: (7) ["\Answered", "\Flagged", "\Draft", "\Deleted", "\Seen", "$NotPhishing", "$Phishing"]
+highestModseq: "219347"
+permanentFlags: (8) ["\Answered", "\Flagged", "\Draft", "\Deleted", "\Seen", "$NotPhishing", "$Phishing", "\*"]
+readOnly: false
+uidNext: 2959
+uidValidity: 1
+            }
+*/
+
+            //set ui info
+            self.statusMessage = "searching for mails...";
+
+            //get all ids with given search term
+            var ids = await self._imapService.getMailIds();
+
+            //ids.length = 30;
+
+            //get total count of mails to process
+            var totalCount = ids.length;
+
+            //await this._userService.storeLastRun();
+
+
+
+            console.log('imap returns');
+            console.log(ids);
+
+            var newIds = [];
+
+            //download only new ids
+
+            /*
+            for(var i = 0; i < ids.length;i++) {
+                if(await self._dbService.exists(ids[i]) === undefined) {
+                    newIds.push(ids[i]);
+                }
+            }
+            */
+            
+
+
+            console.log('new ids');
+            console.log(newIds);
+
+        
+
+            var updateCount = 0;
+
+            //download all mails
+            var fullResult = await self._imapService.getMailContent(ids,async  function (workedCount, fetchedMails) {
+                updateCount++;
+                self.statusMessage = workedCount.toString() + ' downloaded (' + Math.round((workedCount / totalCount) * 100) + '%)';
+                self.progress = (Math.round((workedCount / totalCount) * 100)) / 100;
+
+            });
+
+
+            console.log('all goten');
+
+            //set ui info
+            self.statusMessage = "importing mails...";
+
+
+            self.bCancel = false;
+
+            for(var i = 0; i < fullResult.length;i++) {
+
+
+                if(self.bCancel) {
+                    break;
+                }
+             
+
+                var msg = new Message();
+                msg.id = fullResult[i].uid;
+                msg.from = mimeWordsDecode(fullResult[i]['body[header.fields (from)]'].substr(6));
+
+                //msg.from = msg.from.replace('"','');
+
+                msg.from = msg.from.replace(/"/g, '');
+                msg.internalDate = Date.parse(fullResult[i]['body[header.fields (date)]'].substr(6));
+                msg.subject = mimeWordsDecode(fullResult[i]['body[header.fields (subject)]'].substr(9));
+                msg.unsubscribeEmail = mimeWordsDecode(fullResult[i]['body[header.fields (list-unsubscribe)]'].substr(18));
+                msg.hostname = extractHostname(msg.from);
+
+                console.log(msg);
+
+                //await self._dbService.add(msg, i % 10 == 0 ? true : false);
+                await self._dbService.add(msg, false);
+            }
+
+            await self._dbService.refresh();
+
+            self.bCancel = false;
+
+            //set sync mode OFF for UI
+            self.isSyncing = false;
+
+            //close client
+            //await self._imapService.close();
+        } catch (error) {
+            self.showAlert(error);
+        }
+
+      
+
+        return;
+
+
+        //var mails = await this._imapService.list();
+        var mails = [];
+
+        console.log(mails);
+
+        var iDownloadccount = 0;
+        var iupdateFrequence = 10;
+        var workCount = 0;
+        var totalCount = mails.length;
+
+        await asyncForEach(mails, async (element) => {
+            //if cancel flag set, return (break not possbile in async)
+            if (self.bCancel) {
+                return;
+            }
+
+            //check if id already known, if yes return
+            if (await self._dbService.exists(element.uid) !== undefined) {
+                return;
+            }
+
+
+            self.statusMessage = iDownloadccount.toString() + ' imported (' + Math.round((workCount / totalCount) * 100) + '%)';
+            self.progress = (Math.round((workCount / totalCount) * 100)) / 100;
+        });
+
+
+        return;
 
         var self = this;
         var lastId = await this._dbService.getLastMailId();
@@ -183,34 +406,34 @@ export class AppComponent implements OnInit {
 
                 //get all emails with same from, and add ids in db, so they can be ignored, only last msg is relevant
                 var iFind = msg.from.indexOf('<');
-                if(iFind != -1) {
-                    var msgFromName = msg.from.substring(0,iFind).trim().replace('"','');
+                if (iFind != -1) {
+                    var msgFromName = msg.from.substring(0, iFind).trim().replace('"', '');
                     var msgFromEmail = msg.from.substring(iFind + 1, msg.from.length - 1);
 
 
                     //from:"info@twitter.com" from:"Twitter for Business "
                     var rlMsgIdsList = [];
-                    var rlMsgIds = await self._gmailService.loadMessageIdsWithQuery(null, "from:\""+msgFromEmail+"\" from:\"" + msgFromName + "\"");
+                    var rlMsgIds = await self._gmailService.loadMessageIdsWithQuery(null, "from:\"" + msgFromEmail + "\" from:\"" + msgFromName + "\"");
                     rlMsgIdsList = rlMsgIdsList.concat(rlMsgIds.messages);
                     var nxtPageToken = rlMsgIds.nextPageToken;
-                    while(nxtPageToken) {
-                        var rlMsgIds2 = await self._gmailService.loadMessageIdsWithQuery(nxtPageToken, "from:\""+msgFromEmail+"\" from:\"" + msgFromName + "\"");
+                    while (nxtPageToken) {
+                        var rlMsgIds2 = await self._gmailService.loadMessageIdsWithQuery(nxtPageToken, "from:\"" + msgFromEmail + "\" from:\"" + msgFromName + "\"");
                         rlMsgIdsList = rlMsgIdsList.concat(rlMsgIds2.messages);
                         nxtPageToken = rlMsgIds2.nextPageToken;
                     }
 
 
-                    if(rlMsgIdsList.length > 0) {
-                        if(rlMsgIdsList[0] == undefined) {
+                    if (rlMsgIdsList.length > 0) {
+                        if (rlMsgIdsList[0] == undefined) {
                             console.log('ignore undefined');
                             return;
                         }
                     }
 
-                    var result = rlMsgIdsList.map(function(e) {return e.id;});
+                    var result = rlMsgIdsList.map(function (e) { return e.id; });
 
-                    for(var a = 0; a < result.length;a++) {
-                        if(result[a] == msg.id) {
+                    for (var a = 0; a < result.length; a++) {
+                        if (result[a] == msg.id) {
                             continue;
                         }
                         var msgIgnore = new Message();
@@ -230,7 +453,7 @@ export class AppComponent implements OnInit {
 
                     //existsing.push(msgFromName+msgFromEmail);
 
-                    
+
                 }
 
                 //set ignore mails without link...
@@ -258,7 +481,9 @@ export class AppComponent implements OnInit {
 
     cancel() {
         this.bCancel = true;
-        this._gmailService.cancelProcess();
+        //this._gmailService.cancelProcess();
+
+        this._imapService.setCancel();
     }
 
     /*
@@ -427,4 +652,31 @@ async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index, array);
     }
+}
+
+
+
+function extractHostname(url) {
+
+
+    var iStart = url.lastIndexOf('<');
+    var iEnd = url.lastIndexOf('>');
+
+    if (iStart > -1 && iEnd > -1) {
+        var mail = url.substr(iStart + 1, iEnd - iStart - 1);
+        var at = mail.lastIndexOf('@');
+        if (at != -1) {
+            var domain = mail.substr(at + 1);
+            var dotCount = domain.split(".").length - 1;
+            if (dotCount > 1) {
+                var ii = domain.indexOf('.');
+                if (ii != -1) {
+                    domain = domain.substr(ii + 1);
+                }
+            }
+            return domain;
+        }
+    }
+
+    return url;
 }

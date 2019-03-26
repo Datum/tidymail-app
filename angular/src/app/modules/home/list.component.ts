@@ -3,7 +3,7 @@ import { Input, Component } from '@angular/core';
 
 import { DisplayGroup } from '../../shared/models';
 
-import { DbService, UserService, UserConfig, GmailService } from '../../shared';
+import { DbService, UserService, UserConfig, GmailService, ImapService } from '../../shared';
 
 
 import { MdcSnackbar } from '@angular-mdc/web';
@@ -24,7 +24,7 @@ export class ListComponent {
 
 
     
-    constructor(private _dbService:DbService, private snackbar: MdcSnackbar, private _gmailService:GmailService) { }
+    constructor(private _dbService:DbService, private snackbar: MdcSnackbar, private _imapService:ImapService, private _gmailService:GmailService) { }
 
     
     async keep(id) {
@@ -33,7 +33,11 @@ export class ListComponent {
 
     async delete(id) {
         await this._dbService.delete(id);
-        await this._gmailService.delete(id);
+
+        var deleteIds = [];
+        deleteIds.push(id);
+
+        await this._imapService.moveTrash(deleteIds);
     }
 
     async unsubscribe(id) {
@@ -80,11 +84,17 @@ export class ListComponent {
         mg.statusText = "Loading...";
 
         event.stopPropagation(); 
+
         var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname",hostname).toArray();
+        
+        await this._imapService.moveTrash(allMessagesToDelete.map(item => item.id));
+
+        /*
         for(var i = 0; i < allMessagesToDelete.length;i++) {
             mg.statusText = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
             await this._gmailService.delete(allMessagesToDelete[i].id);
         }
+        */
 
         await this._dbService.deleteAll(hostname);
 

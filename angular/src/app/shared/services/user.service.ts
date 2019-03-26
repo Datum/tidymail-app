@@ -20,7 +20,7 @@ export class UserService {
         return new Promise<UserConfig>(
             (resolve, reject) => {
                 var config = localStorage.getItem('config');
-                if(config == null) {
+                if (config == null) {
 
                     var randomsecret = SimpleCrypto.generateRandom();
 
@@ -36,19 +36,41 @@ export class UserService {
     }
 
 
-    encrypt(str:string) {
+    encrypt(str: string) {
         var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
         return simpleCrypto.encrypt(str).toString();
     }
 
-    decrypt(enc:string) {
+    decrypt(enc: string) {
         var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
         return simpleCrypto.decrypt(enc).toString();
     }
 
+
+    storeLastRun(modseq) {
+        this.userConfig.modseq = modseq;
+    }
+
+    storeImapSettings(host, port, username, password, isGmailProvider) {
+        this.userConfig.imapurl = host;
+        this.userConfig.imapport = parseInt(port);
+        this.userConfig.username = username;
+        this.userConfig.password = password;
+        this.userConfig.isGmailProvider = isGmailProvider;
+        this.userConfig.firsttime = false;
+
+        return new Promise<UserConfig>(
+            (resolve, reject) => {
+                localStorage.setItem('config', JSON.stringify(this.userConfig));
+                resolve(this.userConfig);
+            }
+        )
+
+    }
+
     storeAccessTokens(tokenResult) {
         this.userConfig.access_token = this.encrypt(tokenResult.access_token);
-        if(tokenResult.refresh_token !== undefined) {
+        if (tokenResult.refresh_token !== undefined) {
             this.userConfig.refresh_token = this.encrypt(tokenResult.refresh_token);
         }
         this.userConfig.expires = Math.round(new Date().getTime() / 1000) + tokenResult.expires_in;

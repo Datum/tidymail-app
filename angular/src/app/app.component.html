@@ -14,24 +14,70 @@
     </div>
     <hr>
     <div style="text-transform:uppercase; font-size:1.2em;">
-        Welcome to Datum Unsubscriber Extension
+        Welcome to Datum Tidy Mail
     </div>
     <hr>
     <div>
-        No account is linked yet. Please login with Google to link your account.
+        Please select your Email Provider to connect over IMAP to your mailbox
     </div>
+    <!--
     <div style="color:darkgray">
         <small>
             By confirming, you will give the extension access to READ,WRITE,MODIFY your email box.
         </small>
     </div>
     <hr>
+
+-->
+    <mdc-radio-group [(ngModel)]="selectedMailProvider" (change)="providerSelectionChanged()">
+        <mdc-form-field *ngFor="let provider of providers">
+            <mdc-radio [value]="provider"></mdc-radio>
+            <label>{{provider}}</label>
+        </mdc-form-field>
+    </mdc-radio-group>
+
+    <hr>
+
+    <div *ngIf="selectedMailProvider">
+        <div class="form-group" *ngIf="selectedMailProvider != 'Gmail'">
+            <label for="exampleInputEmail1">Imap Host </label>
+            <input type="text" class="form-control" aria-describedby="imapHelp" placeholder="Imap Host"
+                [(ngModel)]="imap_host">
+            <small id="imapHelp" class="form-text text-muted">imap.mailprovider.com</small>
+        </div>
+        <div class="form-group" *ngIf="selectedMailProvider != 'Gmail'">
+            <label for="exampleInputEmail1">Imap Port</label>
+            <input type="text" class="form-control" aria-describedby="imapHelp" placeholder="Imap Port"
+                [(ngModel)]="imap_port">
+            <small id="imapHelp" class="form-text text-muted">default 113 or SSL 993</small>
+        </div>
+        <div class="form-group">
+            <label for="exampleInputEmail1">Email address</label>
+            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+                placeholder="Enter email" [(ngModel)]="imap_username">
+            <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone
+                else.</small>
+        </div>
+        <div class="form-group">
+            <label for="exampleInputPassword1">Password</label>
+            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password"
+                [(ngModel)]="imap_password">
+        </div>
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="exampleCheck1" checked disabled>
+            <label class="form-check-label" for="exampleCheck1">Save Password in Localstorage</label>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="login()">Login</button>
+    </div>
+
+    <!--
     <div class="text-center">
-        <!--  -->
+
         <button mdc-button raised (click)="login()">
             <mdc-icon>account_box</mdc-icon>Login
         </button>
     </div>
+    -->
 </div>
 
 
