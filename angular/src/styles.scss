@@ -3,7 +3,6 @@ $mdc-theme-primary: #084280; // primary color
 $mdc-theme-secondary: #388e3c; // secondary color
 
 
-
 @import "~@angular-mdc/theme/material";
 
 
@@ -19,4 +18,9 @@ $mdc-theme-secondary: #388e3c; // secondary color
 
 .whiteframe {
     background:#fff; border-radius: 12px; padding: 12px;
+    margin-top:20px;
+}
+
+.no_underline {
+    @include mdc-tab-indicator-underline-height(0);
 }

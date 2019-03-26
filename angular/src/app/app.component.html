@@ -8,7 +8,7 @@
 
 
 
-<div *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;" class="container   ">
+<div *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;" class="container">
     <div>
         <img class="logo" src="assets/logo.svg">
     </div>
@@ -83,11 +83,11 @@
 </div>
 
 
-<div *ngIf="isLoggedIn">
+<div *ngIf="isLoggedIn" class="container">
 
     <div class="row">
         <div class="col">
-            <img src="assets/logo.png" style="padding-left:10px; padding-top:8px;">
+            <img src="assets/logo.svg" style="padding-left:10px; padding-top:8px;max-width:120px">
         </div>
         <div class="col text-center" style="margin-top:8px;">
             <div *ngIf="isSyncing">
@@ -108,7 +108,7 @@
     </div>
 
     <!-- [@myAnimation]="o.isActivated ? o.activatedRoute : ''" -->
-    <div>
+    <div class="whiteframe">
         <router-outlet #o="outlet"></router-outlet>
     </div>
 
