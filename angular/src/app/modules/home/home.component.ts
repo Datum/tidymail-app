@@ -114,7 +114,8 @@ export class HomeComponent implements OnInit {
         for (var key in group) {
             var mg = new MessageGroup();
             mg.name = key;
-            mg.messages = group[key];
+            mg.messages = [];//group[key];
+            mg.messageCount = group[key].length;
             mg.hostname = group[key][0].hostname;
             mg.subject = group[key][0].subject;
             msgGroup.push(mg);
