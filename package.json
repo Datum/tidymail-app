@@ -32,7 +32,7 @@
     "bootstrap": "^4.3.1",
     "core-js": "^2.5.4",
     "dexie": "^2.0.4",
-    "emailjs-imap-client": "^3.0.7",
+    "emailjs-imap-client": "git+https://github.com/Datum/emailjs-imap-client.git",
     "emailjs-mime-codec": "^2.0.8",
     "js-base64": "^2.5.1",
     "rxjs": "~6.3.3",
