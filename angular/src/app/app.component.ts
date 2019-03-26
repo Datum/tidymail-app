@@ -1,67 +1,20 @@
 import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit } from '@angular/core';
-
 import { TAB_ID } from './tab-id.injector';
-
-
 import { GmailService, DbService, UserService, ImapService } from './shared';
-
 import { Message } from './shared/models';
-
 import { DialogAlert } from './dialog-alert';
-
-
-
 import { MdcDialog, MdcDialogRef, MDC_DIALOG_DATA } from '@angular-mdc/web';
-
-
-
-
 import {
     mimeWordEncode, mimeWordDecode,
     mimeWordsEncode, mimeWordsDecode
   } from 'emailjs-mime-codec'
 
 
-
-import {
-    transition,
-    trigger,
-    query,
-    style,
-    animate,
-    group,
-    animateChild
-} from '@angular/animations';
-import { ReturnStatement } from '@angular/compiler';
-
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
-    /*
-    animations: [
-        trigger('myAnimation', [
-          transition('* => *', [
-            query(
-              ':enter',
-              [style({ opacity: 0 })],
-              { optional: true }
-            ),
-            query(
-              ':leave',
-               [style({ opacity: 1 }), animate('0.3s', style({ opacity: 0 }))],
-              { optional: true }
-            ),
-            query(
-              ':enter',
-              [style({ opacity: 0 }), animate('0.3s', style({ opacity: 1 }))],
-              { optional: true }
-            )
-          ])
-        ])] // register the animations
-        */
 })
-// tslint:disable:variable-name
 export class AppComponent implements OnInit {
     readonly tabId = this._tabId;
     isLoggedIn: boolean = false;
@@ -175,19 +128,14 @@ export class AppComponent implements OnInit {
                 //store tokens in localStorage
                 //await self._userService.storeAccessTokens(tokenResult);
             } else {
-    
-
                 //init the imap client
                 this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
                     
-
                     self._imapService.setGmailSearchMode(self.userConfig.isGmailProvider);
 
                     //open imap for further processing
                     await self._imapService.open();
 
-
-                    
                     //var boxes = await self._imapService.getMailBoxes();
                     self.isLoggedIn = true;
                 });
@@ -215,14 +163,17 @@ export class AppComponent implements OnInit {
         var self = this;
 
 
+        console.log(this.userConfig);
+
         try {
 
             //set sync mode for UI
             self.isSyncing = true;
 
-
             //get total stats about mailbox, mainly for modseq for further searches....
             var mb = await this._imapService.selectMailBox();
+
+            //return;
 
 
             /* {
@@ -246,18 +197,9 @@ uidValidity: 1
 
             //get total count of mails to process
             var totalCount = ids.length;
-
-            //await this._userService.storeLastRun();
-
-
-
-            console.log('imap returns');
-            console.log(ids);
-
             var newIds = [];
 
             //download only new ids
-
             /*
             for(var i = 0; i < ids.length;i++) {
                 if(await self._dbService.exists(ids[i]) === undefined) {
@@ -265,13 +207,7 @@ uidValidity: 1
                 }
             }
             */
-            
-
-
-            console.log('new ids');
-            console.log(newIds);
-
-        
+                    
 
             var updateCount = 0;
 
@@ -312,11 +248,15 @@ uidValidity: 1
                 msg.unsubscribeEmail = mimeWordsDecode(fullResult[i]['body[header.fields (list-unsubscribe)]'].substr(18));
                 msg.hostname = extractHostname(msg.from);
 
-                console.log(msg);
 
                 //await self._dbService.add(msg, i % 10 == 0 ? true : false);
                 await self._dbService.add(msg, false);
             }
+
+
+            console.log(mb.uidNext);
+
+            await this._userService.storeLastRun(mb.uidNext);
 
             await self._dbService.refresh();
 

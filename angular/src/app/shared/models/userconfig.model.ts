@@ -11,5 +11,5 @@ export class UserConfig {
     imapurl:string;
     imapport:number;
     isGmailProvider:boolean;
-    modseq:string;
+    lastUidProcessed:number;
 }

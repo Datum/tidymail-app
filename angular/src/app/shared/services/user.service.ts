@@ -47,8 +47,9 @@ export class UserService {
     }
 
 
-    storeLastRun(modseq) {
-        this.userConfig.modseq = modseq;
+    storeLastRun(lastUid) {
+        this.userConfig.lastUidProcessed = lastUid;
+        localStorage.setItem('config', JSON.stringify(this.userConfig));
     }
 
     storeImapSettings(host, port, username, password, isGmailProvider) {
