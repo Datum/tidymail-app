@@ -164,6 +164,9 @@ export class AppComponent implements OnInit {
             //create init user 
             var userConfig = await this._userService.initConfig();
             this.userConfig = userConfig;
+
+            console.log(userConfig);
+
             if (userConfig.firsttime) {
                 //if first time show auto screen and login
                 //var tokenResult = await this._gmailService.login();
@@ -177,8 +180,13 @@ export class AppComponent implements OnInit {
                 //init the imap client
                 this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
                     
+
+                    self._imapService.setGmailSearchMode(self.userConfig.isGmailProvider);
+
                     //open imap for further processing
                     await self._imapService.open();
+
+
                     
                     //var boxes = await self._imapService.getMailBoxes();
                     self.isLoggedIn = true;
