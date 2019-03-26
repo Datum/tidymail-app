@@ -11,3 +11,12 @@ $mdc-theme-secondary: #388e3c; // secondary color
     @include mdc-linear-progress-bar-color($material-color-red-500);
     @include mdc-linear-progress-buffer-color($material-color-red-100);
 }
+
+.logo {
+    max-width: 120px !important;
+    height: auto;
+}
+
+.whiteframe {
+    background:#fff; border-radius: 12px; padding: 12px;
+}

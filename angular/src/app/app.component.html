@@ -8,15 +8,16 @@
 
 
 
-<div *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px; text-align:center;">
+<div *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;" class="container   ">
     <div>
         <img class="logo" src="assets/logo.svg">
     </div>
-    <hr>
+    <br>
+    <div class="whiteframe">
     <div style="text-transform:uppercase; font-size:1.2em;">
         Welcome to Datum Tidy Mail
     </div>
-    <hr>
+
     <div>
         Please select your Email Provider to connect over IMAP to your mailbox
     </div>
@@ -36,7 +37,7 @@
         </mdc-form-field>
     </mdc-radio-group>
 
-    <hr>
+    <br>
 
     <div *ngIf="selectedMailProvider">
         <div class="form-group" *ngIf="selectedMailProvider != 'Gmail'">
@@ -78,6 +79,7 @@
         </button>
     </div>
     -->
+</div>
 </div>
 
 
