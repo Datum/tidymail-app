@@ -37,7 +37,9 @@ import {
     DbService,
     UserService,
     ImapService,
+    UIService
   } from './shared';
+
 
 @NgModule({
   declarations: [
@@ -65,7 +67,7 @@ import {
     MdcFormFieldModule,
     MdcDialogModule 
   ],
-  providers: [/*GmailService,*/ DbService, UserService,ImapService],
+  providers: [/*GmailService,*/ DbService, UserService,ImapService, UIService],
   bootstrap: [AppComponent],
   entryComponents: [DialogAlert]
 })

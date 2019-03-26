@@ -1,5 +1,4 @@
 <!--
-
 <div *ngIf="!isLoaded" style="min-width: 200px; padding:20px;">
     Loading
     <mdc-linear-progress></mdc-linear-progress>
@@ -8,78 +7,11 @@
 
 
 
-<div *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px;" class="container">
-    <div>
-        <img class="logo" src="assets/logo.svg">
-    </div>
-    <br>
-    <div class="whiteframe">
-    <div style="text-transform:uppercase; font-size:1.2em;">
-        Welcome to Datum Tidy Mail
-    </div>
+<!--
 
-    <div>
-        Please select your Email Provider to connect over IMAP to your mailbox
-    </div>
-    <!--
-    <div style="color:darkgray">
-        <small>
-            By confirming, you will give the extension access to READ,WRITE,MODIFY your email box.
-        </small>
-    </div>
-    <hr>
 
--->
-    <mdc-radio-group [(ngModel)]="selectedMailProvider" (change)="providerSelectionChanged()">
-        <mdc-form-field *ngFor="let provider of providers">
-            <mdc-radio [value]="provider"></mdc-radio>
-            <label>{{provider}}</label>
-        </mdc-form-field>
-    </mdc-radio-group>
-
-    <br>
-
-    <div *ngIf="selectedMailProvider">
-        <div class="form-group" *ngIf="selectedMailProvider != 'Gmail'">
-            <label for="exampleInputEmail1">Imap Host </label>
-            <input type="text" class="form-control" aria-describedby="imapHelp" placeholder="Imap Host"
-                [(ngModel)]="imap_host">
-            <small id="imapHelp" class="form-text text-muted">imap.mailprovider.com</small>
-        </div>
-        <div class="form-group" *ngIf="selectedMailProvider != 'Gmail'">
-            <label for="exampleInputEmail1">Imap Port</label>
-            <input type="text" class="form-control" aria-describedby="imapHelp" placeholder="Imap Port"
-                [(ngModel)]="imap_port">
-            <small id="imapHelp" class="form-text text-muted">default 113 or SSL 993</small>
-        </div>
-        <div class="form-group">
-            <label for="exampleInputEmail1">Email address</label>
-            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
-                placeholder="Enter email" [(ngModel)]="imap_username">
-            <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone
-                else.</small>
-        </div>
-        <div class="form-group">
-            <label for="exampleInputPassword1">Password</label>
-            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password"
-                [(ngModel)]="imap_password">
-        </div>
-        <div class="form-group form-check">
-            <input type="checkbox" class="form-check-input" id="exampleCheck1" checked disabled>
-            <label class="form-check-label" for="exampleCheck1">Save Password in Localstorage</label>
-        </div>
-        <button type="button" class="btn btn-primary" (click)="login()">Login</button>
-    </div>
-
-    <!--
-    <div class="text-center">
-
-        <button mdc-button raised (click)="login()">
-            <mdc-icon>account_box</mdc-icon>Login
-        </button>
-    </div>
-    -->
-</div>
+<div class="container" *ngIf="!isLoaded && !isLoggedIn" style="min-width: 200px; padding:20px; text-align:center;">
+  
 </div>
 
 
@@ -107,138 +39,15 @@
         </div>
     </div>
 
-    <!-- [@myAnimation]="o.isActivated ? o.activatedRoute : ''" -->
     <div class="whiteframe">
         <router-outlet #o="outlet"></router-outlet>
     </div>
 
 </div>
 
+-->
 
 
-<!--
 <div class="container">
-    <div class="row">
-      <div class="col">
-        1 of 2
-      </div>
-      <div class="col text-right">
-        2 of 2
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
-        1 of 3
-      </div>
-      <div class="col">
-        2 of 3
-      </div>
-      <div class="col">
-        3 of 3
-      </div>
-    </div>
-  </div>
-  <div class="alert alert-primary" role="alert">
-    A simple primary alert—check it out!
-  </div>
-
-  -->
-
-<!--
-<div *ngIf="!isLoggedIn">
-    <div>
-        your not logged in. please login
-    </div>
-    <br>
-    <button mdc-button raised (click)="login()">
-        <mdc-icon>account_box</mdc-icon>Login
-      </button>
+    <router-outlet #o="outlet"></router-outlet>
 </div>
--->
-
-
-<!--
-<mdc-top-app-bar class="top-app-bar-with-tabs" *ngIf="isLoggedIn">
-    <mdc-top-app-bar-row>
-        <mdc-top-app-bar-section align="start" title="{{ title }}">
-            <button mdcTopAppBarNavIcon (click)="drawer.open = !drawer.open">
-                <mdc-icon>menu</mdc-icon>
-            </button>
-        </mdc-top-app-bar-section>
-        <mdc-top-app-bar-section align="end">
-            <mdc-icon mdcTopAppBarActionItem>search</mdc-icon>
-            <mdc-icon mdcTopAppBarActionItem>notifications_none</mdc-icon>
-            <mdc-icon mdcTopAppBarActionItem (click)="profileMenu.open = !profileMenu.open">more_vert</mdc-icon>
-            <div mdcMenuSurfaceAnchor #menuAnchor>
-                <mdc-menu #profileMenu [anchorElement]="menuAnchor">
-                    <mdc-list>
-                        <mdc-list-item>My Profile</mdc-list-item>
-                        <mdc-list-divider></mdc-list-divider>
-                        <mdc-list-item>Sign out</mdc-list-item>
-                    </mdc-list>
-                </mdc-menu>
-            </div>
-        </mdc-top-app-bar-section>
-    </mdc-top-app-bar-row>
-    <mdc-top-app-bar-row>
-        <mdc-top-app-bar-section>
-            <mdc-tab-bar>
-                <mdc-tab-scroller>
-                    <mdc-tab *ngFor="let tab of tabs">
-                        <mdc-icon mdcTabIcon>{{ tab.icon }}</mdc-icon>
-                        <mdc-tab-label>{{ tab.label }} ({{tab.count}})</mdc-tab-label>
-                    </mdc-tab>
-                </mdc-tab-scroller>
-            </mdc-tab-bar>
-        </mdc-top-app-bar-section>
-    </mdc-top-app-bar-row>
-</mdc-top-app-bar>
--->
-
-<!--
-<div class="app-content" *ngIf="isLoggedIn">
-    <mdc-list avatar twoLine>
-            <mdc-list-item *ngFor="let m of messages">
-                <mdc-list-item-text *ngIf="m.subject !== undefined" secondaryText="{{ m.unsubscribeURL }}">{{ m.subject }}</mdc-list-item-text>
-                <mdc-list-item-text *ngIf="m.subject === undefined" secondaryText="loading...">{{ 'Id: ' +  m.id }}</mdc-list-item-text>
-                <button mdc-button mdcListItemMeta>
-                        <mdc-icon>delete</mdc-icon>
-                </button>
-            </mdc-list-item>
-        </mdc-list>
-
-        <!--
-    <mdc-list avatar twoLine>
-        <mdc-list-item *ngFor="let mail of mails">
-            <mdc-icon mdcListItemGraphic>
-                <img src="{{ mail.icon }}">
-            </mdc-icon>
-            <mdc-list-item-text secondaryText="Secondary text">{{ mail.title }}</mdc-list-item-text>
-            
-            <a href="#/list-demo/examples" mdcListItemMeta mdcIcon aria-label="View more" title="More info">done</a>Keep in Inbox
-            <a href="#/list-demo/examples" mdcListItemMeta mdcIcon aria-label="View more" title="More info">delete</a>Unsubscribe & Delete
-            
-            <button mdc-button mdcListItemMeta>
-                    <mdc-icon>done</mdc-icon>Keep in Inbox
-            </button>
-            <button mdc-button mdcListItemMeta>
-                    <mdc-icon>delete</mdc-icon>Unsubscribe & Delete
-            </button>
-        </mdc-list-item>
-    </mdc-list>
--->
-
-<!--
-    <div style="text-align:center">
-        <img width="300" alt="Angular Logo"
-            src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
-    
-    </div>
-    <h2>Current TAB ID: {{ tabId }}</h2>
-    <p>You can easily send messages to the content page with the provided Tab ID!</p>
-    <button (click)="onClick()">Click me to test</button>
-    <div><strong>{{ message }}</strong></div>
-
-
-</div>
--->
