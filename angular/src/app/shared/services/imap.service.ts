@@ -73,6 +73,10 @@ export class ImapService {
                 }
             });
 
+
+            //try to find tash mailbox
+
+
             //client initalized, fire callback with cert
             callback(pemEncodedCertificate);
         }
@@ -122,10 +126,8 @@ export class ImapService {
         } catch(error) {
             isGmail = false;
         }
-
         return isGmail;
     }
-
 
     //get relavant mail based on searchCommand;
     getMailIds() {
@@ -144,7 +146,6 @@ export class ImapService {
     setCancel() {
         this.bCancel = true;
     }
-
 
     //read requested fields for all mail, optional callback method can be provided, to is called after every batch with length and msd details
     async getMailContent(ids, batchCallBack) {

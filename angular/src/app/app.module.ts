@@ -33,7 +33,7 @@ import {
 
 
 import {
-    GmailService,
+    //GmailService,
     DbService,
     UserService,
     ImapService,
@@ -65,7 +65,7 @@ import {
     MdcFormFieldModule,
     MdcDialogModule 
   ],
-  providers: [GmailService, DbService, UserService,ImapService],
+  providers: [/*GmailService,*/ DbService, UserService,ImapService],
   bootstrap: [AppComponent],
   entryComponents: [DialogAlert]
 })

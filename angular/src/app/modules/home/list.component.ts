@@ -3,7 +3,7 @@ import { Input, Component } from '@angular/core';
 
 import { DisplayGroup } from '../../shared/models';
 
-import { DbService, UserService, UserConfig, GmailService, ImapService } from '../../shared';
+import { DbService, UserService, UserConfig, ImapService } from '../../shared';
 
 
 import { MdcSnackbar } from '@angular-mdc/web';
@@ -24,7 +24,7 @@ export class ListComponent {
 
 
 
-    constructor(private _dbService: DbService, private snackbar: MdcSnackbar, private _imapService: ImapService, private _gmailService: GmailService) { }
+    constructor(private _dbService: DbService, private snackbar: MdcSnackbar, private _imapService: ImapService) { }
 
 
 
@@ -158,28 +158,9 @@ export class ListComponent {
         }
 
 
-        this.snackbar.open('Unsubscription requested.');
+        //this.snackbar.open('Unsubscription requested.');
 
 
-
-        /*
-
-         var msg = await this._dbService.exists(id);
-
-        if(msg.unsubscribeEmail !== undefined) {
-            var result = await this._gmailService.send(msg.unsubscribeEmail);
-            await this._dbService.unsubscribe(id);
-            await this._gmailService.delete(result.id);
-
-            this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
-        } else {
-            await this._gmailService.unsubscribeUrl(msg.unsubscribeUrl);
-            await this._dbService.unsubscribe(id);
-
-            this.snackbar.open('Unsubscription requested.');
-        }
-
-        */
 
         this.snackbar.open('Unsubscription for ' + hostname + ' requested.');
 

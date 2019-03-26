@@ -2,7 +2,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { HomeComponent } from './home.component';
-import { DetailComponent} from './detail.component';
 import { ListComponent} from './list.component';
 
 
@@ -44,10 +43,12 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
         path: 'settings',
         component: SettingsComponent,
     },
+    /*
     {
         path: 'detail/:id/:status',
         component: DetailComponent,
     },
+    */
 ]);
 
 
@@ -55,7 +56,6 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
     declarations: [
         HomeComponent,
         SettingsComponent,
-        DetailComponent,
         ListComponent
     ],
     imports: [

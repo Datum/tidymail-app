@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit } from '@angular/core';
 import { TAB_ID } from './tab-id.injector';
-import { GmailService, DbService, UserService, ImapService } from './shared';
+import { DbService, UserService, ImapService } from './shared';
 import { Message } from './shared/models';
 import { DialogAlert } from './dialog-alert';
 import { MdcDialog, MdcDialogRef, MDC_DIALOG_DATA } from '@angular-mdc/web';
@@ -88,11 +88,11 @@ export class AppComponent implements OnInit {
                 //check if host is gmail (supports gmail search, etc)
                 var isProviderGmail = await self._imapService.isGmail();
 
+                //set imap client bavhior
+                self._imapService.setGmailSearchMode(isProviderGmail);
+
                 //if successfull , store to localStorage
                 await self._userService.storeImapSettings(self.imap_host, self.imap_port, self.imap_username, self.imap_password, isProviderGmail);
-
-                //close client
-                //await self._imapService.close();
 
                 //set user logged in
                 self.isLoggedIn = true;
@@ -151,7 +151,6 @@ export class AppComponent implements OnInit {
     constructor(
         @Inject(TAB_ID) private _tabId: number,
         private _changeDetector: ChangeDetectorRef,
-        private _gmailService: GmailService,
         private _userService: UserService,
         private _imapService: ImapService,
         public dialog: MdcDialog,
@@ -169,6 +168,11 @@ export class AppComponent implements OnInit {
 
             //set sync mode for UI
             self.isSyncing = true;
+
+            var bb = await self._imapService.getMailBoxes();
+            console.log(bb);
+
+            return;
 
             //get total stats about mailbox, mainly for modseq for further searches....
             var mb = await this._imapService.selectMailBox();
@@ -270,159 +274,6 @@ uidValidity: 1
         } catch (error) {
             self.showAlert(error);
         }
-
-      
-
-        return;
-
-
-        //var mails = await this._imapService.list();
-        var mails = [];
-
-        console.log(mails);
-
-        var iDownloadccount = 0;
-        var iupdateFrequence = 10;
-        var workCount = 0;
-        var totalCount = mails.length;
-
-        await asyncForEach(mails, async (element) => {
-            //if cancel flag set, return (break not possbile in async)
-            if (self.bCancel) {
-                return;
-            }
-
-            //check if id already known, if yes return
-            if (await self._dbService.exists(element.uid) !== undefined) {
-                return;
-            }
-
-
-            self.statusMessage = iDownloadccount.toString() + ' imported (' + Math.round((workCount / totalCount) * 100) + '%)';
-            self.progress = (Math.round((workCount / totalCount) * 100)) / 100;
-        });
-
-
-        return;
-
-        var self = this;
-        var lastId = await this._dbService.getLastMailId();
-        var syncCount = 0;
-
-        this.isSyncing = true;
-
-        var existsing = [];
-        var ignoreIds = [];
-
-        var msgUnsubs = await this._dbService.filterEquals("status", 1).toArray();
-        var ignores = msgUnsubs.map(function (obj) { return obj.hostname; });
-        ignores = ignores.filter(function (v, i) { return ignores.indexOf(v) == i; });
-
-        this._gmailService.findAll(async function (mailIds) {
-
-            var iDownloadccount = 0;
-            var iupdateFrequence = 10;
-            var workCount = 0;
-            var totalCount = mailIds.length;
-
-            //250
-
-
-
-            self.bCancel = false;
-            self.statusMessage = 'syncing...';
-
-            await asyncForEach(mailIds, async (element) => {
-                workCount++;
-
-                //if cancel flag set, return (break not possbile in async)
-                if (self.bCancel) {
-                    return;
-                }
-
-                //check if id already known, if yes return
-                if (await self._dbService.exists(element.id) !== undefined) {
-                    return;
-                }
-
-                //update ui status test
-                self.statusMessage = iDownloadccount.toString() + ' imported (' + Math.round((workCount / totalCount) * 100) + '%)';
-                self.progress = (Math.round((workCount / totalCount) * 100)) / 100;
-
-                //get complete message from gmail api
-                var msg = await self._gmailService.getMessageDetail(element.id);
-
-                //get all emails with same from, and add ids in db, so they can be ignored, only last msg is relevant
-                var iFind = msg.from.indexOf('<');
-                if (iFind != -1) {
-                    var msgFromName = msg.from.substring(0, iFind).trim().replace('"', '');
-                    var msgFromEmail = msg.from.substring(iFind + 1, msg.from.length - 1);
-
-
-                    //from:"info@twitter.com" from:"Twitter for Business "
-                    var rlMsgIdsList = [];
-                    var rlMsgIds = await self._gmailService.loadMessageIdsWithQuery(null, "from:\"" + msgFromEmail + "\" from:\"" + msgFromName + "\"");
-                    rlMsgIdsList = rlMsgIdsList.concat(rlMsgIds.messages);
-                    var nxtPageToken = rlMsgIds.nextPageToken;
-                    while (nxtPageToken) {
-                        var rlMsgIds2 = await self._gmailService.loadMessageIdsWithQuery(nxtPageToken, "from:\"" + msgFromEmail + "\" from:\"" + msgFromName + "\"");
-                        rlMsgIdsList = rlMsgIdsList.concat(rlMsgIds2.messages);
-                        nxtPageToken = rlMsgIds2.nextPageToken;
-                    }
-
-
-                    if (rlMsgIdsList.length > 0) {
-                        if (rlMsgIdsList[0] == undefined) {
-                            console.log('ignore undefined');
-                            return;
-                        }
-                    }
-
-                    var result = rlMsgIdsList.map(function (e) { return e.id; });
-
-                    for (var a = 0; a < result.length; a++) {
-                        if (result[a] == msg.id) {
-                            continue;
-                        }
-                        var msgIgnore = new Message();
-                        msgIgnore.status = 4
-                        msgIgnore.id = result[a];
-                        msgIgnore.hostname = msg.hostname;
-                        await self._dbService.add(msgIgnore, false);
-                    }
-
-                    ignoreIds = ignoreIds.concat(result);
-
-                    msg.ignoredCount = result.length;
-
-                    //if same from / email already exists ignore
-                    /* }
-                    */
-
-                    //existsing.push(msgFromName+msgFromEmail);
-
-
-                }
-
-                //set ignore mails without link...
-                msg.unsubscribeUrl === undefined ? msg.status = 4 : msg.status = 0;
-                //set unsubscribe status for mails already done
-                if (ignores.indexOf(msg.hostname) >= 0) {
-                    msg.status = 1;
-                }
-
-                await self._dbService.add(msg, iDownloadccount % iupdateFrequence == 0 ? true : false);
-                iDownloadccount++;
-            });
-            self.bCancel = false;
-            self.isSyncing = false;
-            self._gmailService.cancelProcess(false); //Enable
-            self._dbService.refresh();
-
-        }, function (mailPages) {
-            syncCount += mailPages.length;
-            self.statusMessage = 'indexing... ' + syncCount.toString();
-        }, lastId !== undefined ? lastId.id : null);
     }
 
 
@@ -433,121 +284,6 @@ uidValidity: 1
 
         this._imapService.setCancel();
     }
-
-    /*
-getMessages() {
-    this._dataService.getMessages()
-        .subscribe(resp => {
-            
-            this.messages = resp.messages;
-            this.tabs[0].count = resp.messages.length;
-            this._changeDetector.detectChanges();
-
-
-            //get details
-
-            var index = 0;
-
-            //this.loadItem(index, 3);
-        }, error => {
-            //try to relog
-            //this.login();
-        });
-}
-*/
-
-    /*
-        loadItem(index, maxRows) {
-            this._dataService.getMessage(this.messages[index].id).subscribe(msg => {
-                for(var a = 0; a < msg.payload.headers.length;a++) {
-                    if(msg.payload.headers[a].name == "Subject")
-                    {
-                        this.messages[index].subject = msg.payload.headers[a].value;
-                    }
-    
-                    if(msg.payload.headers[a].name == "From")
-                    {
-                        this.messages[index].from = msg.payload.headers[a].value;
-                    }
-    
-                    if(msg.payload.headers[a].name == "List-Unsubscribe")
-                    {
-                        this.messages[index].unsubscribeURL = msg.payload.headers[a].value;
-                    }
-                }
-    
-                
-    
-                //if no unsubscribe header found, try to get from body
-                if(this.messages[index].unsubscribeURL === undefined) {
-                    try {
-                        var plainText = atob(msg.payload.body.data);
-    
-                        //Extract urls from body
-                        var urls = getURLsFromString(plainText);
-                        var bUnSub = false;
-                        for(var u = 0;u < urls.length;u++) {
-                            var n = urls[u].search("unsubscribe");
-                            if(n != -1) {
-                                
-                                this.messages[index].unsubscribeURL = urls[u];
-                            }
-                        }
-                    } catch(error) {
-                        alert(msg.id);
-                    }   
-                }
-    
-                index++;
-                if(index < maxRows) {
-                    this._changeDetector.detectChanges();
-                    this.loadItem(index, maxRows);
-                } 
-            });
-        }
-        */
-
-    storeToken(accessToken: string) {
-        chrome.storage.local.set({ token: accessToken }, function () {
-
-        });
-    }
-
-
-    search() {
-
-
-        //https://www.googleapis.com/gmail/v1/users/me/messages?access_token=ya29.GlzFBhvswgB65HeAoeiBnoIz9nwc6aAPI8FAzu_D60gCpL6W5f363pAjFWXWonlpxBpaGXnAi0eDyIEUwNy4NmR-m-huORIz1p-UPaPIQo85ORUGC91E0JV_WULm8Q
-
-
-        /*
-        {
- "messages": [
-  {
-   "id": "16959b5933aaf138",
-   "threadId": "16959b5933aaf138"
-  },
-  */
-
-
-
-    }
-
-    onClick(): void {
-        chrome.tabs.sendMessage(this._tabId, 'request', message => {
-            //this.message = message;
-            this._changeDetector.detectChanges();
-        });
-    }
-
-    tabs = [
-        { label: 'New', icon: 'info', count: 1 },
-        { label: 'Unsubscribed', icon: 'email', count: 10 }
-    ];
-
-    mails = [
-        { title: 'Test-Title', description: 'blah aldhsflhajsdhfasd ', icon: 'https://s2.googleusercontent.com/s2/favicons?domain=Atlassian.net' }
-    ]
 }
 
 
