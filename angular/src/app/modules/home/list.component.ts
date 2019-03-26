@@ -28,26 +28,22 @@ export class ListComponent {
 
 
 
+    //open/close group and reload messages if needed
     async toogleGroup(m, event) {
-
         var self = this;
 
         //toogle collpanse
         m.isCollapsed = !m.isCollapsed
 
+        //load msg if needed
         if (!m.isCollapsed) {
+            if (m.messages.length == 0) {
 
-            //load messages
-            var tt = await this._dbService.filterEqualsIgnoreCase("hostname", m.hostname).filter(function (msg) {
-                return msg.status === self.status;
-            }).toArray();
-
-
-            m.messages = tt;
-
-            console.log(tt);
-
-
+                //load messages
+                m.messages = await this._dbService.filterEqualsIgnoreCase("hostname", m.hostname).filter(function (msg) {
+                    return msg.status === self.status;
+                }).toArray();
+            }
         }
     }
 
@@ -68,18 +64,18 @@ export class ListComponent {
         var msg = await this._dbService.exists(id);
 
         if (msg.unsubscribeEmail !== undefined) {
-            
+
             //var result = await this._gmailService.send(msg.unsubscribeEmail);
 
 
             await this._dbService.unsubscribe(id);
-            
-            
+
+
             //await this._gmailService.delete(result.id);
 
             this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
         } else {
-            
+
             //await this._gmailService.unsubscribeUrl(msg.unsubscribeUrl);
 
 

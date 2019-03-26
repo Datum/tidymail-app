@@ -172,7 +172,6 @@ export class AppComponent implements OnInit {
             var bb = await self._imapService.getMailBoxes();
             console.log(bb);
 
-            return;
 
             //get total stats about mailbox, mainly for modseq for further searches....
             var mb = await this._imapService.selectMailBox();
