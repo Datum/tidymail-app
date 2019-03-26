@@ -9,11 +9,11 @@
         <mdc-list avatar twoLine>
             <div *ngFor="let m of d.messagegroups; let i = index">
                 <!-- routerLink="/detail/{{ m.hostname }}/{{ status }} -->
-                <mdc-list-item (click)="m.isCollapsed = !m.isCollapsed" [attr.aria-expanded]="!m.isCollapsed"
+                <mdc-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                     [attr.aria-controls]="'collapse' + a + i">
                     <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
                         style="padding-right:10px;">
-                    <mdc-list-item-text secondaryText="{{ m.messages.length + ' newsletter(s)' }}">{{ m.name }}
+                    <mdc-list-item-text secondaryText="{{ m.messageCount + ' newsletter(s)' }}">{{ m.name }}
                         <small style="color:darkgrey"> {{ m.hostname }} </small>
                     </mdc-list-item-text>
                     <div class="delete-info mdc-list-item__secondary-text">{{ m.status }}</div>
@@ -34,6 +34,7 @@
                     </div>
 
                 </mdc-list-item>
+                
                 <div [attr.id]="'collapse' + a + i" [ngbCollapse]="m.isCollapsed">
                     <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index">
                         <mdc-list-item-text *ngIf="status != 1"
@@ -59,6 +60,7 @@
                     </mdc-list-item>
 
                 </div>
+                
             </div>
         </mdc-list>
         <mdc-list-divider></mdc-list-divider>

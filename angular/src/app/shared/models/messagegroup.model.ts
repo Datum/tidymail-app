@@ -22,6 +22,7 @@ export class MessageGroup {
     keepLoading:boolean;
     unsubLoading:boolean;
     deleteLoading:boolean;
+    messageCount:number;
 
     get unreadCount():number {
         return this.messages.filter((obj) => obj.unread === true).length
