@@ -73,10 +73,6 @@ export class ImapService {
                 }
             });
 
-
-            //try to find tash mailbox
-
-
             //client initalized, fire callback with cert
             callback(pemEncodedCertificate);
         }

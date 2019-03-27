@@ -337,24 +337,11 @@ function extractHostname(url) {
 
 
 function extractMailFromName(from) {
-
-
-
-
     var iStart = from.lastIndexOf('<');
     var iEnd = from.lastIndexOf('>');
-
     var fromName = from;
-
-    console.log('----');
-    console.log(fromName);
-
     if (iStart > -1 && iEnd > -1) {
         fromName = from.substr(0, iStart);
     }
-
-    console.log(fromName);
-    console.log('*****');
-
     return fromName;
 }

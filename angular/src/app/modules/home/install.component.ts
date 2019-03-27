@@ -42,7 +42,7 @@ export class InstallComponent implements OnInit {
   async check() {
     var self = this;
 
-    if(this.imap_username == "") {
+    if(this.imap_username === undefined) {
       return;
     }
 
