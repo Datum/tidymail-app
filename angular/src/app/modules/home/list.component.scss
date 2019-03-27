@@ -2,6 +2,25 @@
     height: 72px;
 }
 
+:host /deep/ .notwoline .mdc-list-item__primary-text {
+    margin-bottom: 0px !important;
+}
+
+.foobar {
+    font-weight: 500;
+}
+
+.whiteframe {
+    background:#fff; border-radius: 4px; padding: 12px;
+    margin-top:20px;
+}
+
+.listheader {
+    margin-top: 42px;
+    font-weight: 500;
+    color:#ddd;
+    width: 15px;
+}
 
 .delete-info {
     position: absolute;
