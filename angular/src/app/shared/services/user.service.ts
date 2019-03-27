@@ -20,15 +20,16 @@ export class UserService {
         return new Promise<UserConfig>(
             (resolve, reject) => {
                 var config = localStorage.getItem('config');
-                if(config == null) {
+                if (config == null) {
 
                     var randomsecret = SimpleCrypto.generateRandom();
 
                     self.userConfig = new UserConfig();
                     self.userConfig.firsttime = true;
-                    self.userConfig.secret = randomsecret;
+                    self.userConfig.token = randomsecret;
                 } else {
                     self.userConfig = JSON.parse(config);
+                    self.userConfig.password = self.decrypt(self.userConfig.password);
                 }
                 resolve(self.userConfig);
             }
@@ -36,22 +37,28 @@ export class UserService {
     }
 
 
-    encrypt(str:string) {
-        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+    encrypt(str: string) {
+        var simpleCrypto = new SimpleCrypto(this.userConfig.token);
         return simpleCrypto.encrypt(str).toString();
     }
 
-    decrypt(enc:string) {
-        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+    decrypt(enc: string) {
+        var simpleCrypto = new SimpleCrypto(this.userConfig.token);
         return simpleCrypto.decrypt(enc).toString();
     }
 
-    storeAccessTokens(tokenResult) {
-        this.userConfig.access_token = this.encrypt(tokenResult.access_token);
-        if(tokenResult.refresh_token !== undefined) {
-            this.userConfig.refresh_token = this.encrypt(tokenResult.refresh_token);
-        }
-        this.userConfig.expires = Math.round(new Date().getTime() / 1000) + tokenResult.expires_in;
+
+    storeLastRun(lastUid) {
+        this.userConfig.lastUidProcessed = lastUid;
+        localStorage.setItem('config', JSON.stringify(this.userConfig));
+    }
+
+    storeImapSettings(host, port, username, password, isGmailProvider) {
+        this.userConfig.imapurl = host;
+        this.userConfig.imapport = parseInt(port);
+        this.userConfig.username = username;
+        this.userConfig.password = this.encrypt(password);
+        this.userConfig.isGmailProvider = isGmailProvider;
         this.userConfig.firsttime = false;
 
         return new Promise<UserConfig>(
@@ -60,7 +67,9 @@ export class UserService {
                 resolve(this.userConfig);
             }
         )
+
     }
+
 
     reset() {
         return new Promise(

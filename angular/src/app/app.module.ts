@@ -6,8 +6,13 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 
 import { HomeModule } from './modules/home/home.module'
+
+import { DialogAlert } from './dialog-alert';
+import { DialogPassword } from './dialog-password';
 
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
@@ -21,22 +26,34 @@ import {
     MdcDrawerModule,
     MdcIconButtonModule,
     MdcButtonModule,
-    MdcLinearProgressModule  
+    MdcLinearProgressModule,
+    MdcRadioModule,
+    MdcFormFieldModule,
+    MdcDialogModule,
+    MdcTextFieldModule
 } from '@angular-mdc/web';
 
 
 import {
-    GmailService,
+    //GmailService,
     DbService,
     UserService,
+    ImapService,
+    UIService
   } from './shared';
+
+
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DialogAlert,
+    DialogPassword,
   ],
   imports: [
     BrowserModule,
+    FormsModule,
+    ReactiveFormsModule,
     NgbModule.forRoot(),
     /*BrowserAnimationsModule,*/
     HttpClientModule,
@@ -50,9 +67,14 @@ import {
     MdcDrawerModule,
     MdcIconButtonModule,
     MdcButtonModule,
-    MdcLinearProgressModule
+    MdcLinearProgressModule,
+    MdcRadioModule,
+    MdcFormFieldModule,
+    MdcDialogModule,
+    MdcTextFieldModule
   ],
-  providers: [GmailService, DbService, UserService],
-  bootstrap: [AppComponent]
+  providers: [/*GmailService,*/ DbService, UserService,ImapService, UIService],
+  bootstrap: [AppComponent],
+  entryComponents: [DialogAlert, DialogPassword]
 })
 export class AppModule { }

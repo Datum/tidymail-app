@@ -45,7 +45,7 @@ export class DbService {
 
         //create table with index fields
         this.db.version(1).stores({
-            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status,unsubscribeDate',
+            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status,unsubscribeDate,ignoredCount',
             mailgroups: '++id,hostname,from,*ids,status',
             messageGroups: '++id, hostname'
         });
@@ -83,7 +83,7 @@ export class DbService {
         });
     }
 
-    exists(msgId: string) {
+    exists(msgId: number) {
         return this.db.mails.get(msgId);
     }
 
@@ -127,26 +127,92 @@ export class DbService {
     }
     */
 
+    async updateIgnoreCount(from) {
+        var mails = await this.filterEqualsIgnoreCase("from", from).toArray();
+        console.log(mails[0].id);
+        if (mails.length == 0 || mails.length > 1) {
+            console.log('invalid mail length!');
+            return;
+        }
 
-   async add(msg, updateObservable = false) {
-    let mailExists = await this.db.mails.get(msg.id);
-    if(mailExists === undefined) {
+        await this.db.mails.update(mails[0].id, { ignoredCount: (mails[0].ignoredCount + 1) });
+    }
+
+
+    async addIgnoreMail(msg) {
+
+        var mails = await this.filterEqualsIgnoreCase("from", msg.from).toArray();
+        if (mails.length == 0 || mails.length > 1) {
+            console.log('invalid mail length!');
+            return;
+        }
+
+        var msgExists = mails[0];
+
+        var actualIgnoreCount = msgExists.ignoredCount;
+
+        //update ignore count
+        await this.db.mails.update(msgExists.id, { ignoredCount: (actualIgnoreCount + 1) });
+
+        //set ignore
+        msg.status = 4;
+
+        //add to db
         await this.db.mails.add(msg);
-        //if not ignored
-        if(msg.status != 4 && msg.status != 1) {
-            this._undhandledMessages.push(msg);
-        }
+    }
 
-        if(msg.status == 1) {
-            this._unsubMessages.push(msg);
-        }
 
-        if(updateObservable) {
-            this._undhandledMessagesObervable.next(this._undhandledMessages);
-            this._unsubMessagesObervable.next(this._unsubMessages);
+
+    //adds an email object to storage
+    async add(msg, updateObservable = false) {
+
+        //get mail with id
+        let mailExists = await this.db.mails.get(msg.id);
+
+        //if mail id exists, skip
+        if (mailExists === undefined) {
+
+            //check if mail exists with given "from" that's not in ignore state
+            var mails = await this.filterEqualsIgnoreCase("from", msg.from).filter(function (msg) {
+                return msg.status !== 4;
+            }).toArray();
+
+            console.log('exists with from: ' + mails);
+
+            //if mail exists with given from, add the mail as ignore and update count
+            if (mails.length == 1) {
+                console.log('from already exists, just add ignore count');
+
+                //add mail with ignore state
+                msg.status = 4;
+                await this.db.mails.add(msg);
+
+
+                console.log(mails[0].id);
+
+                //update ignore count
+                await this.db.mails.update(mails[0].id, { ignoredCount: (mails[0].ignoredCount + 1) });
+
+            } else {
+                //add default
+                await this.db.mails.add(msg);
+            }
+
+            //if not ignored
+            if (msg.status == 0) {
+                this._undhandledMessages.push(msg);
+            }
+
+            if (updateObservable) {
+                this._undhandledMessagesObervable.next(this._undhandledMessages);
+                this._unsubMessagesObervable.next(this._unsubMessages);
+            }
+
+
+        } else {
+            console.log('exists');
         }
     }
-}
 
 
     delete(msgId: string) {
@@ -175,12 +241,12 @@ export class DbService {
     async deleteAll(hostname: string) {
         var allMessagesToDelete = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
         allMessagesToDelete.forEach(async element => {
-            if(element.status == 0) {
+            if (element.status == 0) {
                 this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != element.id; });
                 this.db.mails.update(element.id, { status: 3 });
-               
+
             }
-           
+
         });
         this.refresh();
     }
@@ -188,12 +254,12 @@ export class DbService {
     async keepAll(hostname: string) {
         var allMessagesToKeep = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
         allMessagesToKeep.forEach(async element => {
-            if(element.status == 0) {
+            if (element.status == 0) {
                 var msg = this._undhandledMessages.filter(function (el) { return el.id == element.id; });
                 this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != element.id; });
                 this._keepMessages.push(msg[0]);
                 this.db.mails.update(element.id, { status: 2 });
- 
+
             }
         });
         this.refresh();
@@ -202,7 +268,7 @@ export class DbService {
     async unsubscribeAll(hostname: string) {
         var allMessagesToKeep = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
         allMessagesToKeep.forEach(async element => {
-            if(element.status == 0) {
+            if (element.status == 0) {
                 var msg = this._undhandledMessages.filter(function (el) { return el.id == element.id; });
                 this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.id != element.id; });
                 this._unsubMessages.push(msg[0]);

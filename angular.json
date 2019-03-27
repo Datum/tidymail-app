@@ -15,14 +15,19 @@
       },
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-builders/custom-webpack:browser",
           "options": {
+            "customWebpackConfig": {
+              "path": "./extra-webpack.config.js",
+              "replaceDuplicatePlugins": true,
+              "mergeStrategies": { "node": "replace" }
+            },
             "outputPath": "angular/dist",
             "index": "angular/src/index.html",
             "main": "angular/src/main.ts",
             "polyfills": "angular/src/polyfills.ts",
             "tsConfig": "angular/src/tsconfig.app.json",
-            "assets": ["angular/src/manifest.json", "angular/src/assets"],
+            "assets": ["angular/src/manifest.json", "angular/src/socket.io.js", "angular/src/assets"],
             "styles": ["angular/src/styles.scss", "node_modules/bootstrap/dist/css/bootstrap.min.css"],
             "scripts": [],
             "es5BrowserSupport": true

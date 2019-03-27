@@ -2,8 +2,9 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { HomeComponent } from './home.component';
-import { DetailComponent} from './detail.component';
-import { ListComponent} from './list.component';
+import { ListComponent } from './list.component';
+import { InstallComponent } from './install.component';
+import { FormsModule } from '@angular/forms';
 
 
 import {
@@ -19,23 +20,26 @@ import {
     MdcLinearProgressModule,
     MdcTypographyModule,
     MdcSnackbarModule,
-    MdcChipsModule 
+    MdcChipsModule,
+    MdcRadioModule,
+    MdcFormFieldModule
 } from '@angular-mdc/web';
 
 
 import {
-    
-  } from '../../shared';
 
-  import {RouterModule} from '@angular/router';
+} from '../../shared';
+
+
+import { RouterModule } from '@angular/router';
 import { ModuleWithProviders } from '@angular/compiler/src/core';
 import { SettingsComponent } from './settings.component';
 
 
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
-  const dataRouting: ModuleWithProviders = RouterModule.forChild([
+const dataRouting: ModuleWithProviders = RouterModule.forChild([
     {
         path: '',
         component: HomeComponent,
@@ -45,9 +49,15 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
         component: SettingsComponent,
     },
     {
+        path: 'install',
+        component: InstallComponent,
+    },
+    /*
+    {
         path: 'detail/:id/:status',
         component: DetailComponent,
     },
+    */
 ]);
 
 
@@ -55,12 +65,13 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
     declarations: [
         HomeComponent,
         SettingsComponent,
-        DetailComponent,
-        ListComponent
+        ListComponent,
+        InstallComponent
     ],
     imports: [
         dataRouting,
         BrowserModule,
+        FormsModule,
         NgbModule,
         HttpClientModule,
         MdcIconModule,
@@ -71,9 +82,11 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
         MdcCheckboxModule,
         MdcTypographyModule,
         MdcSnackbarModule,
-        MdcChipsModule 
+        MdcChipsModule,
+        MdcRadioModule,
+        MdcFormFieldModule,
     ],
-    exports: [ HomeComponent ],
+    exports: [HomeComponent],
     providers: [],
 })
 export class HomeModule { }

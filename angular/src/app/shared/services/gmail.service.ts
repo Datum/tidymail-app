@@ -18,7 +18,7 @@ declare const gapi: any;
 export class GmailService {
 
     constructor(private http: HttpClient) {
-        this.googleInit();
+        //this.googleInit();
     }
 
     baseUrl: string = "https://www.googleapis.com/gmail/v1/users/me";
