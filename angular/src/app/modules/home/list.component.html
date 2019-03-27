@@ -4,19 +4,20 @@
 </div>
 
 <mdc-list-group>
-    <div *ngFor="let d of groups;let a = index;">
-        <h3 mdcListGroupSubheader>{{ d.name }}</h3>
-        <mdc-list avatar twoLine>
+    <div *ngFor="let d of groups;let a = index;" class="row">
+        <h3 mdcListGroupSubheader class="listheader">{{ d.name }}</h3>
+        <mdc-list avatar style="flex-grow: 1;" class="whiteframe">
             <div *ngFor="let m of d.messagegroups; let i = index">
                 <!-- routerLink="/detail/{{ m.hostname }}/{{ status }} -->
                 <mdc-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                     [attr.aria-controls]="'collapse' + a + i">
                     <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
                         style="padding-right:10px;">
-                    <mdc-list-item-text secondaryText="{{ m.messageCount + ' newsletter(s)' }}">{{ m.name }}
-                        <small style="color:darkgrey"> {{ m.hostname }} </small>
+                    <mdc-list-item-text class="notwoline">{{ m.name }} {{ m.messageCount>1 ? '('+m.messageCount+')' : ''}}
+                        <mdc-icon *ngIf="m.messageCount>1" style="position: relative;bottom: -5px;">arrow_drop_down</mdc-icon>
+                        <small *ngIf="m.messageCount<2" style="color:darkgrey"> {{ m.hostname }} </small>
                     </mdc-list-item-text>
-                    <div class="delete-info mdc-list-item__secondary-text">{{ m.status }}</div>
+                    
 
                     <div mdcListItemMeta>
                         <button *ngIf="status == 0" mdc-button (click)="keepAll(m.hostname,m,$event)">
@@ -36,7 +37,7 @@
                 </mdc-list-item>
                 
                 <div [attr.id]="'collapse' + a + i" [ngbCollapse]="m.isCollapsed">
-                    <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index">
+                    <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index" class="mdc-list--two-line">
                         <mdc-list-item-text *ngIf="status != 1"
                             secondaryText="{{ (msg.ignoredCount + 1) + ' mails, last from: ' +  (msg.internalDate | date:'medium') }}">
                             {{ msg.from }}
@@ -63,6 +64,6 @@
                 
             </div>
         </mdc-list>
-        <mdc-list-divider></mdc-list-divider>
+       <!--  <mdc-list-divider></mdc-list-divider>-->
     </div>
 </mdc-list-group>

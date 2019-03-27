@@ -16,11 +16,3 @@ $mdc-theme-secondary: #388e3c; // secondary color
     height: auto;
 }
 
-.whiteframe {
-    background:#fff; border-radius: 12px; padding: 12px;
-    margin-top:20px;
-}
-
-.no_underline {
-    @include mdc-tab-indicator-underline-height(0);
-}
