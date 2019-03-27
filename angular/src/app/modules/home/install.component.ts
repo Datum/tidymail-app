@@ -64,6 +64,13 @@ export class InstallComponent implements OnInit {
         //check if host is gmail (supports gmail search, etc)
         var isProviderGmail = await self._imapService.isGmail();
 
+        //if remember is disabled, remove password from save process
+        /*
+        if(!self.imap_savepassword) {
+          self.imap_password = "";
+        }
+        */
+
         //if successfull , store to localStorage
         await self._userService.storeImapSettings(self.imap_host, self.imap_port, self.imap_username, self.imap_password, isProviderGmail);
 

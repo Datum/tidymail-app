@@ -6,25 +6,18 @@
 
 <hr>
 
-<div class="card" style="width: 18rem;">
-    <img src="{{ 'https://via.placeholder.com/728x90.png?text=' + userConfig.username }}" class="card-img-top">
+<div class="card" style="width: 25rem;">
+    <img src="{{ 'https://via.placeholder.com/400x200.png?text=' + userConfig.username }}" class="card-img-top">
     <div class="card-body">
         <h5 class="card-title">{{ userConfig.username }}</h5>
-        <p class="card-text">{{ userConfig.imapurl }} </p>
+        <p class="card-text">
+            Host: {{ userConfig.imapurl }}
+            <br>
+            Port: {{ userConfig.imapport }}
+        </p>
+       <p>
+            <button (click)="removeAccount()" class="btn btn-warning">Remove Account</button>
+            <button (click)="resetDatabase()" class="btn btn-danger float-right">Reset Database</button>
+       </p>
     </div>
 </div>
-
-<hr>
-
-<div style="padding:20px;">
-    <p>
-        <button (click)="resetDatabase()" mdc-button outlined>
-            <mdc-icon>delete</mdc-icon>reset database
-        </button>
-    </p>
-    <p>
-        <button (click)="resetAll()" mdc-button outlined>
-            <mdc-icon>delete</mdc-icon>reset ALL
-        </button>
-    </p>
-</div>>

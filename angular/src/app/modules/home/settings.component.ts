@@ -19,21 +19,9 @@ export class SettingsComponent implements OnInit {
   ngOnInit() {
     this.userConfig = this._userService.getConfig();
     this.userConfig.password = "******";
-
-    console.log(this.userConfig);
   }
 
-  resetDatabase() {
-    var self = this;
-    this._dbService.deleteDb().then(() => {
-        self._dbService.create();
-        this.snackbar.open('Database deleted. Please start new sync.');
-    }).catch(error => {
-        alert(error);
-    });
-  }
-
-  resetAll() {
+  removeAccount() {
     var self = this;
     this._dbService.deleteDb().then(() => {
         self._dbService.create();
@@ -41,6 +29,16 @@ export class SettingsComponent implements OnInit {
     }).then(() => {
         //reset successfully done
         this.snackbar.open('Database and local configuration deleted. Please restart extension.');
+    }).catch(error => {
+        alert(error);
+    });
+  }
+
+  resetDatabase() {
+    var self = this;
+    this._dbService.deleteDb().then(() => {
+        self._dbService.create();
+        this.snackbar.open('Database deleted. Please start new sync.');
     }).catch(error => {
         alert(error);
     });

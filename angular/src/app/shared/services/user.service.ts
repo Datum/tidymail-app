@@ -26,9 +26,10 @@ export class UserService {
 
                     self.userConfig = new UserConfig();
                     self.userConfig.firsttime = true;
-                    self.userConfig.secret = randomsecret;
+                    self.userConfig.token = randomsecret;
                 } else {
                     self.userConfig = JSON.parse(config);
+                    self.userConfig.password = self.decrypt(self.userConfig.password);
                 }
                 resolve(self.userConfig);
             }
@@ -37,12 +38,12 @@ export class UserService {
 
 
     encrypt(str: string) {
-        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+        var simpleCrypto = new SimpleCrypto(this.userConfig.token);
         return simpleCrypto.encrypt(str).toString();
     }
 
     decrypt(enc: string) {
-        var simpleCrypto = new SimpleCrypto(this.userConfig.secret);
+        var simpleCrypto = new SimpleCrypto(this.userConfig.token);
         return simpleCrypto.decrypt(enc).toString();
     }
 
@@ -56,7 +57,7 @@ export class UserService {
         this.userConfig.imapurl = host;
         this.userConfig.imapport = parseInt(port);
         this.userConfig.username = username;
-        this.userConfig.password = password;
+        this.userConfig.password = this.encrypt(password);
         this.userConfig.isGmailProvider = isGmailProvider;
         this.userConfig.firsttime = false;
 
@@ -69,21 +70,6 @@ export class UserService {
 
     }
 
-    storeAccessTokens(tokenResult) {
-        this.userConfig.access_token = this.encrypt(tokenResult.access_token);
-        if (tokenResult.refresh_token !== undefined) {
-            this.userConfig.refresh_token = this.encrypt(tokenResult.refresh_token);
-        }
-        this.userConfig.expires = Math.round(new Date().getTime() / 1000) + tokenResult.expires_in;
-        this.userConfig.firsttime = false;
-
-        return new Promise<UserConfig>(
-            (resolve, reject) => {
-                localStorage.setItem('config', JSON.stringify(this.userConfig));
-                resolve(this.userConfig);
-            }
-        )
-    }
 
     reset() {
         return new Promise(
