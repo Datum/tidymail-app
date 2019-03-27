@@ -91,50 +91,12 @@ export class DbService {
         var existsWithFrom = await this.filterEqualsIgnoreCase("from", from).toArray();
         return existsWithFrom.length > 0;
     }
-
-
-    /*
-    async add(msg: Message, updateObservable = false) {
-        
-        let mailExists = await this.db.mails.get(msg.id);
-        if (mailExists === undefined) {
-            await this.db.mails.add(msg);
-        }
-
     
-        var idList = [];
-        idList.push(msg.id);
-
-        let mailGroupExists = await this.db.mailgroups.where('hostname').equals(msg.hostname).first();
-        if (mailGroupExists === undefined) {
-            console.log('new');
-            await this.db.mailgroups.add({ hostname: msg.hostname, from: msg.from, ids: idList, status : 0 });
-        } else {
-            if (mailGroupExists.from == msg.from) {
-                console.log('exists');
-                mailGroupExists.ids = mailGroupExists.ids.concat(idList);
-                await this.db.mailgroups.update(mailGroupExists.id, { ids: mailGroupExists.ids });
-            } else {
-                console.log('new from');
-                await this.db.mailgroups.add({ hostname: msg.hostname, from: msg.from, ids: idList, status : 0 });
-            }
-        }
-
-        if(updateObservable) {
-            this._newMessageGroups = await this.db.mailgroups.where("status").equals(0).toArray();
-            this._newMessageGroupsObservable.next(this._newMessageGroups);
-        }
-    }
-    */
-
     async updateIgnoreCount(from) {
         var mails = await this.filterEqualsIgnoreCase("from", from).toArray();
-        console.log(mails[0].id);
         if (mails.length == 0 || mails.length > 1) {
-            console.log('invalid mail length!');
             return;
         }
-
         await this.db.mails.update(mails[0].id, { ignoredCount: (mails[0].ignoredCount + 1) });
     }
 
@@ -143,7 +105,6 @@ export class DbService {
 
         var mails = await this.filterEqualsIgnoreCase("from", msg.from).toArray();
         if (mails.length == 0 || mails.length > 1) {
-            console.log('invalid mail length!');
             return;
         }
 
@@ -177,18 +138,11 @@ export class DbService {
                 return msg.status !== 4;
             }).toArray();
 
-            console.log('exists with from: ' + mails);
-
             //if mail exists with given from, add the mail as ignore and update count
             if (mails.length == 1) {
-                console.log('from already exists, just add ignore count');
-
                 //add mail with ignore state
                 msg.status = 4;
                 await this.db.mails.add(msg);
-
-
-                console.log(mails[0].id);
 
                 //update ignore count
                 await this.db.mails.update(mails[0].id, { ignoredCount: (mails[0].ignoredCount + 1) });
@@ -209,9 +163,7 @@ export class DbService {
             }
 
 
-        } else {
-            console.log('exists');
-        }
+        } 
     }
 
 
