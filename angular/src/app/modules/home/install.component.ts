@@ -10,17 +10,17 @@ import { HttpClient } from '@angular/common/http';
 })
 export class InstallComponent implements OnInit {
 
-
-  imap_username: string;// = "florian@datum.org";
-  imap_password: string;// = "meblmmoxaxwejrov";
+  imap_username: string;
+  imap_password: string;
   imap_host: string = '';
-  imap_port: string = '';
+  imap_port: string = '993';
   imap_savepassword: boolean = true;
   selectedMailProvider: string;
-  providers: string[] = ['Gmail', 'Other'];
+  defaultMailDomainsToCheck: string[] = ['imap', 'mail'];
   buttonText: string = "Login";
   discoverButtonText: string = "Discover Settings";
   emailSettingsFinderUrl: string = "https://emailsettings.firetrust.com/settings?q=";
+  dnsCheckUrl: string = "https://dns-api.org/AAAA/";
 
 
   showPasswordField: boolean = false;
@@ -42,7 +42,7 @@ export class InstallComponent implements OnInit {
   async check() {
     var self = this;
 
-    if(this.imap_username === undefined) {
+    if (this.imap_username === undefined) {
       return;
     }
 
@@ -66,39 +66,44 @@ export class InstallComponent implements OnInit {
         }
       });
 
-      //if not exists, show settings to enter manully
-      if(!bFound) {
-        this.showImapSettingsFields = true;
+      //if not exists, throw error for alternate discovery
+      if (!bFound) {
+        throw new Error('Alternate Discovery Process');
+      } else {
+        self.showPasswordField = true;
       }
-
-      //show password field
-      this.showPasswordField = true;
     } catch (error) {
       //extract domain and try with default name imap.emailprovider.com / 993, only SSL connections are allowed
       var domain = extractHostname(this.imap_username);
-      var imapDomain = 'imap.' + domain;
+      var imapFound = false;
 
-      //try to connect
-      this._imapService.init(this.imap_username, this.imap_password, this.imap_host, this.imap_port, true, async function (pem) {
+      for (var i = 0; i < this.defaultMailDomainsToCheck.length; i++) {
+        var imapDomain = this.defaultMailDomainsToCheck[i] + '.' + domain;
+
+
+        //workaround, because socket server crashes!
         try {
-          //open imap client
-          await self._imapService.open();
-
-          //seems to work
-          await self._imapService.close();
-
-          //set host/port
-          self.imap_host = imapDomain;
-          self.imap_port = "993";
-
-          //show password field
-          self.showPasswordField = true;
+          var result = await this.http.get<any>(this.dnsCheckUrl + imapDomain).toPromise();
         } catch (error) {
-          //failed
-          self.showImapSettingsFields = true;
-          self.showPasswordField = true;
+          continue;
         }
-      });
+        
+
+        try {
+          var pem = await this._imapService.init(this.imap_username, this.imap_password, imapDomain, this.imap_port);
+          await this._imapService.open();
+        } catch (error) {
+          if (error == "Error: Authentication failed.") {
+            imapFound = true;
+            self.imap_host = imapDomain;
+            self.imap_port = "993";
+            self.showPasswordField = true;
+          }
+        }
+      }
+
+      self.showImapSettingsFields = true;
+      self.showPasswordField = true;
     }
   }
 
@@ -110,59 +115,40 @@ export class InstallComponent implements OnInit {
 
     this.buttonText = "Connecting...";
 
-
-    /*
-    var self = this;
-
-    if (this.selectedMailProvider != "Gmail") {
-      if (this.imap_host == '' || this.imap_port == '') {
-        alert('empty host / port');
-      }
-    } else {
-      this.imap_host = 'imap.gmail.com';
-      this.imap_port = "993";
-    }
-
-    if (this.imap_password == '' || this.imap_username == '') {
-      alert('empty username/password');
-      return;
-    }
-    */
-
     //init imap service with credentials
-    this._imapService.init(this.imap_username, this.imap_password, this.imap_host, this.imap_port, true, async function (pem) {
+    var pem = await this._imapService.init(this.imap_username, this.imap_password, this.imap_host, this.imap_port);
 
-      //try to open 
-      try {
-        //open imap client
-        await self._imapService.open();
+    //try to open 
+    try {
+      //open imap client
+      await self._imapService.open();
 
-        //check if host is gmail (supports gmail search, etc)
-        var isProviderGmail = await self._imapService.isGmail();
+      //check if host is gmail (supports gmail search, etc)
+      var isProviderGmail = await self._imapService.isGmail();
 
-        //if remember is disabled, remove password from save process
-        if (!self.imap_savepassword) {
-          self.imap_password = "";
-        }
-
-        //if successfull , store to localStorage
-        await self._userService.storeImapSettings(self.imap_host, self.imap_port, self.imap_username, self.imap_password, isProviderGmail);
-
-        //init database
-        await self._dbService.create();
-
-        //close client
-        await self._imapService.close();
-
-        //navigate back to home
-        self.router.navigateByUrl('/');
-
-      } catch (error) {
-        self._uiService.showAlert(error);
+      //if remember is disabled, remove password from save process
+      if (!self.imap_savepassword) {
+        self.imap_password = "";
       }
 
-      self.buttonText = "Login";
-    });
+      //if successfull , store to localStorage
+      await self._userService.storeImapSettings(self.imap_host, self.imap_port, self.imap_username, self.imap_password, isProviderGmail);
+
+      //init database
+      await self._dbService.create();
+
+      //close client
+      await self._imapService.close();
+
+      //navigate back to home
+      self.router.navigateByUrl('/');
+
+    } catch (error) {
+      self._uiService.showAlert(error);
+    }
+
+    self.buttonText = "Login";
+
   }
 
 }
