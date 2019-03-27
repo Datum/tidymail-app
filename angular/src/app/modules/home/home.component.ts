@@ -142,9 +142,9 @@ export class HomeComponent implements OnInit {
 
             //set ui info
             self.statusMessage = "importing mails...";
-
-
             self.bCancel = false;
+
+            var totalToImport = fullResult.length;
 
             for (var i = 0; i < fullResult.length; i++) {
 
@@ -169,6 +169,10 @@ export class HomeComponent implements OnInit {
 
                 //await self._dbService.add(msg, i % 10 == 0 ? true : false);
                 await self._dbService.add(msg, false);
+
+                self.statusMessage = i.toString() + ' imported (' + Math.round((i / totalToImport) * 100) + '%)';
+
+
             }
 
             await self._dbService.refresh();

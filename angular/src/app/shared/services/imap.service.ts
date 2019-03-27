@@ -89,6 +89,11 @@ export class ImapService {
 
     //open the imap client instance
     open() {
+        this.client.onerror = function(error){
+            console.log('imap client error');
+            console.log(error);
+            throw new Error(error);
+        };
         return this.client.connect();
     }
 

@@ -10,14 +10,12 @@ import { HttpClient } from '@angular/common/http';
 })
 export class InstallComponent implements OnInit {
 
-
   imap_username: string;
   imap_password: string;
   imap_host: string = '';
   imap_port: string = '993';
   imap_savepassword: boolean = true;
   selectedMailProvider: string;
-  providers: string[] = ['Gmail', 'Other'];
   defaultMailDomainsToCheck: string[] = ['imap', 'mail'];
   buttonText: string = "Login";
   discoverButtonText: string = "Discover Settings";
@@ -84,12 +82,12 @@ export class InstallComponent implements OnInit {
 
 
         //workaround, because socket server crashes!
-        
         try {
           var result = await this.http.get<any>(this.dnsCheckUrl + imapDomain).toPromise();
         } catch (error) {
           continue;
         }
+        
 
         try {
           var pem = await this._imapService.init(this.imap_username, this.imap_password, imapDomain, this.imap_port);
