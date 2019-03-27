@@ -6,13 +6,12 @@
 
 <hr>
 
-<div>
-    <p>
-        User Account Information
-    </p>
-    <p class="dont-break-out">
-        {{ userInformation }}
-    </p>
+<div class="card" style="width: 18rem;">
+    <img src="{{ 'https://via.placeholder.com/728x90.png?text=' + userConfig.username }}" class="card-img-top">
+    <div class="card-body">
+        <h5 class="card-title">{{ userConfig.username }}</h5>
+        <p class="card-text">{{ userConfig.imapurl }} </p>
+    </div>
 </div>
 
 <hr>

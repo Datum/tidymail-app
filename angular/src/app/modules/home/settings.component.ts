@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 
-import { DbService, UserService } from '../../shared';
+import { DbService, UserService, UserConfig } from '../../shared';
 
 import { MdcSnackbar } from '@angular-mdc/web';
 
@@ -12,15 +12,15 @@ import { MdcSnackbar } from '@angular-mdc/web';
 })
 export class SettingsComponent implements OnInit {
 
-
-  userInformation:string = "";
+  userConfig:UserConfig = new UserConfig();
 
   constructor(private _dbService:DbService, private _userService:UserService,private snackbar: MdcSnackbar) { }
 
   ngOnInit() {
-    var config = this._userService.getConfig();
-    config.password = "******";
-    this.userInformation = JSON.stringify(config);
+    this.userConfig = this._userService.getConfig();
+    this.userConfig.password = "******";
+
+    console.log(this.userConfig);
   }
 
   resetDatabase() {
