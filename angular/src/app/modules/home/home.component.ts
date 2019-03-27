@@ -43,14 +43,20 @@ export class HomeComponent implements OnInit {
 
 
 
+
     //main app init
     async ngOnInit() {
         var self = this;
+
+
+        this.statusMessage = "init config...";
 
         this.userConfig = await this._userService.initConfig();
         this._dbService.create();
         await this._dbService.init();
 
+
+        this.statusMessage = "init imap client...";
 
         //init the imap client
         this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
@@ -61,22 +67,23 @@ export class HomeComponent implements OnInit {
             //open imap for further processing
             await self._imapService.open();
 
-            self.isLoaded = true;
-        });
+
+            self.statusMessage = "loading database...";
+
+            self._dbService.undhandledMails.subscribe(function (mails) {
+                self.undhandledMails = self.groupMails(mails);
+                self.isLoaded = true;
+            });
 
 
-        this._dbService.undhandledMails.subscribe(function (mails) {
-            self.undhandledMails = self.groupMails(mails);
-            //self.isLoaded = true;
-        });
+            self._dbService.keepMails.subscribe(function (mails) {
+                self.keepMails = self.groupMails(mails);
+            });
 
+            self._dbService.unsubpMails.subscribe(function (mails) {
+                self.unsubscribedMails = self.groupMails(mails);
+            });
 
-        this._dbService.keepMails.subscribe(function (mails) {
-            self.keepMails = self.groupMails(mails);
-        });
-
-        this._dbService.unsubpMails.subscribe(function (mails) {
-            self.unsubscribedMails = self.groupMails(mails);
         });
     }
 
@@ -189,11 +196,6 @@ export class HomeComponent implements OnInit {
         var self = this;
         var msgGroup = [];
         var dspGroup = [];
-
-
-        //console.log(msgList);
-
-
 
         msgList.forEach((item: Message) => {
             group[item.hostname] = group[item.hostname] || [];

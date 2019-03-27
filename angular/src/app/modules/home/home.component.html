@@ -37,7 +37,7 @@
 
 
     <div *ngIf="!isLoaded" class="text-center" style="padding:20px;">
-        loading database...
+        {{ statusMessage }}
         <mdc-linear-progress></mdc-linear-progress>
         <br>
     </div>

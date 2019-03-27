@@ -12,9 +12,15 @@ import { MdcSnackbar } from '@angular-mdc/web';
 })
 export class SettingsComponent implements OnInit {
 
+
+  userInformation:string = "";
+
   constructor(private _dbService:DbService, private _userService:UserService,private snackbar: MdcSnackbar) { }
 
   ngOnInit() {
+    var config = this._userService.getConfig();
+    config.password = "******";
+    this.userInformation = JSON.stringify(config);
   }
 
   resetDatabase() {
