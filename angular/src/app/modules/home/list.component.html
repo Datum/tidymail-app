@@ -20,16 +20,19 @@
                     
 
                     <div mdcListItemMeta>
-                        <button *ngIf="status == 0" mdc-button (click)="keepAll(m.hostname,m,$event)">
-                            <span [hidden]="m.keepLoading">KEEP ALL</span>
+                        <button *ngIf="status == 0" mdc-button (click)="keepAll(m.hostname,m,$event)" class="buttonspace">
+                            <i class="material-icons mdc-button__icon iconadjust" aria-hidden="true">check</i>
+                            <span [hidden]="m.keepLoading" class="iconclose">KEEP</span>
                             <span [hidden]="!m.keepLoading">{{ m.statusText }}</span>
                         </button>
-                        <button *ngIf="status == 0" mdc-button (click)="unsubscribeAll(m.hostname, m,$event)">
-                            <span [hidden]="m.unsubLoading">UNSUBSCRIBE ALL</span>
+                        <button *ngIf="status == 0" mdc-button (click)="unsubscribeAll(m.hostname, m,$event)" class="buttonspace">
+                            <i class="material-icons mdc-button__icon iconadjust" aria-hidden="true">cancel</i>
+                            <span [hidden]="m.unsubLoading" class="iconclose">UNSUBSCRIBE</span>
                             <span [hidden]="!m.unsubLoading">{{ m.statusText }}</span>
                         </button>
                         <button  *ngIf="status == 0"mdc-button (click)="deleteAll(m.hostname, m, $event)">
-                            <span [hidden]="m.deleteLoading">DELETE ALL</span>
+                            <i class="material-icons mdc-button__icon iconadjust" aria-hidden="true">delete</i>
+                            <span [hidden]="m.deleteLoading" class="iconclose">DELETE ALL</span>
                             <span [hidden]="!m.deleteLoading">{{ m.statusText }}</span>
                         </button>
                     </div>
@@ -37,6 +40,7 @@
                 </mdc-list-item>
                 
                 <div [attr.id]="'collapse' + a + i" [ngbCollapse]="m.isCollapsed">
+                    <mdc-list twoLine>
                     <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index" class="mdc-list--two-line">
                         <mdc-list-item-text *ngIf="status != 1"
                             secondaryText="{{ (msg.ignoredCount + 1) + ' mails, last from: ' +  (msg.internalDate | date:'medium') }}">
@@ -47,18 +51,22 @@
                             {{ msg.from }}
                         </mdc-list-item-text>
                         <div mdcListItemMeta>
-                            <button *ngIf="status == 0" mdc-button (click)="keep(msg.id)">
-                                KEEP
+                            <button *ngIf="status == 0" mdc-button (click)="keep(msg.id)" class="buttonspace">
+                                <i class="material-icons mdc-button__icon iconadjust" aria-hidden="true">check</i>
+                                <span class="iconclose">KEEP</span>
                             </button>
-                            <button *ngIf="status == 0" mdc-button (click)="unsubscribe(msg.id)">
-                                UNSUBSCRIBE
+                            <button *ngIf="status == 0" mdc-button (click)="unsubscribe(msg.id)" class="buttonspace">
+                                <i class="material-icons mdc-button__icon iconadjust" aria-hidden="true">cancel</i>
+                                <span class="iconclose">UNSUBSCRIBE</span>
                             </button>
                             <button *ngIf="status == 0" mdc-button (click)="delete(msg.id)">
-                                DELETE
+                                <i class="material-icons mdc-button__icon iconadjust" aria-hidden="true">delete</i>
+                                <span class="iconclose">DELETE ALL</span>
                             </button>
                         </div>
 
                     </mdc-list-item>
+                </mdc-list>
 
                 </div>
                 

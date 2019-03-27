@@ -1,6 +1,3 @@
-.mdc-list--two-line .mdc-list-item {
-    height: 72px;
-}
 
 :host /deep/ .notwoline .mdc-list-item__primary-text {
     margin-bottom: 0px !important;
@@ -13,6 +10,18 @@
 .whiteframe {
     background:#fff; border-radius: 4px; padding: 12px;
     margin-top:20px;
+}
+
+.iconclose {
+    margin-left: -5px;
+}
+
+.iconadjust {
+    margin-top: -2px;
+}
+
+.buttonspace {
+    margin-right: 10px;
 }
 
 .listheader {
