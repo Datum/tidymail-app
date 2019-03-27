@@ -6,12 +6,13 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
 import { HomeModule } from './modules/home/home.module'
 
 import { DialogAlert } from './dialog-alert';
+import { DialogPassword } from './dialog-password';
 
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
@@ -28,7 +29,8 @@ import {
     MdcLinearProgressModule,
     MdcRadioModule,
     MdcFormFieldModule,
-    MdcDialogModule 
+    MdcDialogModule,
+    MdcTextFieldModule
 } from '@angular-mdc/web';
 
 
@@ -41,14 +43,17 @@ import {
   } from './shared';
 
 
+
 @NgModule({
   declarations: [
     AppComponent,
-    DialogAlert
+    DialogAlert,
+    DialogPassword,
   ],
   imports: [
     BrowserModule,
     FormsModule,
+    ReactiveFormsModule,
     NgbModule.forRoot(),
     /*BrowserAnimationsModule,*/
     HttpClientModule,
@@ -65,10 +70,11 @@ import {
     MdcLinearProgressModule,
     MdcRadioModule,
     MdcFormFieldModule,
-    MdcDialogModule 
+    MdcDialogModule,
+    MdcTextFieldModule
   ],
   providers: [/*GmailService,*/ DbService, UserService,ImapService, UIService],
   bootstrap: [AppComponent],
-  entryComponents: [DialogAlert]
+  entryComponents: [DialogAlert, DialogPassword]
 })
 export class AppModule { }

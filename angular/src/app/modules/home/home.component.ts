@@ -55,8 +55,24 @@ export class HomeComponent implements OnInit {
         this._dbService.create();
         await this._dbService.init();
 
+        if (!this.userConfig.firsttime) {
+            if (this.userConfig.password == "") {
+                this._uiService.showPasswordConfirm(function (password) {
+                    self.userConfig.password = password;
+                    self.bind();
+                });
+                return;
+            }
+        }
+        this.bind();
+    }
+
+    bind() {
+
+        var self = this;
 
         this.statusMessage = "init imap client...";
+
 
         //init the imap client
         this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
@@ -64,8 +80,13 @@ export class HomeComponent implements OnInit {
             //set imap mode
             self._imapService.setGmailSearchMode(self.userConfig.isGmailProvider);
 
-            //open imap for further processing
-            await self._imapService.open();
+
+            try {
+                //open imap for further processing
+                await self._imapService.open();
+            } catch (error) {
+                self._uiService.showAlert(error);
+            }
 
 
             self.statusMessage = "loading database...";
@@ -85,6 +106,7 @@ export class HomeComponent implements OnInit {
             });
 
         });
+
     }
 
 
@@ -316,7 +338,7 @@ function extractHostname(url) {
 
 function extractMailFromName(from) {
 
-    
+
 
 
     var iStart = from.lastIndexOf('<');
