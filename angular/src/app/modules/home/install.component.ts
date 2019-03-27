@@ -172,13 +172,6 @@ function extractHostname(mail) {
   var at = mail.lastIndexOf('@');
   if (at != -1) {
     var domain = mail.substr(at + 1);
-    var dotCount = domain.split(".").length - 1;
-    if (dotCount > 1) {
-      var ii = domain.indexOf('.');
-      if (ii != -1) {
-        domain = domain.substr(ii + 1);
-      }
-    }
     return domain;
   }
   return mail;
