@@ -45,22 +45,29 @@ export class HomeComponent implements OnInit {
 
     //main app init
     async ngOnInit() {
-
-
-
-        console.log('home init');
-
-
         var self = this;
-
 
         this.userConfig = await this._userService.initConfig();
         this._dbService.create();
         await this._dbService.init();
 
+
+        //init the imap client
+        this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
+
+            //set imap mode
+            self._imapService.setGmailSearchMode(self.userConfig.isGmailProvider);
+
+            //open imap for further processing
+            await self._imapService.open();
+
+            self.isLoaded = true;
+        });
+
+
         this._dbService.undhandledMails.subscribe(function (mails) {
             self.undhandledMails = self.groupMails(mails);
-            self.isLoaded = true;
+            //self.isLoaded = true;
         });
 
 
