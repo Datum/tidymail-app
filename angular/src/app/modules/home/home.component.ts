@@ -205,7 +205,7 @@ export class HomeComponent implements OnInit {
         //create list with all grouped
         for (var key in group) {
             var mg = new MessageGroup();
-            mg.name = key;
+            mg.name = extractMailFromName(group[key][0].from);
             mg.messages = [];//group[key];
             mg.messageCount = group[key].length;
             mg.hostname = group[key][0].hostname;
@@ -292,8 +292,6 @@ async function asyncForEach(array, callback) {
 
 
 function extractHostname(url) {
-
-
     var iStart = url.lastIndexOf('<');
     var iEnd = url.lastIndexOf('>');
 
@@ -312,6 +310,29 @@ function extractHostname(url) {
             return domain;
         }
     }
-
     return url;
+}
+
+
+function extractMailFromName(from) {
+
+    
+
+
+    var iStart = from.lastIndexOf('<');
+    var iEnd = from.lastIndexOf('>');
+
+    var fromName = from;
+
+    console.log('----');
+    console.log(fromName);
+
+    if (iStart > -1 && iEnd > -1) {
+        fromName = from.substr(0, iStart);
+    }
+
+    console.log(fromName);
+    console.log('*****');
+
+    return fromName;
 }

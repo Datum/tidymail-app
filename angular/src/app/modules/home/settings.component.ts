@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-
-
 import { DbService, UserService, UserConfig } from '../../shared';
-
 import { MdcSnackbar } from '@angular-mdc/web';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -14,7 +12,11 @@ export class SettingsComponent implements OnInit {
 
   userConfig:UserConfig = new UserConfig();
 
-  constructor(private _dbService:DbService, private _userService:UserService,private snackbar: MdcSnackbar) { }
+  constructor(
+    private _dbService:DbService, 
+    private _userService:UserService,
+    private snackbar: MdcSnackbar,
+    private router: Router) { }
 
   ngOnInit() {
     this.userConfig = this._userService.getConfig();
@@ -27,8 +29,7 @@ export class SettingsComponent implements OnInit {
         self._dbService.create();
         return self._userService.reset();
     }).then(() => {
-        //reset successfully done
-        this.snackbar.open('Database and local configuration deleted. Please restart extension.');
+        self.router.navigateByUrl('/install');
     }).catch(error => {
         alert(error);
     });
