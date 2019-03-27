@@ -40,7 +40,7 @@
                 </mdc-list-item>
                 
                 <div [attr.id]="'collapse' + a + i" [ngbCollapse]="m.isCollapsed">
-                    <mdc-list twoLine>
+                    <mdc-list twoLine interactive=false>
                     <mdc-list-item *ngFor="let msg of m.messages; let msgIndex = index" class="mdc-list--two-line">
                         <mdc-list-item-text *ngIf="status != 1"
                             secondaryText="{{ (msg.ignoredCount + 1) + ' mails, last from: ' +  (msg.internalDate | date:'medium') }}">
