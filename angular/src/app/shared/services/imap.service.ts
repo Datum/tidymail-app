@@ -26,60 +26,64 @@ import { environment } from '../../../environments/environment';
 export class ImapService {
 
     //cancel flag to stop work on long running processes    
-    bCancel:boolean = false;
+    bCancel: boolean = false;
 
     //imap client 
     client: ImapClient;
 
     //by default use gmail syntax
-    useGmailSearchSyntax:boolean = true;
+    useGmailSearchSyntax: boolean = true;
 
-    //create a socket the get actual certificates and returns as callback
-    init(username, password, host, port, ismail, callback) {
 
+
+    init(username, password, host, port) {
         var self = this;
-        //init socketProxy
-        
-        //create socket to get certificate
-        var certSocket = TCPSocket.open(host, parseInt(port), {
-            useSecureTransport: true,
-            ws: {
-                url: environment.proxyUrl,
-                options: {
-                    upgrade: false
+
+        return new Promise<string>(
+            (resolve, reject) => {
+                //create socket to get certificate
+                var certSocket = TCPSocket.open(host, parseInt(port), {
+                    useSecureTransport: true,
+                    ws: {
+                        url: environment.proxyUrl,
+                        options: {
+                            upgrade: false
+                        }
+                    }
+                });
+
+
+                //fired, if certificate received (works only if ciphers are supported by browser!)
+                certSocket.oncert = pemEncodedCertificate => {
+
+                    //close the socket
+                    certSocket.close();
+
+                    //create imap client with given cert und auth
+                    self.client = new ImapClient(host, parseInt(port), {
+                        useSecureTransport: true,
+                        auth: {
+                            user: username,
+                            pass: password
+                        },
+                        ca: pemEncodedCertificate,
+                        ws: {
+                            url: environment.proxyUrl,
+                            options: {
+                                upgrade: false
+                            }
+                        }
+                    });
+
+                    //client initalized, fire callback with cert
+                    resolve(pemEncodedCertificate);
                 }
             }
-        });
-
-        //fired, if certificate received (works only if ciphers are supported by browser!)
-        certSocket.oncert = pemEncodedCertificate => {
-            
-            //close the socket
-            certSocket.close();
-
-            //create imap client with given cert und auth
-            self.client = new ImapClient(host, parseInt(port), {
-                useSecureTransport: true,
-                auth: {
-                    user: username,
-                    pass: password
-                },
-                ca: pemEncodedCertificate,
-                ws: {
-                    url: environment.proxyUrl,
-                    options: {
-                        upgrade: false
-                    }
-                }
-            });
-
-            //client initalized, fire callback with cert
-            callback(pemEncodedCertificate);
-        }
+        )
     }
 
     //enable/disbable gmail specified behavior
-    setGmailSearchMode(useGmailSyntax:boolean) {
+    setGmailSearchMode(useGmailSyntax: boolean) {
         this.useGmailSearchSyntax = useGmailSyntax;
     }
 
@@ -107,7 +111,7 @@ export class ImapService {
 
     //move given mail id to trash
     moveTrash(ids) {
-        if(this.useGmailSearchSyntax) {
+        if (this.useGmailSearchSyntax) {
             return this.client.moveMessages('INBOX', ids.join(), '[Gmail]/Trash', { byUid: true });
         } else {
             return this.client.moveMessages('INBOX', ids.join(), 'Trash', { byUid: true });
@@ -118,8 +122,8 @@ export class ImapService {
     async isGmail() {
         var isGmail = true;
         try {
-          await this.client.search('INBOX', { 'X-GM-RAW': "label:^anythingThatNotExists" }, { byUid: false });
-        } catch(error) {
+            await this.client.search('INBOX', { 'X-GM-RAW': "label:^anythingThatNotExists" }, { byUid: false });
+        } catch (error) {
             isGmail = false;
         }
         return isGmail;
@@ -128,14 +132,14 @@ export class ImapService {
     //get relavant mail based on searchCommand;
     getMailIds() {
         //create search object
-        var searchObject = this.useGmailSearchSyntax ? 
+        var searchObject = this.useGmailSearchSyntax ?
             environment.gmailSearchQuery
-            : 
+            :
             environment.defaultSearchQuery;
 
         //search for ids with given criteria
         return this.client.search('INBOX', searchObject, { byUid: true });
-    } 
+    }
 
 
     //set cancel request
@@ -152,7 +156,7 @@ export class ImapService {
         while (ids.length >= environment.fetchBatchSize) {
             //get details for messages
             var msgDetails = await this.client.listMessages('INBOX', ids.slice(0, environment.fetchBatchSize).join(), environment.fetchImapFlags, { byUid: true });
-            
+
             //concact to full array
             allMessages = allMessages.concat(msgDetails);
 
@@ -160,7 +164,7 @@ export class ImapService {
             ids.splice(0, environment.fetchBatchSize);
 
             //fire callback if provided
-            if(batchCallBack) {
+            if (batchCallBack) {
                 batchCallBack(allMessages.length, msgDetails);
             }
 
@@ -171,11 +175,11 @@ export class ImapService {
         }
 
         //check open ids amount smaller than batchsize
-        if(ids.length > 0 && !self.bCancel) {
+        if (ids.length > 0 && !self.bCancel) {
             allMessages = allMessages.concat(await this.client.listMessages('INBOX', ids.join(), environment.fetchImapFlags, { byUid: true }));
         }
 
         //return full list
         return allMessages;
-    } 
+    }
 }

@@ -57,17 +57,17 @@ export class HomeComponent implements OnInit {
 
         if (!this.userConfig.firsttime) {
             if (this.userConfig.password == "") {
-                this._uiService.showPasswordConfirm(function (password) {
+                this._uiService.showPasswordConfirm(async function (password) {
                     self.userConfig.password = password;
-                    self.bind();
+                    await self.bind();
                 });
                 return;
             }
         }
-        this.bind();
+        await this.bind();
     }
 
-    bind() {
+    async bind() {
 
         var self = this;
 
@@ -75,37 +75,37 @@ export class HomeComponent implements OnInit {
 
 
         //init the imap client
-        this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.isGmailProvider, async function (pem) {
-
-            //set imap mode
-            self._imapService.setGmailSearchMode(self.userConfig.isGmailProvider);
+        var pem = await this._imapService.init(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport);
 
 
-            try {
-                //open imap for further processing
-                await self._imapService.open();
-            } catch (error) {
-                self._uiService.showAlert(error);
-            }
+        //set imap mode
+        self._imapService.setGmailSearchMode(self.userConfig.isGmailProvider);
 
 
-            self.statusMessage = "loading database...";
+        try {
+            //open imap for further processing
+            await self._imapService.open();
+        } catch (error) {
+            self._uiService.showAlert(error);
+        }
 
-            self._dbService.undhandledMails.subscribe(function (mails) {
-                self.undhandledMails = self.groupMails(mails);
-                self.isLoaded = true;
-            });
 
+        self.statusMessage = "loading database...";
 
-            self._dbService.keepMails.subscribe(function (mails) {
-                self.keepMails = self.groupMails(mails);
-            });
-
-            self._dbService.unsubpMails.subscribe(function (mails) {
-                self.unsubscribedMails = self.groupMails(mails);
-            });
-
+        self._dbService.undhandledMails.subscribe(function (mails) {
+            self.undhandledMails = self.groupMails(mails);
+            self.isLoaded = true;
         });
+
+
+        self._dbService.keepMails.subscribe(function (mails) {
+            self.keepMails = self.groupMails(mails);
+        });
+
+        self._dbService.unsubpMails.subscribe(function (mails) {
+            self.unsubscribedMails = self.groupMails(mails);
+        });
+
 
     }
 
