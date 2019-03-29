@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Inject, AfterViewInit, OnInit, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component, ChangeDetectionStrategy, Inject, AfterViewInit, OnInit, NgZone } from '@angular/core';
 
 
 import { DbService, UserService, UserConfig, ImapService, UIService } from '../../shared';
@@ -28,7 +28,7 @@ export class HomeComponent implements OnInit {
         private _imapService: ImapService,
         private _uiService: UIService,
         private _changeDetector: ChangeDetectorRef,
-        private zone: NgZone) { }
+        private _ngZone: NgZone) { }
 
     isLoaded: boolean = false;
     isSyncing: boolean = false;
@@ -36,7 +36,7 @@ export class HomeComponent implements OnInit {
     statusMessage: string = "";
     progress: number = 0;
     activeTab: number = 0;
-    undhandledMails: DisplayGroup[] = [];
+    undhandledMails: any[] = [];
     unsubscribedMails: DisplayGroup[] = [];
     keepMails: DisplayGroup[] = [];
     deletedMails: any;
@@ -68,6 +68,9 @@ export class HomeComponent implements OnInit {
         await this.bind();
     }
 
+
+    mainSub: any;
+
     async bind() {
 
         var self = this;
@@ -91,8 +94,24 @@ export class HomeComponent implements OnInit {
         }
 
 
+        self.isLoaded = true;
         self.statusMessage = "loading database...";
 
+        
+        this.mainSub = self._dbService.groups.subscribe(function (groups) {
+            self.undhandledMails = groups;
+        });
+        
+
+        self._dbService.keepMails.subscribe(function (mails) {
+            self.keepMails = self.groupMails(mails);
+        });
+
+        self._dbService.unsubpMails.subscribe(function (mails) {
+            self.unsubscribedMails = self.groupMails(mails);
+        });
+
+        /*
         self._dbService.undhandledMails.subscribe(function (mails) {
             self.undhandledMails = self.groupMails(mails);
             self.isLoaded = true;
@@ -106,6 +125,7 @@ export class HomeComponent implements OnInit {
         self._dbService.unsubpMails.subscribe(function (mails) {
             self.unsubscribedMails = self.groupMails(mails);
         });
+        */
 
 
     }
@@ -119,6 +139,9 @@ export class HomeComponent implements OnInit {
     /* sync the mails from imap to local */
     async sync() {
         var self = this;
+
+
+        this.mainSub.unsubscribe();
 
         try {
 
@@ -139,7 +162,7 @@ export class HomeComponent implements OnInit {
 
             //download all mails
             var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails) {
-                self.statusMessage = workedCount.toString() + ' downloaded (' + Math.round((workedCount / dynamicTotalCount) * 100) + '%)';
+                self.statusMessage = (ids.length - dynamicTotalCount) + '/' + ids.length + ' (' + Math.round((workedCount / dynamicTotalCount) * 100) + '%)';
                 self.progress = (Math.round((workedCount / dynamicTotalCount) * 100)) / 100;
 
                 for (var i = 0; i < fetchedMails.length; i++) {
@@ -147,8 +170,8 @@ export class HomeComponent implements OnInit {
                     if (self.bCancel) {
                         break;
                     }
-    
-    
+
+
                     var msg = new Message();
                     msg.id = fetchedMails[i].uid;
                     msg.from = mimeWordsDecode(fetchedMails[i]['body[header.fields (from)]'].substr(6));
@@ -157,16 +180,25 @@ export class HomeComponent implements OnInit {
                     msg.subject = mimeWordsDecode(fetchedMails[i]['body[header.fields (subject)]'].substr(9));
                     msg.unsubscribeEmail = mimeWordsDecode(fetchedMails[i]['body[header.fields (list-unsubscribe)]'].substr(18));
                     msg.hostname = extractHostname(msg.from);
-        
+
                     //await self._dbService.add(msg, i % 10 == 0 ? true : false);
                     await self._dbService.add(msg, false);
-    
+
                     //self.statusMessage = i.toString() + ' imported (' + Math.round((i / totalToImport) * 100) + '%)';
-    
-    
+
+                    //add direct to ui instaed of subscribe
+
+
+                    self.updateUI(msg);
+
+                    
+
                 }
-    
-                await self._dbService.refresh();
+
+
+
+
+                //await self._dbService.refresh();
 
             });
 
@@ -216,12 +248,57 @@ export class HomeComponent implements OnInit {
         } catch (error) {
             self._uiService.showAlert(error);
         }
+
+
+        this.mainSub = self._dbService.groups.subscribe(function (groups) {
+            self.undhandledMails = groups;
+        });
     }
 
     tabChanged(event: MdcTabActivatedEvent): void {
         this.activeTab = event.index;
     }
 
+
+    updateUI(msg) {
+        //add to grouping
+        var groupIndex = msg.hostname.substring(0, 1).toLocaleLowerCase();
+
+
+        if (this.undhandledMails.filter(e => e.group === groupIndex).length == 0) {
+            var hn: any = {};
+            hn.hostname = msg.hostname;
+            hn.messageCount = 1;
+            hn.name = extractMailFromName(msg.from);
+            hn.messages = [];
+            hn.isCollapsed = true;
+            var hnArray = [];
+            hnArray.push(hn);
+            this.undhandledMails.push({ group: groupIndex, hostnames: hnArray });
+
+            this.undhandledMails.sort((a, b) => (a.group > b.group) ? 1 : ((b.group > a.group) ? -1 : 0));
+
+        } else {
+            for (var i = 0; i < this.undhandledMails.length; i++) {
+                if (this.undhandledMails[i].group == groupIndex) {
+                    if (this.undhandledMails[i].hostnames.filter(e => e.hostname === msg.hostname).length == 0) {
+                        var updateHosts = this.undhandledMails[i].hostnames;
+                        updateHosts.push({ hostname: msg.hostname, messageCount: 1, messages: [], isCollapsed: true, name: extractMailFromName(msg.from) });
+                        this.undhandledMails[i].hostnames = updateHosts;
+                    } else {
+                        var updateHosts = this.undhandledMails[i].hostnames;
+                        for (var a = 0; a < updateHosts.length; a++) {
+                            if (updateHosts[a].hostname == msg.hostname) {
+                                updateHosts[a].messageCount = updateHosts[a].messageCount + 1;
+                            }
+                        }
+
+                        this.undhandledMails[i].hostnames = updateHosts;
+                    }
+                }
+            }
+        }
+    }
 
     groupDisplay(msgList) {
         var group = {};

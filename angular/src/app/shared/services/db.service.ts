@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import Dexie from 'dexie';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-import { Message, MessageGroup } from '../models';
+import { Message, MessageGroup, DisplayGroup } from '../models';
 
 @Injectable()
 export class DbService {
@@ -34,6 +34,12 @@ export class DbService {
 
 
 
+    private _groups: any[];
+    private _groupsObservable: BehaviorSubject<any[]> = new BehaviorSubject([]);
+    get groups(): Observable<any[]> { return this._groupsObservable.asObservable() }
+
+
+
     constructor() { }
 
     db: any;
@@ -46,7 +52,7 @@ export class DbService {
         //create table with index fields
         this.db.version(1).stores({
             mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status,unsubscribeDate,ignoredCount',
-            mailgroups: '++id,hostname,from,*ids,status',
+            mailgroups: 'group,hostnames,count,status',
             messageGroups: '++id, hostname'
         });
 
@@ -61,6 +67,7 @@ export class DbService {
     }
 
     async init() {
+        /*
         this._undhandledMessages = await this.filterEquals("status", 0).toArray();
         this._undhandledMessagesObervable.next(this._undhandledMessages);
 
@@ -69,9 +76,16 @@ export class DbService {
 
         this._unsubMessages = await this.filterEquals("status", 1).toArray();
         this._unsubMessagesObervable.next(this._unsubMessages);
+        */
 
+        /*
         this._newMessageGroups = await this.db.mailgroups.where("status").equals(0).toArray();
         this._newMessageGroupsObservable.next(this._newMessageGroups);
+*/
+
+        this._groups = await this.db.mailgroups.toArray();
+        this._groupsObservable.next(this._groups);
+
     }
 
     addRange(mails) {
@@ -91,7 +105,7 @@ export class DbService {
         var existsWithFrom = await this.filterEqualsIgnoreCase("from", from).toArray();
         return existsWithFrom.length > 0;
     }
-    
+
     async updateIgnoreCount(from) {
         var mails = await this.filterEqualsIgnoreCase("from", from).toArray();
         if (mails.length == 0 || mails.length > 1) {
@@ -163,7 +177,35 @@ export class DbService {
             }
 
 
-        } 
+            //add to grouping
+            var groupIndex = msg.hostname.substring(0, 1).toLocaleLowerCase();
+            let groupExists = await this.db.mailgroups.get(groupIndex);
+            if (groupExists === undefined) {
+                var hn:any = {};
+                hn.hostname = msg.hostname;
+                hn.messageCount = 1;
+                hn.name = extractMailFromName(msg.from);
+                hn.messages = [];
+                hn.isCollapsed = true;
+                var hnArray = [];
+                hnArray.push(hn);
+                await this.db.mailgroups.add({ group: groupIndex, hostnames: hnArray });
+            } else {
+                if (groupExists.hostnames.filter(e => e.hostname === msg.hostname).length == 0) {
+                    var updateHosts = groupExists.hostnames;
+                    updateHosts.push({ hostname: msg.hostname, messageCount: 1 , messages: [], isCollapsed: true, name : extractMailFromName(msg.from)});
+                    await this.db.mailgroups.update(groupIndex, { hostnames: updateHosts });
+                } else {
+                    var updateHosts = groupExists.hostnames;
+                    for (var i = 0; i < updateHosts.length; i++) {
+                        if (updateHosts[i].hostname == msg.hostname) {
+                            updateHosts[i].messageCount = updateHosts[i].messageCount + 1;
+                        }
+                    }
+                    await this.db.mailgroups.update(groupIndex, { hostnames: updateHosts });
+                }
+            }
+        }
     }
 
 
@@ -230,10 +272,15 @@ export class DbService {
         this.refresh();
     }
 
-    refresh() {
+    async refresh() {
+        /*
         this._undhandledMessagesObervable.next(this._undhandledMessages);
         this._keepMessagesObervable.next(this._keepMessages);
         this._unsubMessagesObervable.next(this._unsubMessages);
+        */
+
+        this._groups = await this.db.mailgroups.toArray();
+        this._groupsObservable.next(this._groups);
     }
 
     filterEqualsIgnoreCase(field, value) {
@@ -266,3 +313,14 @@ export class DbService {
 
 
 
+
+
+function extractMailFromName(from) {
+    var iStart = from.lastIndexOf('<');
+    var iEnd = from.lastIndexOf('>');
+    var fromName = from;
+    if (iStart > -1 && iEnd > -1) {
+        fromName = from.substr(0, iStart);
+    }
+    return fromName;
+}

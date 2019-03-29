@@ -5,9 +5,9 @@
 
 <mdc-list-group>
     <div *ngFor="let d of groups;let a = index;" class="row">
-        <h3 mdcListGroupSubheader class="listheader">{{ d.name }}</h3>
+        <h3 mdcListGroupSubheader class="listheader">{{ d.group }}</h3>
         <mdc-list avatar style="flex-grow: 1;" class="whiteframe">
-            <div *ngFor="let m of d.messagegroups; let i = index">
+            <div *ngFor="let m of d.hostnames; let i = index">
                 <!-- routerLink="/detail/{{ m.hostname }}/{{ status }} -->
                 <mdc-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                     [attr.aria-controls]="'collapse' + a + i">

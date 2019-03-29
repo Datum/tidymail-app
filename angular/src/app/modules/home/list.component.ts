@@ -1,4 +1,4 @@
-import { Input, Component } from '@angular/core';
+import { Input, Component, ChangeDetectionStrategy } from '@angular/core';
 
 
 import { DisplayGroup } from '../../shared/models';
@@ -39,10 +39,14 @@ export class ListComponent {
         if (!m.isCollapsed) {
             if (m.messages.length == 0) {
 
+                console.log(m);
+
                 //load messages
                 m.messages = await this._dbService.filterEqualsIgnoreCase("hostname", m.hostname).filter(function (msg) {
                     return msg.status === self.status;
                 }).toArray();
+
+                
             }
         }
     }
