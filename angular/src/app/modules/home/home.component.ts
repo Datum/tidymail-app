@@ -12,6 +12,7 @@ import {
     mimeWordEncode, mimeWordDecode,
     mimeWordsEncode, mimeWordsDecode
 } from 'emailjs-mime-codec'
+import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
 
 
 @Component({
@@ -133,10 +134,13 @@ export class HomeComponent implements OnInit {
             //get total count of mails to process
             var totalCount = ids.length;
 
+            //start with newest first
+            ids = ids.reverse();
+
             //download all mails
-            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, fetchedMails) {
-                self.statusMessage = workedCount.toString() + ' downloaded (' + Math.round((workedCount / totalCount) * 100) + '%)';
-                self.progress = (Math.round((workedCount / totalCount) * 100)) / 100;
+            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails) {
+                self.statusMessage = workedCount.toString() + ' downloaded (' + Math.round((workedCount / dynamicTotalCount) * 100) + '%)';
+                self.progress = (Math.round((workedCount / dynamicTotalCount) * 100)) / 100;
 
             });
 
@@ -148,7 +152,6 @@ export class HomeComponent implements OnInit {
 
             for (var i = 0; i < fullResult.length; i++) {
 
-
                 if (self.bCancel) {
                     break;
                 }
@@ -157,9 +160,6 @@ export class HomeComponent implements OnInit {
                 var msg = new Message();
                 msg.id = fullResult[i].uid;
                 msg.from = mimeWordsDecode(fullResult[i]['body[header.fields (from)]'].substr(6));
-
-                //msg.from = msg.from.replace('"','');
-
                 msg.from = msg.from.replace(/"/g, '');
                 msg.internalDate = Date.parse(fullResult[i]['body[header.fields (date)]'].substr(6));
                 msg.subject = mimeWordsDecode(fullResult[i]['body[header.fields (subject)]'].substr(9));

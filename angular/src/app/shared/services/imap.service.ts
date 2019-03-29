@@ -20,6 +20,10 @@ import { Injectable } from '@angular/core';
 import ImapClient from 'emailjs-imap-client'
 import TCPSocket from 'emailjs-tcp-socket'
 import { environment } from '../../../environments/environment';
+import {
+    mimeWordEncode, mimeWordDecode,
+    mimeWordsEncode, mimeWordsDecode
+} from 'emailjs-mime-codec'
 
 
 @Injectable()
@@ -89,7 +93,7 @@ export class ImapService {
 
     //open the imap client instance
     open() {
-        this.client.onerror = function(error){
+        this.client.onerror = function (error) {
             console.log('imap client error');
             console.log(error);
             throw new Error(error);
@@ -147,6 +151,27 @@ export class ImapService {
     }
 
 
+    async getMailWithSameFrom(from: string) {
+        //trim all whitespace
+        from = from.trim();
+
+        //check if mail only or with name
+        if (from.indexOf(' ') != -1) {
+            var fromName = "";
+            var fromMail = "";
+    
+            var iStart = from.indexOf('<');
+            if (iStart != -1) {
+                fromName = from.substr(0, iStart).split("\"").join("").trim();
+                fromMail = from.substr(iStart);
+            }
+            return await this.client.search('INBOX', { 'HEADER': ['from', '"' + fromName + '" ' + fromMail] }, { byUid: true });
+        } else {
+            return await this.client.search('INBOX', { 'FROM': from }, { byUid: true });
+        }
+    }
+
+
     //set cancel request
     setCancel() {
         this.bCancel = true;
@@ -168,9 +193,40 @@ export class ImapService {
             //remove worked ids
             ids.splice(0, environment.fetchBatchSize);
 
+
+
+            var worked = [];
+
+            //loop to get from and remove ids from list
+            for (var i = 0; i < msgDetails.length; i++) {
+                var from = mimeWordsDecode(msgDetails[i]['body[header.fields (from)]'].substr(6));
+                from = from.replace(/"/g, '');
+
+                if (worked.indexOf(from) == -1) {
+
+                    var sameFromIds = await this.getMailWithSameFrom(from);
+                    msgDetails[i].sameFromIds = sameFromIds;
+
+                    console.log('work ids before exlude: ' + ids.length);
+
+                    ids = ids.filter(function (el) {
+                        return !sameFromIds.includes(el);
+                    });
+
+                    console.log('work ids after exlude: ' + ids.length);
+
+                    worked.push(from);
+                }
+
+                //break if cancel requested
+                if (self.bCancel) {
+                    break;
+                }
+            }
+
             //fire callback if provided
             if (batchCallBack) {
-                batchCallBack(allMessages.length, msgDetails);
+                batchCallBack(allMessages.length, ids.length, msgDetails);
             }
 
             //break if cancel requested
