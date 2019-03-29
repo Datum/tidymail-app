@@ -142,9 +142,37 @@ export class HomeComponent implements OnInit {
                 self.statusMessage = workedCount.toString() + ' downloaded (' + Math.round((workedCount / dynamicTotalCount) * 100) + '%)';
                 self.progress = (Math.round((workedCount / dynamicTotalCount) * 100)) / 100;
 
+                for (var i = 0; i < fetchedMails.length; i++) {
+
+                    if (self.bCancel) {
+                        break;
+                    }
+    
+    
+                    var msg = new Message();
+                    msg.id = fetchedMails[i].uid;
+                    msg.from = mimeWordsDecode(fetchedMails[i]['body[header.fields (from)]'].substr(6));
+                    msg.from = msg.from.replace(/"/g, '');
+                    msg.internalDate = Date.parse(fetchedMails[i]['body[header.fields (date)]'].substr(6));
+                    msg.subject = mimeWordsDecode(fetchedMails[i]['body[header.fields (subject)]'].substr(9));
+                    msg.unsubscribeEmail = mimeWordsDecode(fetchedMails[i]['body[header.fields (list-unsubscribe)]'].substr(18));
+                    msg.hostname = extractHostname(msg.from);
+        
+                    //await self._dbService.add(msg, i % 10 == 0 ? true : false);
+                    await self._dbService.add(msg, false);
+    
+                    //self.statusMessage = i.toString() + ' imported (' + Math.round((i / totalToImport) * 100) + '%)';
+    
+    
+                }
+    
+                await self._dbService.refresh();
+
             });
 
             //set ui info
+
+            /*
             self.statusMessage = "importing mails...";
             self.bCancel = false;
 
@@ -176,6 +204,7 @@ export class HomeComponent implements OnInit {
             }
 
             await self._dbService.refresh();
+            */
 
             self.bCancel = false;
 
