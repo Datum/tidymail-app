@@ -159,15 +159,29 @@ export class ImapService {
         if (from.indexOf(' ') != -1) {
             var fromName = "";
             var fromMail = "";
-    
+
             var iStart = from.indexOf('<');
             if (iStart != -1) {
                 fromName = from.substr(0, iStart).split("\"").join("").trim();
                 fromMail = from.substr(iStart);
             }
-            return await this.client.search('INBOX', { 'HEADER': ['from', '"' + fromName + '" ' + fromMail] }, { byUid: true });
+
+            var searchObject = this.useGmailSearchSyntax ?
+                { 'X-GM-RAW': "from:" + '"' + fromName + '" ' + fromMail }
+                :
+                { 'HEADER': ['from', '"' + fromName + '" ' + fromMail] };
+
+
+            return await this.client.search('INBOX', searchObject, { byUid: true });
+
         } else {
-            return await this.client.search('INBOX', { 'FROM': from }, { byUid: true });
+
+            var searchObject = this.useGmailSearchSyntax ?
+                { 'X-GM-RAW': "from:" + from }
+                :
+                { 'HEADER': ['from', from] };
+
+            return await this.client.search('INBOX', searchObject, { byUid: true });
         }
     }
 
@@ -192,8 +206,6 @@ export class ImapService {
 
             //remove worked ids
             ids.splice(0, environment.fetchBatchSize);
-
-
 
             var worked = [];
 
