@@ -164,7 +164,7 @@ export class DbService {
             dg.displayName = groupIndex;
 
             if (dgExists === undefined)
-                this._newGroups.push(dg);
+                this.getGroupObservables(source).push(dg);
             if (dbEntity === undefined)
                 await this.getGroupEntity(source).add(dg);
 
@@ -227,12 +227,9 @@ export class DbService {
                     dbEntity.messagegroups = dbEntity.messagegroups.filter(function(el) { return el.hostname != msg.hostname; }); 
                 }
 
-
-                console.log(dbEntity.messagegroups.length);
                 if(dbEntity.messagegroups.length > 0) {
                     await this.getGroupEntity(source).update(groupIndex, { messagegroups: dbEntity.messagegroups });
                 } else {
-                    console.log(gpOb);
                     gpOb = gpOb.filter(function(el) { return el.messagegroups.length > 0 }); 
                     await this.getGroupEntity(source).delete(groupIndex);
                 }
@@ -245,27 +242,10 @@ export class DbService {
     async keep(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
-            console.log(msg);
             await this.db.mails.update(msgId, { status: 2 });
             await this.addOrUpdateMsg(msg.id, msg.status);
         }
-
     }
-
-
-    async deleteAll(hostname: string) {
-        var allMessagesToKeep = await this.filterEquals("hostname", hostname).filter(function (mail) {
-            return mail.status === 0;
-        }).toArray();
-
-        
-
-        for (var i = 0; i < allMessagesToKeep.length; i++) {
-            await this.db.mails.update(allMessagesToKeep[i].id, { status: 3 });
-            await this.removeMsg(allMessagesToKeep[i], allMessagesToKeep[i].status);
-        }
-    }
-
 
     async delete(msgId: string) {
         var msg = await this.db.mails.get(msgId)
@@ -273,31 +253,55 @@ export class DbService {
             await this.removeMsg(msg.id, msg.status);
             await this.db.mails.update(msgId, { status: 3 });
         }
-
     }
 
-    async keepAll(mg: MessageGroup) {
+    
+    async unsubscribe(msgId: string) {
+        var msg = await this.db.mails.get(msgId)
+        if (msg !== undefined) {
+            await this.db.mails.update(msgId, { status: 1 });
+            await this.addOrUpdateMsg(msg.id, msg.status);
+        }
+    }
+
+
+
+
+    async deleteAll(mg: MessageGroup, statusFilter:number = 0) {
+        var allMessagesToDelete = await this.filterEqualsIgnoreCase("hostname", mg.hostname).filter(function (mail) {
+            return mail.status === statusFilter;
+        }).toArray();
+        for (var i = 0; i < allMessagesToDelete.length; i++) {
+            await this.db.mails.update(allMessagesToDelete[i].lastId, { status: 3 });
+            await this.removeMsg(allMessagesToDelete[i], allMessagesToDelete[i].status);
+        }
+    }
+    
+
+    async keepAll(mg: MessageGroup , statusFilter:number = 0) {
         var allMessagesToKeep = await this.filterEquals("hostname", mg.hostname).filter(function (mail) {
-            return mail.status === 0;
+            return mail.status === statusFilter;
         }).toArray();
 
-        console.log(allMessagesToKeep);
-
         for (var i = 0; i < allMessagesToKeep.length; i++) {
-            //await this.db.mails.update(allMessagesToKeep[i].id, { status: 2 });
-
-
+            await this.db.mails.update(allMessagesToKeep[i].lastId, { status: 2 });
             await this.addOrUpdateMsg(allMessagesToKeep[i], 2);
             await this.removeMsg(allMessagesToKeep[i], allMessagesToKeep[i].status);
         }
     }
 
-    unsubscribe(msgId: string) {
-      
-    }
 
-    unsubscribeAll(msgId: string) {
-      
+    async unsubscribeAll(mg: MessageGroup , statusFilter:number = 0) {
+        
+        var allMessagesToUnsubscribe = await this.filterEqualsIgnoreCase("hostname", mg.hostname).filter(function (mail) {
+            return mail.status === statusFilter;
+        }).toArray();
+
+        for (var i = 0; i < allMessagesToUnsubscribe.length; i++) {
+            await this.db.mails.update(allMessagesToUnsubscribe[i].lastId, { status: 1 });
+            await this.addOrUpdateMsg(allMessagesToUnsubscribe[i], 1);
+            await this.removeMsg(allMessagesToUnsubscribe[i], allMessagesToUnsubscribe[i].status);
+        }
     }
 
 

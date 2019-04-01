@@ -35,7 +35,8 @@
                 Password
             </div>
             <div class="col">
-                <a href="#">change</a>
+                <!--<a href="#">change</a>-->
+                ******
             </div>
         </div>
         <div class="row">
@@ -43,7 +44,9 @@
                 Datum Rewards
             </div>
             <div class="col">
-                <span *ngIf="userConfig.hasJoinedRewardProgram"></span>
+                <span *ngIf="userConfig.hasJoinedRewardProgram">
+                    joined {{ (userConfig.rewardJoinDate | date:'short')  }}
+                </span>
                 <span *ngIf="!userConfig.hasJoinedRewardProgram">
                     <a href="#">join now</a>
                 </span>

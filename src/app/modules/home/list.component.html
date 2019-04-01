@@ -7,11 +7,10 @@
                 <div *ngFor="let m of d.messagegroups; let i = index">
                     <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                         [attr.aria-controls]="'collapse' + a + i">
-                        <img mat-list-icon
-                            src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
-                            style="padding-right:10px;">
-
-                        <p matLine class="notwoline">{{ m.name }}
+                        <p matLine class="notwoline">
+                            <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
+                                style="padding-right:10px;">
+                            {{ m.name }}
                             {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
                             <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
                                 arrow_drop_down</mat-icon>
@@ -19,16 +18,16 @@
                         </p>
 
                         <div mat-list-item style="min-width:500px; text-align: right;">
-                            <button mat-button (click)="keepAll(m,$event)">
+                            <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
                                 <mat-icon>check</mat-icon>
                                 {{ m.estimatedMessageCount>1 ? 'KEEP (' +  m.estimatedMessageCount + ')' : 'KEEP' }}
                             </button>
-                            <button mat-button (click)="keepAll(m.hostname,m,$event)">
+                            <button [hidden]="status == 1" mat-button (click)="unsubscribeAll(m,$event)">
                                 <mat-icon>cancel</mat-icon>
                                 UNSUBSCRIBE {{ m.estimatedMessageCount>1 ? '(' +  m.estimatedMessageCount + ')' : '' }}
-                                
+
                             </button>
-                            <button mat-button (click)="keepAll(m.hostname,m,$event)">
+                            <button mat-button (click)="deleteAll(m,$event)">
                                 <mat-icon>delete</mat-icon>
                                 DELETE {{ m.estimatedMessageCount>1 ? '(' +  m.estimatedMessageCount + ')' : '' }}
                             </button>
@@ -47,7 +46,8 @@
                                     {{ (msg.ignoreIds.length + 1) + ' mails, last from: ' +  (msg.lastDate | date:'medium') }}
                                 </p>
 
-                                <div [hidden]="m.messages.length == 1" mat-list-item style="min-width:500px; text-align: right;">
+                                <div [hidden]="m.messages.length == 1" mat-list-item
+                                    style="min-width:500px; text-align: right;">
                                     <button mat-button (click)="keep(msg.id)">
                                         <mat-icon>check</mat-icon>
                                         KEEP

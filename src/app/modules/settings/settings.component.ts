@@ -27,7 +27,7 @@ export class SettingsComponent implements OnInit {
             self._dbService.create();
             return self._userService.reset();
         }).then(() => {
-            self.router.navigateByUrl('/install');
+            self.router.navigateByUrl('/register');
         }).catch(error => {
             alert(error);
         });

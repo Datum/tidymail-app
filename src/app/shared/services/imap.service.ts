@@ -59,8 +59,6 @@ export class ImapService {
                 //fired, if certificate received (works only if ciphers are supported by browser!)
                 certSocket.oncert = pemEncodedCertificate => {
 
-                    console.log(pemEncodedCertificate);
-
                     //close the socket
                     certSocket.close();
 
@@ -227,13 +225,9 @@ export class ImapService {
                     var sameFromIds = await this.getMailWithSameFrom(from);
                     msgDetails[i].sameFromIds = sameFromIds;
 
-                    console.log('work ids before exlude: ' + ids.length);
-
                     ids = ids.filter(function (el) {
                         return !sameFromIds.includes(el);
                     });
-
-                    console.log('work ids after exlude: ' + ids.length);
 
                     worked.push(from);
                 }

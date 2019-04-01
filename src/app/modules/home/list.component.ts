@@ -81,30 +81,16 @@ export class ListComponent {
 
 
     async keepAll(mg, event) {
-
-        //mg.keepLoading = true;
-        //mg.statusText = "Loading...";
-
-
-        console.log('asdfasdf');
-
         event.stopPropagation();
         await this._dbService.keepAll(mg);
-
-        //mg.keepLoading = false;;
     }
 
-    async deleteAll(hostname, mg, event) {
-
-        mg.deleteLoading = true;
-
-        mg.statusText = "Loading...";
-
+    async deleteAll(mg, event) {
         event.stopPropagation();
 
-        var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+        //var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
 
-        await this._imapService.moveTrash(allMessagesToDelete.map(item => item.id));
+        //await this._imapService.moveTrash(allMessagesToDelete.map(item => item.id));
 
         /*
         for(var i = 0; i < allMessagesToDelete.length;i++) {
@@ -113,17 +99,20 @@ export class ListComponent {
         }
         */
 
-        await this._dbService.deleteAll(hostname);
+        await this._dbService.deleteAll(mg, this.status);
 
         mg.deleteLoading = false;
     }
 
-    async unsubscribeAll(hostname, mg, event) {
+    async unsubscribeAll(mg, event) {
         mg.unsubLoading = true;
         mg.statusText = "Loading...";
 
+        
+
         event.stopPropagation();
 
+        /*
         var allMessagesToUnsubscribe = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
         for (var i = 0; i < allMessagesToUnsubscribe.length; i++) {
             mg.statusText = 'Unsubscribe ' + i + ' of ' + allMessagesToUnsubscribe.length;
@@ -141,15 +130,9 @@ export class ListComponent {
                 //this.snackbar.open('Unsubscription requested.');
             }
         }
+        */
 
-
-        //this.snackbar.open('Unsubscription requested.');
-
-
-
-        //this.snackbar.open('Unsubscription for ' + hostname + ' requested.');
-
-        await this._dbService.unsubscribeAll(hostname);
+        await this._dbService.unsubscribeAll(mg, this.status);
 
         mg.unsubLoading = false;
     }

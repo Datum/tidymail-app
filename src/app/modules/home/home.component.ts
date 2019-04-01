@@ -63,16 +63,17 @@ export class HomeComponent implements OnInit {
             this.isSyncing = true;
 
             //set ui info
-            this.statusMessage = "connection to server...";
-
-
-            console.log(this.userConfig);
+            this.statusMessage = "connecting to server...";
 
             //create client with config
             await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport);
 
             //open
             await this._imapService.open();
+
+
+            //set ui info
+            this.statusMessage = "searching for new newsletters...";
 
             //get all ids with given search term
             var ids = await this._imapService.getMailIds();

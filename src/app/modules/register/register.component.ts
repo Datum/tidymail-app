@@ -42,21 +42,20 @@ export class RegisterComponent implements OnInit {
         });
 
         this.customImapFormGroup = this._formBuilder.group({
-            host: ['', Validators.required],
-            username: ['', Validators.required],
-            password: ['', Validators.required],
+            host: ['imap.gmx.net', Validators.required],
+            username: ['florian.honegger@gmx.ch', Validators.required],
+            password: ['Tinetta,.12', Validators.required],
             rememberMe: ['']
         });
     }
 
     async doRegister(joinReward: boolean) {
 
-        if(joinReward) {
+        if (joinReward) {
             //call something
             try {
-                var res = await this._userService.registerRewards(userConfig.email);
-                console.log(res);
-            }  catch(error) {
+                var res = await this._userService.registerRewards(this.mailFormGroup.value.email);
+            } catch (error) {
                 console.log(error);
             }
         }
@@ -65,10 +64,12 @@ export class RegisterComponent implements OnInit {
         var userConfig = this._userService.createOrLoadConfig();
         userConfig.firsttime = false;
         userConfig.hasJoinedRewardProgram = joinReward;
-        
-        if(this.customProvider) {
-            userConfig.imapurl = this.customImapFormGroup.value.host;
-            userConfig.imapport = this.customImapFormGroup.value.port;
+        if(joinReward) 
+            userConfig.rewardJoinDate = Date.now();
+
+        if (this.customProvider) {
+            userConfig.imapurl = this.customImapFormGroup.value.host.split(':')[0];
+            userConfig.imapport = this.customImapFormGroup.value.host.split(':').length > 1 ? this.customImapFormGroup.value.host.split(':')[1] : 993;
             userConfig.isGmailProvider = false;
             userConfig.username = this.customImapFormGroup.value.username;
             userConfig.email = this.mailFormGroup.value.email;
@@ -79,7 +80,7 @@ export class RegisterComponent implements OnInit {
         }
 
         //save config
-        this._userService.save(userConfig, this.passwordFormGroup.value.password);
+        this._userService.save(userConfig,this.customProvider ? this.customImapFormGroup.value.password : this.passwordFormGroup.value.password );
 
         //navigate to home
         this.router.navigateByUrl('/');
@@ -88,33 +89,31 @@ export class RegisterComponent implements OnInit {
 
 
     async verifiy() {
-        var host = "imap.gmail.com";
-        var port = 993;
+        var host = this.customProvider ? this.customImapFormGroup.value.host.split(':')[0] : "imap.gmail.com";
+        var port = this.customProvider ? this.customImapFormGroup.value.host.split(':').length > 1 ? this.customImapFormGroup.value.host.split(':')[1] : 993 : 993;
 
-        //check if custom or gmail
-        if (!this.customProvider) {
-            try {
-                //create imap client
-                await this._imapService.create(this.mailFormGroup.value.email, this.passwordFormGroup.value.password, host, port);
 
-                //try to connect
-                await this._imapService.open();
+        try {
+            //create imap client
+            await this._imapService.create(this.customProvider ? 
+                this.customImapFormGroup.value.username :  this.mailFormGroup.value.email, 
+                this.customProvider ? 
+                this.customImapFormGroup.value.password : this.passwordFormGroup.value.password, host, port);
 
-                //close after connection without error
-                await this._imapService.close();
+            //try to connect
+            await this._imapService.open();
 
-                //disable editing for previous steps 
-                this.editable = false;
+            //close after connection without error
+            await this._imapService.close();
 
-                //set stepper to next step
-                this.stepper.next();
-            } catch (error) {
-                //show error as alert
-                this._uiService.showAlert(error);
-            }
+            //disable editing for previous steps 
+            this.editable = false;
+
+            //set stepper to next step
+            this.stepper.next();
+        } catch (error) {
+            //show error as alert
+            this._uiService.showAlert(error);
         }
-
-       
     }
-
 }

@@ -9,5 +9,6 @@ export class UserConfig {
     imapport:number;
     isGmailProvider:boolean;
     hasJoinedRewardProgram:boolean;
+    rewardJoinDate:number;
     lastUidProcessed:number;
 }
