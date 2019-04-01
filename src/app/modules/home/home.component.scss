@@ -1,0 +1,11 @@
+.header-row img {
+    max-width:120px
+}
+
+.header-row {
+    padding-top:15px;
+}
+
+:host /deep/ .mat-tab-body-content{
+    overflow: hidden;
+}
