@@ -115,7 +115,7 @@ export class DbService {
             }
 
 
-            //this.undhandledMails.sort((a, b) => (a.group > b.group) ? 1 : ((b.group > a.group) ? -1 : 0));
+            this._newGroups.sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
         }
     }
 
@@ -248,7 +248,6 @@ export class DbService {
     async delete(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
-            console.log(msg);
             await this.removeMsg(msg, msg.status);
             await this.db.mails.update(msgId, { status: 3 });
         }
@@ -258,8 +257,9 @@ export class DbService {
     async unsubscribe(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
-            await this.db.mails.update(msgId, { status: 1 });
             await this.addOrUpdateMsg(msg, msg.status);
+            await this.removeMsg(msg, msg.status);
+            await this.db.mails.update(msgId, { status: 1 });
         }
     }
 
@@ -272,8 +272,7 @@ export class DbService {
         }).toArray();
 
         for (var i = 0; i < allMessagesToDelete.length; i++) {
-            await this.db.mails.update(allMessagesToDelete[i].lastId, { status: 3 });
-            await this.removeMsg(allMessagesToDelete[i], allMessagesToDelete[i].status);
+            await this.delete(allMessagesToDelete[i].lastId);
         }
     }
     
@@ -296,9 +295,7 @@ export class DbService {
         }).toArray();
 
         for (var i = 0; i < allMessagesToUnsubscribe.length; i++) {
-            await this.db.mails.update(allMessagesToUnsubscribe[i].lastId, { status: 1 });
-            await this.addOrUpdateMsg(allMessagesToUnsubscribe[i], 1);
-            await this.removeMsg(allMessagesToUnsubscribe[i], allMessagesToUnsubscribe[i].status);
+            await this.unsubscribe(allMessagesToUnsubscribe[i].lastId);
         }
     }
 

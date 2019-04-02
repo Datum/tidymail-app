@@ -29,11 +29,13 @@ export class HomeComponent implements OnInit {
     unsubscribedMails: Observable<DisplayGroup[]>;
 
     async ngOnInit() {
+
         //init db
         this._dbService.create();
 
         //get config
         this.userConfig = this._userService.getConfig();
+
 
         //if password is not in config, prompt user
         if (this.userConfig.password == "") {
