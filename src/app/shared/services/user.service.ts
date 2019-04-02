@@ -93,6 +93,10 @@ export class UserService {
             userConfig.password = this.encrypt(password);
         }
         localStorage.setItem('config', JSON.stringify(userConfig));
+
+        if(password != null) {
+            userConfig.password = this.decrypt(password);
+        }
     }
 }
 

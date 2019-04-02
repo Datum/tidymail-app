@@ -40,20 +40,34 @@ export class ListComponent {
         }
     }
 
-    async keep(id) {
+    async keep(mg,id) {
         await this._dbService.keep(id);
+        mg.isCollapsed = true;
+        mg.messages.length = 0;
     }
 
-    async delete(id) {
+    async keepAll(mg, event) {
+        event.stopPropagation();
+        await this._dbService.keepAll(mg);
+    }
+
+    async delete(mg,id) {
         await this._dbService.delete(id);
 
-        var deleteIds = [];
-        deleteIds.push(id);
+        var msg = await this._dbService.exists(id);
+        if(msg !== undefined) {
+            try {
+                await this._imapService.moveTrash(msg.ignoreIds);
+            } catch(error) {
+                console.log(error);
+            }
+        }
 
-        await this._imapService.moveTrash(deleteIds);
+        mg.isCollapsed = true;
+        mg.messages.length = 0;
     }
 
-    async unsubscribe(id) {
+    async unsubscribe(mg,id) {
         var msg = await this._dbService.exists(id);
 
         if (msg.unsubscribeEmail !== undefined) {
@@ -80,35 +94,23 @@ export class ListComponent {
 
 
 
-    async keepAll(mg, event) {
-        event.stopPropagation();
-        await this._dbService.keepAll(mg);
-    }
+   
 
     async deleteAll(mg, event) {
         event.stopPropagation();
 
-        //var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+        var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", mg.hostname).toArray();
 
-        //await this._imapService.moveTrash(allMessagesToDelete.map(item => item.id));
-
-        /*
         for(var i = 0; i < allMessagesToDelete.length;i++) {
             mg.statusText = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
-            await this._gmailService.delete(allMessagesToDelete[i].id);
+            await this.delete(mg,allMessagesToDelete[i].id);
         }
-        */
-
-        await this._dbService.deleteAll(mg, this.status);
-
-        mg.deleteLoading = false;
     }
 
     async unsubscribeAll(mg, event) {
         mg.unsubLoading = true;
         mg.statusText = "Loading...";
 
-        
 
         event.stopPropagation();
 

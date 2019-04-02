@@ -39,8 +39,16 @@ export class ImapService {
 
 
 
-    create(username, password, host = "imap.gmail.com", port = 993) {
+    create(username, password, host = "imap.gmail.com", port = 993, trashBox = null) {
         var self = this;
+
+        if(trashBox == null) {
+            trashBox = "Trash";
+        }
+
+        if(host == "imap.gmail.com") {
+            this.useGmailSearchSyntax = true;
+        }
 
         return new Promise<string>(
             (resolve, reject) => {
@@ -119,8 +127,11 @@ export class ImapService {
 
     //move given mail id to trash
     moveTrash(ids) {
+        console.log('move');
+        console.log(ids);
+        console.log(this.useGmailSearchSyntax);
         if (this.useGmailSearchSyntax) {
-            return this.client.moveMessages('INBOX', ids.join(), '[Gmail]/Trash', { byUid: true });
+            return this.client.moveMessages('INBOX', ids.join(), 'Trash', { byUid: true });
         } else {
             return this.client.moveMessages('INBOX', ids.join(), 'Trash', { byUid: true });
         }

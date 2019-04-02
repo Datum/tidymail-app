@@ -11,4 +11,5 @@ export class UserConfig {
     hasJoinedRewardProgram:boolean;
     rewardJoinDate:number;
     lastUidProcessed:number;
+    trashBoxPath:string;
 }

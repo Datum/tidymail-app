@@ -198,7 +198,7 @@ export class DbService {
     }
 
 
-    private async removeMsg(msg: Message, source: number = 0) {
+    private async removeMsg(msg: Message, source: number = 0, msgId:number = -1) {
 
         //Set key group index, here 1st letter
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
@@ -206,31 +206,36 @@ export class DbService {
         var dbEntity = await this.getGroupEntity(source).where("identifier").equalsIgnoreCase(groupIndex).first();
         var gpOb = this.getGroupObservables(source);
 
+        console.log(dbEntity);
+
         //check if already exists
         var dgExists = gpOb.find(x => x.identifier === groupIndex);
         if (dgExists === undefined || dbEntity === undefined) {
         } else {
             var mgExists = dgExists.messagegroups.find(x => x.key === msg.hostname);
-            var mgExistsDb = await dbEntity.messagegroups.find(x => x.key === msg.hostname);
+            var mgExistsDb = dbEntity.messagegroups.find(x => x.key === msg.hostname);
             if (mgExists === undefined || mgExistsDb === undefined) {
             } else {
-                
-                if (dgExists.messagegroups.length == 1) {
-                    dgExists.messagegroups.length = 0;
-                } else {
-                    dgExists.messagegroups = dgExists.messagegroups.filter(function(el) { return el.hostname != msg.hostname; }); 
-                }
+                //check if more from same hostname
+                /*
+                var keyCount = await this.db.mails.where('status').equalsIgnoreCase(source.toString()).filter(function (mail) {
+                    return mail.hostname.substring(0, 1).toUpperCase() === groupIndex;
+                }).count();
+                */
 
-                if (dbEntity.messagegroups.length == 1) {
+                //if only one, remove all
+                if(dgExists.messagegroups.length == 1) {
+                    dgExists.messagegroups.length = 0;
                     dbEntity.messagegroups.length = 0;
                 } else {
-                    dbEntity.messagegroups = dbEntity.messagegroups.filter(function(el) { return el.hostname != msg.hostname; }); 
+                    //filter
+                    dgExists.messagegroups = dgExists.messagegroups.filter(function(el) { return el.hostname !== msg.hostname }); 
+                    dbEntity.messagegroups = dbEntity.messagegroups.filter(function(el) { return el.hostname !== msg.hostname }); 
                 }
 
                 if(dbEntity.messagegroups.length > 0) {
                     await this.getGroupEntity(source).update(groupIndex, { messagegroups: dbEntity.messagegroups });
                 } else {
-                    gpOb = gpOb.filter(function(el) { return el.messagegroups.length > 0 }); 
                     await this.getGroupEntity(source).delete(groupIndex);
                 }
             }
@@ -242,15 +247,17 @@ export class DbService {
     async keep(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
+            await this.addOrUpdateMsg(msg, 2);
+            await this.removeMsg(msg, msg.status);
             await this.db.mails.update(msgId, { status: 2 });
-            await this.addOrUpdateMsg(msg.id, msg.status);
         }
     }
 
     async delete(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
-            await this.removeMsg(msg.id, msg.status);
+            console.log(msg);
+            await this.removeMsg(msg, msg.status);
             await this.db.mails.update(msgId, { status: 3 });
         }
     }
@@ -260,7 +267,7 @@ export class DbService {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
             await this.db.mails.update(msgId, { status: 1 });
-            await this.addOrUpdateMsg(msg.id, msg.status);
+            await this.addOrUpdateMsg(msg, msg.status);
         }
     }
 
@@ -271,6 +278,7 @@ export class DbService {
         var allMessagesToDelete = await this.filterEqualsIgnoreCase("hostname", mg.hostname).filter(function (mail) {
             return mail.status === statusFilter;
         }).toArray();
+
         for (var i = 0; i < allMessagesToDelete.length; i++) {
             await this.db.mails.update(allMessagesToDelete[i].lastId, { status: 3 });
             await this.removeMsg(allMessagesToDelete[i], allMessagesToDelete[i].status);
@@ -284,9 +292,7 @@ export class DbService {
         }).toArray();
 
         for (var i = 0; i < allMessagesToKeep.length; i++) {
-            await this.db.mails.update(allMessagesToKeep[i].lastId, { status: 2 });
-            await this.addOrUpdateMsg(allMessagesToKeep[i], 2);
-            await this.removeMsg(allMessagesToKeep[i], allMessagesToKeep[i].status);
+           await this.keep(allMessagesToKeep[i].lastId);
         }
     }
 

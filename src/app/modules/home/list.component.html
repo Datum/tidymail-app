@@ -48,15 +48,15 @@
 
                                 <div [hidden]="m.messages.length == 1" mat-list-item
                                     style="min-width:500px; text-align: right;">
-                                    <button mat-button (click)="keep(msg.id)">
+                                    <button mat-button (click)="keep(m,msg.lastId)">
                                         <mat-icon>check</mat-icon>
                                         KEEP
                                     </button>
-                                    <button mat-button (click)="unsubscribe(msg.id)">
+                                    <button mat-button (click)="unsubscribe(m,msg.lastId)">
                                         <mat-icon>cancel</mat-icon>
                                         UNSUBSCRIBE
                                     </button>
-                                    <button mat-button (click)="delete(msg.id)">
+                                    <button mat-button (click)="delete(m,msg.lastId)">
                                         <mat-icon>delete</mat-icon>
                                         DELETE
                                     </button>

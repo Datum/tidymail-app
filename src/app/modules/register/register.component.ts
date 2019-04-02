@@ -45,6 +45,7 @@ export class RegisterComponent implements OnInit {
             host: ['imap.gmx.net', Validators.required],
             username: ['florian.honegger@gmx.ch', Validators.required],
             password: ['Tinetta,.12', Validators.required],
+            trashBoxPath: ['Trash'],
             rememberMe: ['']
         });
     }
@@ -64,6 +65,7 @@ export class RegisterComponent implements OnInit {
         var userConfig = this._userService.createOrLoadConfig();
         userConfig.firsttime = false;
         userConfig.hasJoinedRewardProgram = joinReward;
+        userConfig.trashBoxPath = this.customImapFormGroup.value.trashBoxPath;
         if(joinReward) 
             userConfig.rewardJoinDate = Date.now();
 
@@ -103,6 +105,16 @@ export class RegisterComponent implements OnInit {
             //try to connect
             await this._imapService.open();
 
+            //read out trash mailbox path
+            var mboxes = await this._imapService.getMailBoxes();
+            var gmailBoxes = mboxes.children.filter(function (e) {
+                return e.name == "[Gmail]";
+            });
+            if (gmailBoxes.length > 0) {
+                var trashBox = findMailboxWithFlag("Trash", gmailBoxes[0]);
+                this.customImapFormGroup.value.trashBoxPath = trashBox == null ? "Trash" : trashBox.path;
+            }
+
             //close after connection without error
             await this._imapService.close();
 
@@ -115,5 +127,27 @@ export class RegisterComponent implements OnInit {
             //show error as alert
             this._uiService.showAlert(error);
         }
+    }
+}
+
+
+function findMailboxWithFlag(flag, currentNode) {
+
+    if (flag === currentNode.flag) {
+        return currentNode;
+    } else {
+        for (var index in currentNode.children) {
+            var node = currentNode.children[index];
+            for (var i = 0; i < node.flags.length; i++) {
+                if (typeof node.flags[i] === 'string' || node.flags[i] instanceof String) {
+                    if (node.flags[i].indexOf('Trash') != -1) {
+                        node.flag = flag;
+                        return node;
+                    }
+                }
+            }
+            findMailboxWithFlag(flag, node);
+        }
+        return "No Node Present";
     }
 }
