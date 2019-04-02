@@ -9,6 +9,7 @@ export const environment = {
     gmailSearchQuery: { 'X-GM-RAW': "label:^unsub" } ,
     fetchBatchSize: 50,
     fetchImapFlags: ['uid', 'flags', 'BODY.PEEK[HEADER.FIELDS (DATE)]', 'BODY.PEEK[HEADER.FIELDS (SUBJECT)]', 'BODY.PEEK[HEADER.FIELDS (FROM)]', 'BODY.PEEK[HEADER.FIELDS (LIST-UNSUBSCRIBE)]']
+
   };
 
 /*

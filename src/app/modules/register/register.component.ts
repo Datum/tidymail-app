@@ -4,6 +4,9 @@ import { UserService, ImapService, UIService } from '../../shared';
 import { MatHorizontalStepper } from '@angular/material/stepper';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+
+declare var require: any;
 
 @Component({
     selector: 'app-register',
@@ -21,6 +24,7 @@ export class RegisterComponent implements OnInit {
     hasError: boolean = false;
     errorMessage: string = "";
     rewardOnlyRegister: boolean = false;
+    version: string = require( '../../../../package.json').version;
 
 
     constructor(
@@ -33,9 +37,6 @@ export class RegisterComponent implements OnInit {
 
 
     ngOnInit() {
-
-
-
         this.mailFormGroup = this._formBuilder.group({
             email: new FormControl('', Validators.compose([
                 Validators.required,
@@ -61,7 +62,8 @@ export class RegisterComponent implements OnInit {
         if (id == "3") {
             var userConfig = this._userService.createOrLoadConfig();
             this.rewardOnlyRegister = true;
-            this.mailFormGroup.value.email = userConfig.email;
+            this.mailFormGroup.setValue({ email : userConfig.email});
+            this.passwordFormGroup.setValue({ password : userConfig.password, rememberMe : true});
             this.editable = false;
             setTimeout(function () {
                 self.stepper.next();

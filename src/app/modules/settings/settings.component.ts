@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { UserService, UserConfig, DbService, UIService } from 'src/app/shared';
 import { Router } from '@angular/router';
 
+declare var require: any;
+
 @Component({
     selector: 'app-settings',
     templateUrl: './settings.component.html',
@@ -16,6 +18,7 @@ export class SettingsComponent implements OnInit {
     ) { }
 
     userConfig: UserConfig;
+    version: string = require( '../../../../package.json').version;
 
     ngOnInit() {
         this.userConfig = this._userService.createOrLoadConfig();

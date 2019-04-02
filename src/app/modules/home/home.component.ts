@@ -165,6 +165,7 @@ export class HomeComponent implements OnInit {
             await this._dbService.delete(id);
 
             try {
+                msg.ignoreIds.push(id);
                 await this._imapService.moveTrash(msg.ignoreIds);
             } catch (error) {
                 console.log(error);

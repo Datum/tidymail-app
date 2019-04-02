@@ -1,6 +1,6 @@
 {
-  "name": "tidymail-app-last",
-  "version": "0.0.0",
+  "name": "tidymail-app",
+  "version": "0.1.0-alpha",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -9,7 +9,8 @@
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
-  "private": true,
+  "author": "Datum Network GmbH",
+  "licsense": "GNU AGPL",
   "dependencies": {
     "@angular/animations": "~7.2.0",
     "@angular/cdk": "~7.3.6",
