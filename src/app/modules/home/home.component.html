@@ -1,21 +1,29 @@
 <div class="row header-row">
-    <div class="col">
+    <div class="col header-row-padding">
         <img src="assets/logo.svg">
     </div>
     <div class="col text-center">
         <div *ngIf="isSyncing">
-            {{ statusMessage }} <mat-icon (click)="cancel()" inline clickable>cancel</mat-icon>
-            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            <div class="progress-content">
+                <small style="margin:0;">{{ statusMessage }} </small>
+                <button (click)="cancel()" mat-icon-button aria-label="Cancel">
+                    <mat-icon>cancel</mat-icon>
+                </button>
+            </div>
+            <div>
+                <!--<mat-icon (click)="cancel()" inline clickable>cancel</mat-icon>-->
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
         </div>
-        <div *ngIf="!isSyncing">
+        <div class=" header-row-padding" *ngIf="!isSyncing">
             <button mat-raised-button (click)="sync()">
                 <mat-icon>sync</mat-icon>
                 SYNC NOW
             </button>
         </div>
     </div>
-    <div class="col text-right">
-        <button mat-raised-button routerLink="/settings">
+    <div class="col text-right header-row-padding">
+        <button [disabled]="isSyncing" mat-raised-button routerLink="/settings">
             <mat-icon>build</mat-icon>
             SETTINGS
         </button>
@@ -24,42 +32,24 @@
 
 <mat-tab-group mat-align-tabs="center">
     <mat-tab label="{{ 'NEW (' + (undhandledMails | async)?.length + ')'}}">
-        <grouped-list 
-            (onDeleteMsg)="onDeleteMsg($event)" 
-            (onKeepMsg)="onKeepMsg($event)" 
-            (onUnsubscribeMsg)="onUnsubscribeMsg($event)" 
-            (onDeleteDomain)="onDeleteDomain($event)" 
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" 
-            (onUnsubscribeDomain)="onUnsubscribeDomain($event)" 
-            [groups]="undhandledMails" 
-            [status]="0"
-        >
+        <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
+            (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
+            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            [groups]="undhandledMails" [status]="0">
         </grouped-list>
     </mat-tab>
     <mat-tab label="{{ 'KEEP (' + (keepMails | async)?.length + ')'}}">
-        <grouped-list 
-            (onDeleteMsg)="onDeleteMsg($event)" 
-            (onKeepMsg)="onKeepMsg($event)" 
-            (onUnsubscribeMsg)="onUnsubscribeMsg($event)" 
-            (onDeleteDomain)="onDeleteDomain($event)" 
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" 
-            (onUnsubscribeDomain)="onUnsubscribeDomain($event)" 
-            [groups]="keepMails" 
-            [status]="2"
-        >
+        <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
+            (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
+            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            [groups]="keepMails" [status]="2">
         </grouped-list>
     </mat-tab>
     <mat-tab label="{{ 'UNSUBSCRIBED (' + (unsubscribedMails | async)?.length + ')'}}">
-            <grouped-list 
-            (onDeleteMsg)="onDeleteMsg($event)" 
-            (onKeepMsg)="onKeepMsg($event)" 
-            (onUnsubscribeMsg)="onUnsubscribeMsg($event)" 
-            (onDeleteDomain)="onDeleteDomain($event)" 
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" 
-            (onUnsubscribeDomain)="onUnsubscribeDomain($event)" 
-            [groups]="unsubscribedMails" 
-            [status]="1"
-        >
+        <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
+            (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
+            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            [groups]="unsubscribedMails" [status]="1">
         </grouped-list>
     </mat-tab>
 </mat-tab-group>

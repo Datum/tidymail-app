@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { UserService, ImapService, UIService } from '../../shared';
 import { MatHorizontalStepper } from '@angular/material/stepper';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'app-register',
@@ -19,6 +20,7 @@ export class RegisterComponent implements OnInit {
     showPrivacy: boolean = false;
     hasError: boolean = false;
     errorMessage: string = "";
+    rewardOnlyRegister: boolean = false;
 
 
     constructor(
@@ -26,28 +28,47 @@ export class RegisterComponent implements OnInit {
         private _userService: UserService,
         private _imapService: ImapService,
         private _uiService: UIService,
-        private router: Router) { }
+        private _route: ActivatedRoute,
+        private _router: Router) { }
 
 
     ngOnInit() {
+
+
+
         this.mailFormGroup = this._formBuilder.group({
-            email: new FormControl('florian.honegger@gmail.com', Validators.compose([
+            email: new FormControl('', Validators.compose([
                 Validators.required,
                 Validators.pattern('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+\.[a-z]{2,4}$')
             ]))
         });
         this.passwordFormGroup = this._formBuilder.group({
-            password: ['vxvzotexpwqzpzhl', Validators.required],
+            password: ['', Validators.required],
             rememberMe: ['true']
         });
 
         this.customImapFormGroup = this._formBuilder.group({
-            host: ['imap.gmx.net', Validators.required],
-            username: ['florian.honegger@gmx.ch', Validators.required],
-            password: ['Tinetta,.12', Validators.required],
+            host: ['', Validators.required],
+            username: ['', Validators.required],
+            password: ['', Validators.required],
             trashBoxPath: ['Trash'],
             rememberMe: ['']
         });
+
+        //check if reward join only, so user already exists
+        var self = this;
+        let id = this._route.snapshot.paramMap.get('step');
+        if (id == "3") {
+            var userConfig = this._userService.createOrLoadConfig();
+            this.rewardOnlyRegister = true;
+            this.mailFormGroup.value.email = userConfig.email;
+            this.editable = false;
+            setTimeout(function () {
+                self.stepper.next();
+                self.stepper.next();
+                self.stepper.next();
+            }, 200);
+        }
     }
 
     async doRegister(joinReward: boolean) {
@@ -61,31 +82,39 @@ export class RegisterComponent implements OnInit {
             }
         }
 
-        //set config
         var userConfig = this._userService.createOrLoadConfig();
-        userConfig.firsttime = false;
-        userConfig.hasJoinedRewardProgram = joinReward;
-        userConfig.trashBoxPath = this.customImapFormGroup.value.trashBoxPath;
-        if(joinReward) 
-            userConfig.rewardJoinDate = Date.now();
+        if (!this.rewardOnlyRegister) {
+            //set config
+            userConfig.firsttime = false;
+            userConfig.hasJoinedRewardProgram = joinReward;
+            userConfig.trashBoxPath = this.customImapFormGroup.value.trashBoxPath;
+            if (joinReward)
+                userConfig.rewardJoinDate = Date.now();
 
-        if (this.customProvider) {
-            userConfig.imapurl = this.customImapFormGroup.value.host.split(':')[0];
-            userConfig.imapport = this.customImapFormGroup.value.host.split(':').length > 1 ? this.customImapFormGroup.value.host.split(':')[1] : 993;
-            userConfig.isGmailProvider = false;
-            userConfig.username = this.customImapFormGroup.value.username;
-            userConfig.email = this.mailFormGroup.value.email;
+            if (this.customProvider) {
+                userConfig.imapurl = this.customImapFormGroup.value.host.split(':')[0];
+                userConfig.imapport = this.customImapFormGroup.value.host.split(':').length > 1 ? this.customImapFormGroup.value.host.split(':')[1] : 993;
+                userConfig.isGmailProvider = false;
+                userConfig.username = this.customImapFormGroup.value.username;
+                userConfig.email = this.mailFormGroup.value.email;
+            } else {
+                userConfig.isGmailProvider = true;
+                userConfig.email = this.mailFormGroup.value.email;
+                userConfig.username = this.mailFormGroup.value.email;
+            }
+
+            //save config
+            this._userService.save(userConfig, this.customProvider ? this.customImapFormGroup.value.password : this.passwordFormGroup.value.password);
         } else {
-            userConfig.isGmailProvider = true;
-            userConfig.email = this.mailFormGroup.value.email;
-            userConfig.username = this.mailFormGroup.value.email;
+            userConfig.hasJoinedRewardProgram = joinReward;
+            if (joinReward)
+                userConfig.rewardJoinDate = Date.now();
+
+            this._userService.save(userConfig);
         }
 
-        //save config
-        this._userService.save(userConfig,this.customProvider ? this.customImapFormGroup.value.password : this.passwordFormGroup.value.password );
-
         //navigate to home
-        this.router.navigateByUrl('/');
+        this._router.navigateByUrl('/');
 
     }
 
@@ -97,10 +126,10 @@ export class RegisterComponent implements OnInit {
 
         try {
             //create imap client
-            await this._imapService.create(this.customProvider ? 
-                this.customImapFormGroup.value.username :  this.mailFormGroup.value.email, 
-                this.customProvider ? 
-                this.customImapFormGroup.value.password : this.passwordFormGroup.value.password, host, port);
+            await this._imapService.create(this.customProvider ?
+                this.customImapFormGroup.value.username : this.mailFormGroup.value.email,
+                this.customProvider ?
+                    this.customImapFormGroup.value.password : this.passwordFormGroup.value.password, host, port);
 
             //try to connect
             await this._imapService.open();

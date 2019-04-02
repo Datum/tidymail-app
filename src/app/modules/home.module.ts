@@ -34,6 +34,10 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         component: RegisterComponent,
     },
     {
+        path: 'register/:step',
+        component: RegisterComponent,
+    },
+    {
         path: 'settings',
         component: SettingsComponent,
     },

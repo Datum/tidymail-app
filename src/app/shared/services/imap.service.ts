@@ -35,7 +35,8 @@ export class ImapService {
     client: ImapClient;
 
     //by default use gmail syntax
-    useGmailSearchSyntax: boolean = true;
+    useGmailSearchSyntax: boolean = false;
+    trashBoxPath:string;
 
 
 
@@ -45,6 +46,8 @@ export class ImapService {
         if (trashBox == null) {
             trashBox = "Trash";
         }
+
+        this.trashBoxPath = trashBox;
 
         if (host == "imap.gmail.com") {
             this.useGmailSearchSyntax = true;
@@ -66,6 +69,8 @@ export class ImapService {
 
                 //fired, if certificate received (works only if ciphers are supported by browser!)
                 certSocket.oncert = pemEncodedCertificate => {
+
+                    console.log(pemEncodedCertificate);
 
                     //close the socket
                     certSocket.close();
@@ -127,11 +132,7 @@ export class ImapService {
 
     //move given mail id to trash
     moveTrash(ids) {
-        if (this.useGmailSearchSyntax) {
-            return this.client.moveMessages('INBOX', ids.join(), 'Trash', { byUid: true });
-        } else {
-            return this.client.moveMessages('INBOX', ids.join(), 'Trash', { byUid: true });
-        }
+        return this.client.moveMessages('INBOX', ids.join(), this.trashBoxPath, { byUid: true });
     }
 
     //check if current imap instance is gmail instance and support gmail search syntax
@@ -215,51 +216,9 @@ export class ImapService {
             //remove worked ids
             ids.splice(0, environment.fetchBatchSize);
 
-            /*
-            var tt = [];
-
-            //loop to get from and remove ids from list
-            for (var i = 0; i < msgDetails.length; i++) {
-                var from = mimeWordsDecode(msgDetails[i]['body[header.fields (from)]'].substr(6));
-                from = from.replace(/"/g, '');
-
-                if (worked.indexOf(from) == -1) {
-                    tt.push(msgDetails[i].uid);
-
-
-                    var sameFromIds = await this.getMailWithSameFrom(from);
-                    msgDetails[i].sameFromIds = sameFromIds;
-
-
-                    //remove from future work
-                    ids = ids.filter(function (el) {
-                        return !sameFromIds.includes(el);
-                    });
-
-
-                    worked.push(from);
-                } else {
-
-                }
-                */
-
-                //break if cancel requested
-                if (self.bCancel) {
-                    break;
-                }
-            //}
-
-            //filter details for callbacl
-            /*
-            msgDetails = msgDetails.filter(function (msg) {
-                return tt.includes(msg.uid);
-            });
-            */
-
-
             //fire callback if provided
             if (batchCallBack) {
-                batchCallBack(allMessages.length, ids.length, msgDetails);
+                await batchCallBack(allMessages.length, ids.length, msgDetails, self.bCancel);
             }
 
             //break if cancel requested
@@ -272,6 +231,9 @@ export class ImapService {
         if (ids.length > 0 && !self.bCancel) {
             allMessages = allMessages.concat(await this.client.listMessages('INBOX', ids.join(), environment.fetchImapFlags, { byUid: true }));
         }
+
+        //set cancel back
+        self.bCancel = false;
 
         //return full list
         return allMessages;

@@ -21,12 +21,11 @@ export class UserService {
 
     createOrLoadConfig() {
         var config = localStorage.getItem('config');
-        if (config == null) {
+         if (config == null) {
             var randomsecret = SimpleCrypto.generateRandom();
             this.userConfig = new UserConfig();
             this.userConfig.firsttime = true;
             this.userConfig.token = randomsecret;
-            this.save(this.userConfig);
         } else {
             this.userConfig = JSON.parse(config);
             if(this.userConfig.password !== undefined)
@@ -48,9 +47,9 @@ export class UserService {
     }
 
 
-    storeLastRun(lastUid) {
+    storeLastId(lastUid) {
         this.userConfig.lastUidProcessed = lastUid;
-        localStorage.setItem('config', JSON.stringify(this.userConfig));
+        this.save(this.userConfig);
     }
 
     storeImapSettings(host, port, username, password, isGmailProvider) {
@@ -91,11 +90,15 @@ export class UserService {
     public save(userConfig:UserConfig, password:string = null) {
         if(password != null) {
             userConfig.password = this.encrypt(password);
+        } else {
+            userConfig.password = this.encrypt(userConfig.password);
         }
         localStorage.setItem('config', JSON.stringify(userConfig));
 
         if(password != null) {
             userConfig.password = password;
+        } else {
+            userConfig.password = this.decrypt(userConfig.password);
         }
     }
 }

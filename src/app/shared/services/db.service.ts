@@ -82,7 +82,6 @@ export class DbService {
 
     //adds an email object to storage and observable
     async add(fetchedMailObject) {
-
         var msg = new Message();
         msg.lastId = fetchedMailObject.uid;
         msg.from = mimeWordsDecode(fetchedMailObject['body[header.fields (from)]'].substr(6)).replace(/"/g, '');
@@ -113,17 +112,15 @@ export class DbService {
             if (keyCount === undefined) {
                 await this.db.mails.add(msg);
                 await this.addOrUpdateMsg(msg);
-
-                this._newGroups.sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
-
-                
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
-                await this.db.mails.update(keyCount.lastId, { ignoreIds : keyCount.ignoreIds })
+                await this.db.mails.update(keyCount.lastId, { ignoreIds: keyCount.ignoreIds })
             }
-
-            
+        } else {
+            console.log('exists');
         }
+
+
     }
 
     private getGroupEntity(status: number) {
@@ -145,6 +142,31 @@ export class DbService {
                 return this._keepGroups;
             default:
                 return this._newGroups;
+        }
+    }
+
+    private filterGroupObservables(status: number, filter: string) {
+        switch (status) {
+            case 1:
+                this._unsubbedGroups = this._unsubbedGroups.filter(function (el) { return el.identifier !== filter });
+                this._unsubbedGroupsObservable.next(this._unsubbedGroups);
+            case 2:
+                this._keepGroups = this._keepGroups.filter(function (el) { return el.identifier !== filter });
+                this._keepGroupsObservable.next(this._keepGroups);
+            default:
+                this._newGroups = this._newGroups.filter(function (el) { return el.identifier !== filter });
+                this._newGroupsObservable.next(this._newGroups);
+        }
+    }
+
+    private updateGroupObservables(status: number) {
+        switch (status) {
+            case 1:
+                this._unsubbedGroupsObservable.next(this._unsubbedGroups);
+            case 2:
+                this._keepGroupsObservable.next(this._keepGroups);
+            default:
+                this._newGroupsObservable.next(this._newGroups);
         }
     }
 
@@ -175,6 +197,8 @@ export class DbService {
             if (dbEntity === undefined)
                 await this.getGroupEntity(source).add(dg);
 
+            this.getGroupObservables(source).sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
+            this.updateGroupObservables(source);
         } else {
             var mgExists = dgExists.messagegroups.find(x => x.key === msg.hostname);
             var mgExistsDb = dbEntity.messagegroups.find(x => x.key === msg.hostname);
@@ -205,7 +229,7 @@ export class DbService {
     }
 
 
-    private async removeMsg(msg: Message, source: number = 0, msgId:number = -1) {
+    private async removeMsg(msg: Message, source: number = 0, msgId: number = -1) {
 
         //Set key group index, here 1st letter
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
@@ -222,20 +246,20 @@ export class DbService {
             if (mgExists === undefined || mgExistsDb === undefined) {
             } else {
                 //if only one, remove all
-                if(dgExists.messagegroups.length == 1) {
+                if (dgExists.messagegroups.length == 1) {
                     dgExists.messagegroups.length = 0;
                     dbEntity.messagegroups.length = 0;
                 } else {
                     //filter
-                    dgExists.messagegroups = dgExists.messagegroups.filter(function(el) { return el.hostname !== msg.hostname }); 
-                    dbEntity.messagegroups = dbEntity.messagegroups.filter(function(el) { return el.hostname !== msg.hostname }); 
+                    dgExists.messagegroups = dgExists.messagegroups.filter(function (el) { return el.hostname !== msg.hostname });
+                    dbEntity.messagegroups = dbEntity.messagegroups.filter(function (el) { return el.hostname !== msg.hostname });
                 }
 
-                if(dbEntity.messagegroups.length > 0) {
+                if (dbEntity.messagegroups.length > 0) {
                     await this.getGroupEntity(source).update(groupIndex, { messagegroups: dbEntity.messagegroups });
                 } else {
                     await this.getGroupEntity(source).delete(groupIndex);
-                    gpOb =  gpOb.filter(function(el) { return el.identifier !== groupIndex }); 
+                    this.filterGroupObservables(source, groupIndex);
                 }
             }
         }
@@ -260,7 +284,7 @@ export class DbService {
         }
     }
 
-    
+
     async unsubscribe(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
@@ -273,7 +297,7 @@ export class DbService {
 
 
 
-    async deleteAll(mg: MessageGroup, statusFilter:number = 0) {
+    async deleteAll(mg: MessageGroup, statusFilter: number = 0) {
         var allMessagesToDelete = await this.filterEqualsIgnoreCase("hostname", mg.hostname).filter(function (mail) {
             return mail.status === statusFilter;
         }).toArray();
@@ -282,21 +306,21 @@ export class DbService {
             await this.delete(allMessagesToDelete[i].lastId);
         }
     }
-    
 
-    async keepAll(mg: MessageGroup , statusFilter:number = 0) {
+
+    async keepAll(mg: MessageGroup, statusFilter: number = 0) {
         var allMessagesToKeep = await this.filterEquals("hostname", mg.hostname).filter(function (mail) {
             return mail.status === statusFilter;
         }).toArray();
 
         for (var i = 0; i < allMessagesToKeep.length; i++) {
-           await this.keep(allMessagesToKeep[i].lastId);
+            await this.keep(allMessagesToKeep[i].lastId);
         }
     }
 
 
-    async unsubscribeAll(mg: MessageGroup , statusFilter:number = 0) {
-        
+    async unsubscribeAll(mg: MessageGroup, statusFilter: number = 0) {
+
         var allMessagesToUnsubscribe = await this.filterEqualsIgnoreCase("hostname", mg.hostname).filter(function (mail) {
             return mail.status === statusFilter;
         }).toArray();
@@ -322,6 +346,16 @@ export class DbService {
 
     getLastMailId() {
         return this.db.mails.orderBy("internalDate").first();
+    }
+
+    async  getProcessedIds() {
+        var ids = [];
+        await this.db.mails.toCollection().each(function (mail) {
+            ids.push(mail.lastId);
+            ids = ids.concat(mail.ignoreIds)
+        });
+
+        return ids;
     }
 }
 

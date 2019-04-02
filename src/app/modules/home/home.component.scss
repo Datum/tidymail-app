@@ -2,10 +2,31 @@
     max-width:120px
 }
 
-.header-row {
+.header-row-padding {
     padding-top:15px;
 }
 
 :host /deep/ .mat-tab-body-content{
     overflow: hidden;
 }
+
+.progress-content {
+    height:38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    padding-top:10px;
+}
+
+
+
+@mixin md-icon-size($size: 24px) {
+    font-size: $size;
+    height: $size;
+    width: $size;
+  }
+  
+  .material-icons.mat-icon {
+    @include md-icon-size(20px);
+  }

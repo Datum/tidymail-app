@@ -9,10 +9,12 @@
     margin-top: 10%;
   }
 
-  .example-header-image {
-    background-image: url('https://material.angular.io/assets/img/examples/shiba1.jpg');
-    background-size: cover;
+
+  .settings-content img {
+      min-height: 225px;
+      background-color: #bbb;
   }
+
 
 .mat-card-header .mat-card-title {
     font-size:18px;

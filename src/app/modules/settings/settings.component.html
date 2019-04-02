@@ -48,7 +48,7 @@
                     joined {{ (userConfig.rewardJoinDate | date:'short')  }}
                 </span>
                 <span *ngIf="!userConfig.hasJoinedRewardProgram">
-                    <a href="#">join now</a>
+                    <a routerLink="/register/3">join now</a>
                 </span>
             </div>
         </div>

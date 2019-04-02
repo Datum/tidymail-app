@@ -44,8 +44,8 @@ export class HomeComponent implements OnInit {
 
         await this.bind();
 
-        /*
 
+        /*
         //set sync mode for UI
         this.isSyncing = true;
 
@@ -57,7 +57,6 @@ export class HomeComponent implements OnInit {
 
         //open
         await this._imapService.open();
-
 
         //set sync mode for UI
         this.isSyncing = false;
@@ -111,6 +110,12 @@ export class HomeComponent implements OnInit {
             //get all ids with given search term
             var ids = await this._imapService.getMailIds();
 
+            //exclude all processed
+            var processedKeys = await this._dbService.getProcessedIds();
+            ids = ids.filter(function (el) {
+                return processedKeys.indexOf(el) < 0;
+            });
+            
             //get total count of mails to process
             var totalCount = ids.length;
 
@@ -118,11 +123,12 @@ export class HomeComponent implements OnInit {
             ids = ids.reverse();
 
             //download all mails
-            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails) {
-                self.statusMessage = (ids.length - dynamicTotalCount) + '/' + ids.length + ' (' + Math.round(((ids.length - dynamicTotalCount) / ids.length) * 100) + '%)';
+            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
                 for (var i = 0; i < fetchedMails.length; i++) {
 
-                    if (self.bCancel) {
+                    self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
+
+                    if (cancelled) {
                         break;
                     }
                     await self._dbService.add(fetchedMails[i]);
@@ -152,10 +158,12 @@ export class HomeComponent implements OnInit {
 
     async onDeleteMsg(id) {
         await this.connect();
-        await this._dbService.delete(id);
+        
         var msg = await this._dbService.exists(id);
         if (msg !== undefined) {
-            console.log(msg);
+            //move to delete
+            await this._dbService.delete(id);
+
             try {
                 await this._imapService.moveTrash(msg.ignoreIds);
             } catch (error) {
@@ -171,7 +179,7 @@ export class HomeComponent implements OnInit {
 
     async onUnsubscribeMsg(id) {
         var msg = await this._dbService.exists(id);
-        if(msg !== undefined) {
+        if (msg !== undefined) {
             await this.connect();
             await this._dbService.unsubscribe(id);
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
@@ -219,14 +227,14 @@ export class HomeComponent implements OnInit {
 
 
 function getUnsubscriptionInfo(unsubString) {
-    var r = { email: '', url: ''};
+    var r = { email: '', url: '' };
     var parts = unsubString.split(',');
-    for(var i = 0;i < parts.length;i++) {
+    for (var i = 0; i < parts.length; i++) {
         parts[i] = parts[i].split('<').join('');
         parts[i] = parts[i].split('>').join('');
 
-        if(parts[i].indexOf('@') != -1) {
-            if(parts[i].indexOf(':') != -1) {
+        if (parts[i].indexOf('@') != -1) {
+            if (parts[i].indexOf(':') != -1) {
                 parts[i] = parts[i].substr(parts[i].indexOf(':') + 1);
             }
             r.email = parts[i];
@@ -235,19 +243,8 @@ function getUnsubscriptionInfo(unsubString) {
             r.url = parts[i];
         }
 
-        
-        
-        
-    }
-    //console.log(parts);
 
-    /*
-    var iStart = from.lastIndexOf('<');
-    var iEnd = from.lastIndexOf('>');
-    var fromName = from;
-    if (iStart > -1 && iEnd > -1) {
-        fromName = from.substr(0, iStart);
+
+
     }
-    return fromName;
-    */
 }
