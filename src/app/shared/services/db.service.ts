@@ -89,7 +89,8 @@ export class DbService {
         msg.lastDate = Date.parse(fetchedMailObject['body[header.fields (date)]'].substr(6));
         msg.lastSubject = mimeWordsDecode(fetchedMailObject['body[header.fields (subject)]'].substr(9));
         msg.unsubscribeEmail = mimeWordsDecode(fetchedMailObject['body[header.fields (list-unsubscribe)]'].substr(18));
-        msg.ignoreIds = fetchedMailObject.sameFromIds !== undefined ? fetchedMailObject.sameFromIds : [];
+        //msg.ignoreIds = fetchedMailObject.sameFromIds !== undefined ? fetchedMailObject.sameFromIds : [];
+        msg.ignoreIds = [];
 
         //hostname as key for 1st level
         var hostname = extractHostname(msg.from);
@@ -107,15 +108,21 @@ export class DbService {
 
             var keyCount = await this.db.mails.where('hostname').equalsIgnoreCase(msg.hostname).filter(function (mail) {
                 return mail.from === msg.from;
-            }).count();
+            }).first();
 
-            if (keyCount == 0) {
+            if (keyCount === undefined) {
                 await this.db.mails.add(msg);
                 await this.addOrUpdateMsg(msg);
+
+                this._newGroups.sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
+
+                
+            } else {
+                keyCount.ignoreIds.push(msg.lastId);
+                await this.db.mails.update(keyCount.lastId, { ignoreIds : keyCount.ignoreIds })
             }
 
-
-            this._newGroups.sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
+            
         }
     }
 

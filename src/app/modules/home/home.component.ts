@@ -125,7 +125,6 @@ export class HomeComponent implements OnInit {
                     if (self.bCancel) {
                         break;
                     }
-
                     await self._dbService.add(fetchedMails[i]);
                 }
             });
@@ -171,8 +170,13 @@ export class HomeComponent implements OnInit {
     }
 
     async onUnsubscribeMsg(id) {
-        await this.connect();
-        await this._dbService.unsubscribe(id);
+        var msg = await this._dbService.exists(id);
+        if(msg !== undefined) {
+            await this.connect();
+            await this._dbService.unsubscribe(id);
+            var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
+            console.log(unSubInfo);
+        }
     }
 
     async onDeleteDomain(hostname) {
@@ -211,4 +215,39 @@ export class HomeComponent implements OnInit {
         this.isSyncing = false;
     }
 
+}
+
+
+function getUnsubscriptionInfo(unsubString) {
+    var r = { email: '', url: ''};
+    var parts = unsubString.split(',');
+    for(var i = 0;i < parts.length;i++) {
+        parts[i] = parts[i].split('<').join('');
+        parts[i] = parts[i].split('>').join('');
+
+        if(parts[i].indexOf('@') != -1) {
+            if(parts[i].indexOf(':') != -1) {
+                parts[i] = parts[i].substr(parts[i].indexOf(':') + 1);
+            }
+            r.email = parts[i];
+            return r;
+        } else {
+            r.url = parts[i];
+        }
+
+        
+        
+        
+    }
+    //console.log(parts);
+
+    /*
+    var iStart = from.lastIndexOf('<');
+    var iEnd = from.lastIndexOf('>');
+    var fromName = from;
+    if (iStart > -1 && iEnd > -1) {
+        fromName = from.substr(0, iStart);
+    }
+    return fromName;
+    */
 }

@@ -42,11 +42,11 @@ export class ImapService {
     create(username, password, host = "imap.gmail.com", port = 993, trashBox = null) {
         var self = this;
 
-        if(trashBox == null) {
+        if (trashBox == null) {
             trashBox = "Trash";
         }
 
-        if(host == "imap.gmail.com") {
+        if (host == "imap.gmail.com") {
             this.useGmailSearchSyntax = true;
         }
 
@@ -127,9 +127,6 @@ export class ImapService {
 
     //move given mail id to trash
     moveTrash(ids) {
-        console.log('move');
-        console.log(ids);
-        console.log(this.useGmailSearchSyntax);
         if (this.useGmailSearchSyntax) {
             return this.client.moveMessages('INBOX', ids.join(), 'Trash', { byUid: true });
         } else {
@@ -218,9 +215,7 @@ export class ImapService {
             //remove worked ids
             ids.splice(0, environment.fetchBatchSize);
 
-            
-
-
+            /*
             var tt = [];
 
             //loop to get from and remove ids from list
@@ -229,31 +224,38 @@ export class ImapService {
                 from = from.replace(/"/g, '');
 
                 if (worked.indexOf(from) == -1) {
-
-
                     tt.push(msgDetails[i].uid);
+
 
                     var sameFromIds = await this.getMailWithSameFrom(from);
                     msgDetails[i].sameFromIds = sameFromIds;
 
+
+                    //remove from future work
                     ids = ids.filter(function (el) {
                         return !sameFromIds.includes(el);
                     });
 
+
                     worked.push(from);
+                } else {
+
                 }
+                */
 
                 //break if cancel requested
                 if (self.bCancel) {
                     break;
                 }
-            }
-            
+            //}
+
             //filter details for callbacl
-            msgDetails = msgDetails.filter(function(msg) {
+            /*
+            msgDetails = msgDetails.filter(function (msg) {
                 return tt.includes(msg.uid);
-              });
-              
+            });
+            */
+
 
             //fire callback if provided
             if (batchCallBack) {
