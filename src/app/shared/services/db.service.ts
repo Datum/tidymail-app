@@ -206,8 +206,6 @@ export class DbService {
         var dbEntity = await this.getGroupEntity(source).where("identifier").equalsIgnoreCase(groupIndex).first();
         var gpOb = this.getGroupObservables(source);
 
-        console.log(dbEntity);
-
         //check if already exists
         var dgExists = gpOb.find(x => x.identifier === groupIndex);
         if (dgExists === undefined || dbEntity === undefined) {
@@ -216,13 +214,6 @@ export class DbService {
             var mgExistsDb = dbEntity.messagegroups.find(x => x.key === msg.hostname);
             if (mgExists === undefined || mgExistsDb === undefined) {
             } else {
-                //check if more from same hostname
-                /*
-                var keyCount = await this.db.mails.where('status').equalsIgnoreCase(source.toString()).filter(function (mail) {
-                    return mail.hostname.substring(0, 1).toUpperCase() === groupIndex;
-                }).count();
-                */
-
                 //if only one, remove all
                 if(dgExists.messagegroups.length == 1) {
                     dgExists.messagegroups.length = 0;
@@ -237,6 +228,7 @@ export class DbService {
                     await this.getGroupEntity(source).update(groupIndex, { messagegroups: dbEntity.messagegroups });
                 } else {
                     await this.getGroupEntity(source).delete(groupIndex);
+                    gpOb =  gpOb.filter(function(el) { return el.identifier !== groupIndex }); 
                 }
             }
         }
@@ -312,71 +304,6 @@ export class DbService {
 
 
 
-
-    /*
-    delete(msgId: string) {
-        var msg = this._undhandledMessages.filter(function (el) { return el.lastId == msgId; });
-        this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.lastId != msgId; });
-        this.db.mails.update(msgId, { status: 3 });
-        this.refresh();
-    }
-
-    keep(msgId: string) {
-        var msg = this._undhandledMessages.filter(function (el) { return el.lastId == msgId; });
-        this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.lastId != msgId; });
-        this._keepMessages.push(msg[0]);
-        this.db.mails.update(msgId, { status: 2 });
-        this.refresh();
-    }
-
-    unsubscribe(msgId: string) {
-        var msg = this._undhandledMessages.filter(function (el) { return el.lastId == msgId; });
-        this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.lastId != msgId; });
-        this._unsubMessages.push(msg[0]);
-        this.db.mails.update(msgId, { status: 1, unsubscribeDate: Date.now() });
-        this.refresh();
-    }
-
-    async deleteAll(hostname: string) {
-        var allMessagesToDelete = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
-        allMessagesToDelete.forEach(async element => {
-            if (element.status == 0) {
-                this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.lastId != element.id; });
-                this.db.mails.update(element.id, { status: 3 });
-
-            }
-
-        });
-        this.refresh();
-    }
-
-
-
-    async unsubscribeAll(hostname: string) {
-        var allMessagesToKeep = await this.filterEqualsIgnoreCase("hostname", hostname).toArray();
-        allMessagesToKeep.forEach(async element => {
-            if (element.status == 0) {
-                var msg = this._undhandledMessages.filter(function (el) { return el.lastId == element.id; });
-                this._undhandledMessages = this._undhandledMessages.filter(function (el) { return el.lastId != element.id; });
-                this._unsubMessages.push(msg[0]);
-                this.db.mails.update(element.id, { status: 1, unsubscribeDate: Date.now() });
-            }
-        });
-        this.refresh();
-    }
-    */
-
-    async refresh() {
-        /*
-        this._undhandledMessagesObervable.next(this._undhandledMessages);
-        this._keepMessagesObervable.next(this._keepMessages);
-        this._unsubMessagesObervable.next(this._unsubMessages);
-        */
-
-        //this._groups = await this.db.mailgroups.toArray();
-        //this._groupsObservable.next(this._groups);
-    }
-
     filterEqualsIgnoreCase(field, value) {
         return this.db.mails.where(field).equalsIgnoreCase(value);
     }
@@ -391,24 +318,6 @@ export class DbService {
 
     getLastMailId() {
         return this.db.mails.orderBy("internalDate").first();
-    }
-
-    /*
-    createDatabase() {
-        this.db = new Dexie('DatumUnsubscriberDatabase');
-        this.db.version(1).stores({
-            mails: 'id,from,subject,threadId,unread,unsubscribeUrl,internalDate,hostname,status'
-        });
-    }
-    */
-
-
-    newDisplayGroup() {
-
-    }
-
-    newMessageGroup() {
-
     }
 }
 

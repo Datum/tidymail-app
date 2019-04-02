@@ -1,5 +1,5 @@
-import { Input, Component, ChangeDetectionStrategy } from '@angular/core';
-import { DisplayGroup } from '../../shared/models';
+import { Input, Component, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
+import { DisplayGroup, MessageGroup } from '../../shared/models';
 import { DbService, UserService, UserConfig, ImapService } from '../../shared';
 import { Observable } from 'rxjs';
 
@@ -13,9 +13,13 @@ export class ListComponent {
     @Input() groups: Observable<DisplayGroup[]>;
     @Input() status: number;
 
+    @Output() onDeleteMsg = new EventEmitter<string>();
+    @Output() onKeepMsg = new EventEmitter<string>();
+    @Output() onUnsubscribeMsg = new EventEmitter<string>();
 
-    loading: boolean = false;
-    statusText: string = 'Loading...';
+    @Output() onDeleteDomain = new EventEmitter<string>();
+    @Output() onKeepMsgDomain = new EventEmitter<string>();
+    @Output() onUnsubscribeDomain = new EventEmitter<string>();
 
 
     constructor(private _dbService: DbService, private _imapService: ImapService) { }
@@ -40,103 +44,37 @@ export class ListComponent {
         }
     }
 
-    async keep(mg,id) {
-        await this._dbService.keep(id);
+    async keep(mg, id) {
+        this.onKeepMsg.emit(id);
         mg.isCollapsed = true;
         mg.messages.length = 0;
+    }
+
+    async unsubscribe(mg, id) {
+        this.onUnsubscribeMsg.emit(id);
+        mg.isCollapsed = true;
+        mg.messages.length = 0;
+    }
+
+    async delete(mg, id) {
+        this.onDeleteMsg.emit(id);
+        mg.isCollapsed = true;
+        mg.messages.length = 0;
+    }
+
+    async deleteAll(mg, event) {
+        event.stopPropagation();
+        this.onDeleteDomain.emit(mg.hostname);
     }
 
     async keepAll(mg, event) {
         event.stopPropagation();
-        await this._dbService.keepAll(mg);
-    }
-
-    async delete(mg,id) {
-        await this._dbService.delete(id);
-
-        var msg = await this._dbService.exists(id);
-        if(msg !== undefined) {
-            try {
-                await this._imapService.moveTrash(msg.ignoreIds);
-            } catch(error) {
-                console.log(error);
-            }
-        }
-
-        mg.isCollapsed = true;
-        mg.messages.length = 0;
-    }
-
-    async unsubscribe(mg,id) {
-        var msg = await this._dbService.exists(id);
-
-        if (msg.unsubscribeEmail !== undefined) {
-
-            //var result = await this._gmailService.send(msg.unsubscribeEmail);
-
-
-            await this._dbService.unsubscribe(id);
-
-
-            //await this._gmailService.delete(result.id);
-
-            //this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
-        } else {
-
-            //await this._gmailService.unsubscribeUrl(msg.unsubscribeUrl);
-
-
-            await this._dbService.unsubscribe(id);
-
-            //this.snackbar.open('Unsubscription requested.');
-        }
-    }
-
-
-
-   
-
-    async deleteAll(mg, event) {
-        event.stopPropagation();
-
-        var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", mg.hostname).toArray();
-
-        for(var i = 0; i < allMessagesToDelete.length;i++) {
-            mg.statusText = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
-            await this.delete(mg,allMessagesToDelete[i].id);
-        }
+        this.onKeepMsgDomain.emit(mg.hostname);
     }
 
     async unsubscribeAll(mg, event) {
-        mg.unsubLoading = true;
-        mg.statusText = "Loading...";
-
-
         event.stopPropagation();
-
-        /*
-        var allMessagesToUnsubscribe = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
-        for (var i = 0; i < allMessagesToUnsubscribe.length; i++) {
-            mg.statusText = 'Unsubscribe ' + i + ' of ' + allMessagesToUnsubscribe.length;
-
-            if (allMessagesToUnsubscribe[i].unsubscribeEmail !== undefined) {
-                //var result = await this._gmailService.send(allMessagesToUnsubscribe[i].unsubscribeEmail);
-                //await this._dbService.unsubscribe(id);
-                //await this._gmailService.delete(result.id);
-
-                //this.snackbar.open('Unsubscription email sent to: ' + msg.unsubscribeEmail + ' and moved to trash.');
-            } else {
-                //await this._gmailService.unsubscribeUrl(allMessagesToUnsubscribe[i].unsubscribeUrl);
-                //await this._dbService.unsubscribe(id);
-
-                //this.snackbar.open('Unsubscription requested.');
-            }
-        }
-        */
-
-        await this._dbService.unsubscribeAll(mg, this.status);
-
-        mg.unsubLoading = false;
+        this.onUnsubscribeDomain.emit(mg.hostname);
     }
 }
 

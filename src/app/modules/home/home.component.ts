@@ -17,6 +17,7 @@ export class HomeComponent implements OnInit {
     ) { }
 
 
+    isConnected: boolean = false;
     isSyncing: boolean = false;
     bCancel: boolean = false;
     statusMessage: string;
@@ -71,24 +72,36 @@ export class HomeComponent implements OnInit {
         this.unsubscribedMails = this._dbService.unsubbedMails;
     }
 
-    async sync() {
-        var self = this;
-        try {
+    async connect() {
+        if (!this.isConnected) {
 
             //set sync mode for UI
             this.isSyncing = true;
 
-            
             //set ui info
             this.statusMessage = "connecting to server...";
 
             //create client with config
-            await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport);
+            await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.trashBoxPath);
 
             //open
             await this._imapService.open();
-            
 
+            //set sync mode for UI
+            this.isSyncing = false;
+
+            this.isConnected = true;
+        }
+    }
+
+    async sync() {
+        var self = this;
+        try {
+            //connect if needed
+            await this.connect();
+
+            //set sync mode for UI
+            this.isSyncing = true;
 
             //set ui info
             this.statusMessage = "searching for new newsletters...";
@@ -122,7 +135,7 @@ export class HomeComponent implements OnInit {
             this.isSyncing = false;
 
             //close client
-            await this._imapService.close();
+            //await this._imapService.close();
         } catch (error) {
             self._uiService.showAlert(error);
         }
@@ -133,4 +146,67 @@ export class HomeComponent implements OnInit {
         this.isSyncing = !this.isSyncing;
         this._imapService.setCancel();
     }
+
+
+
+    async onDeleteMsg(id) {
+        await this.connect();
+        await this._dbService.delete(id);
+        var msg = await this._dbService.exists(id);
+        if (msg !== undefined) {
+            console.log(msg);
+            try {
+                await this._imapService.moveTrash(msg.ignoreIds);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    async onKeepMsg(id) {
+        //await this.connect();
+        await this._dbService.keep(id);
+    }
+
+    async onUnsubscribeMsg(id) {
+        await this.connect();
+        await this._dbService.unsubscribe(id);
+    }
+
+    async onDeleteDomain(hostname) {
+        this.isSyncing = true;
+
+        var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+
+        for (var i = 0; i < allMessagesToDelete.length; i++) {
+            this.statusMessage = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
+            await this.onDeleteMsg(allMessagesToDelete[i].lastId);
+        }
+
+        this.isSyncing = false;
+    }
+
+    async onKeepMsgDomain(hostname) {
+        this.isSyncing = true;
+
+        var allMessageToKeep = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+
+        for (var i = 0; i < allMessageToKeep.length; i++) {
+            await this.onKeepMsg(allMessageToKeep[i].lastId);
+        }
+
+        this.isSyncing = false;
+    }
+    async onUnsubscribeDomain(hostname) {
+        this.isSyncing = true;
+
+        var allMessagesToUnSubscribe = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+
+        for (var i = 0; i < allMessagesToUnSubscribe.length; i++) {
+            await this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
+        }
+
+        this.isSyncing = false;
+    }
+
 }
