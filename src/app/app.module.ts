@@ -16,7 +16,8 @@ import {
     DbService,
     UserService,
     ImapService,
-    UIService
+    UIService,
+    SmtpService,
   } from './shared';
 
 import { DialogAlert } from './shared/dialogs/dialog-alert';
@@ -35,7 +36,7 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
     BrowserAnimationsModule,
     HomeModule
   ],
-  providers: [DbService, UserService,ImapService, UIService],
+  providers: [DbService, UserService,ImapService, UIService, SmtpService],
   bootstrap: [AppComponent],
   entryComponents: [DialogAlert, DialogPassword]
 })

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig } from 'src/app/shared';
+import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService } from 'src/app/shared';
 import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
     selector: 'app-home',
@@ -14,10 +15,13 @@ export class HomeComponent implements OnInit {
         private _imapService: ImapService,
         private _dbService: DbService,
         private _uiService: UIService,
+        private _smtpService: SmtpService,
+        private http: HttpClient
     ) { }
 
 
     isConnected: boolean = false;
+    isSmtpConnected: boolean = false;
     isSyncing: boolean = false;
     bCancel: boolean = false;
     statusMessage: string;
@@ -29,6 +33,8 @@ export class HomeComponent implements OnInit {
     unsubscribedMails: Observable<DisplayGroup[]>;
 
     async ngOnInit() {
+
+        var self = this;
 
         //init db
         this._dbService.create();
@@ -43,25 +49,6 @@ export class HomeComponent implements OnInit {
         }
 
         await this.bind();
-
-
-        /*
-        //set sync mode for UI
-        this.isSyncing = true;
-
-        //set ui info
-        this.statusMessage = "connecting to server...";
-
-        //create client with config
-        await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.trashBoxPath);
-
-        //open
-        await this._imapService.open();
-
-        //set sync mode for UI
-        this.isSyncing = false;
-        */
-
     }
 
     async bind() {
@@ -95,6 +82,29 @@ export class HomeComponent implements OnInit {
         }
     }
 
+
+    async connectSmtp() {
+        if (!this.isSmtpConnected) {
+
+            //set sync mode for UI
+            this.isSyncing = true;
+
+            //set ui info
+            this.statusMessage = "connecting to server...";
+
+            //create client with config
+            await this._smtpService.create(this.userConfig.email, this.userConfig.password);
+
+            //open
+            await this._smtpService.open();
+
+            this.isSmtpConnected = true;
+
+            //set sync mode for UI
+            this.isSyncing = false;
+        }
+    }
+
     async sync() {
         var self = this;
         try {
@@ -115,7 +125,7 @@ export class HomeComponent implements OnInit {
             ids = ids.filter(function (el) {
                 return processedKeys.indexOf(el) < 0;
             });
-            
+
             //get total count of mails to process
             var totalCount = ids.length;
 
@@ -158,7 +168,7 @@ export class HomeComponent implements OnInit {
 
     async onDeleteMsg(id) {
         await this.connect();
-        
+
         var msg = await this._dbService.exists(id);
         if (msg !== undefined) {
             //move to delete
@@ -179,12 +189,19 @@ export class HomeComponent implements OnInit {
     }
 
     async onUnsubscribeMsg(id) {
+        var self = this;
         var msg = await this._dbService.exists(id);
         if (msg !== undefined) {
-            await this.connect();
-            await this._dbService.unsubscribe(id);
+            await this.connectSmtp();
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
-            console.log(unSubInfo);
+            if (unSubInfo.email != "") {
+                this._smtpService.send(self.userConfig.email, unSubInfo.email);
+                await this._dbService.unsubscribe(id);
+            } else {
+                if (unSubInfo.url != "") {
+                    await this.http.get<any>(unSubInfo.url).toPromise();
+                }
+            }
         }
     }
 
@@ -230,7 +247,9 @@ export class HomeComponent implements OnInit {
 function getUnsubscriptionInfo(unsubString) {
     var r = { email: '', url: '' };
     var parts = unsubString.split(',');
+    
     for (var i = 0; i < parts.length; i++) {
+        parts[i] = parts[i].trim();
         parts[i] = parts[i].split('<').join('');
         parts[i] = parts[i].split('>').join('');
 
@@ -243,9 +262,7 @@ function getUnsubscriptionInfo(unsubString) {
         } else {
             r.url = parts[i];
         }
-
-
-
-
     }
+
+    return r;
 }

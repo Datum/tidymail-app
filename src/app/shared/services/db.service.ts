@@ -288,7 +288,7 @@ export class DbService {
     async unsubscribe(msgId: string) {
         var msg = await this.db.mails.get(msgId)
         if (msg !== undefined) {
-            await this.addOrUpdateMsg(msg, msg.status);
+            await this.addOrUpdateMsg(msg, 1);
             await this.removeMsg(msg, msg.status);
             await this.db.mails.update(msgId, { status: 1 });
         }
