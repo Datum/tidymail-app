@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import '~@angular/material/theming';
 
 @import "variables";
 @import "~bootstrap/scss/functions";
@@ -10,6 +11,13 @@
 @import "~bootstrap/scss/utilities/text";
 @import "reset";
 
+@include mat-core();
+
+// tidymail theme colors
+$tm-app-primary: mat-palette($mat-indigo, A700);
+$tm-app-accent:  mat-palette($mat-pink, A200, A100, A400);
+$tm-app-theme: mat-light-theme($tm-app-primary, $tm-app-accent);
+@include angular-material-theme($tm-app-theme);
 
 html, body { 
     height: 100%; 
@@ -26,4 +34,41 @@ body {
     background-size: 200px 200px;
     height: 100%;
     width: 100%;
-  }
+}
+
+.tm-stepper > div > mat-step-header:first-child  {
+    padding-left: 24px !important;
+}
+
+.tm-stepper > div > mat-step-header:last-child  {
+    padding-right: 24px !important;
+}
+
+.tm-stepper > div > .mat-step-header {
+    padding: 12px;
+}
+
+.tm-stepper > div > .mat-step-header:after {
+    top: 19px !important;
+    border-top-width: 3px !important;
+    width: calc(50% - 8px) !important;
+}
+
+.tm-stepper > div > .mat-step-header:before {
+    top: 19px !important;
+    border-top-width: 3px !important;
+    width: calc(50% - 8px) !important;
+}
+
+.tm-stepper > div > .mat-stepper-horizontal-line {
+    top: 19px !important;
+    border-top-width: 3px !important;
+    width: calc(50% - 8px) !important;
+}
+
+.tm-stepper > div > .mat-step-header > .mat-step-icon {
+    width: 16px;
+    height: 16px;
+}
+
+

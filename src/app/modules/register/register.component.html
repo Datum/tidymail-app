@@ -2,7 +2,15 @@
     <img class="logo" src="assets/logo.svg">
 </div>
 <mat-card class="wizard-content">
-    <mat-horizontal-stepper [linear]="true" class="card" labelPosition="bottom" #stepper>
+    <mat-horizontal-stepper [linear]="true" class="card tm-stepper" labelPosition="bottom" #stepper>
+        <ng-template matStepperIcon="edit">
+            
+        </ng-template>
+        <ng-template matStepperIcon="done">
+            
+            </ng-template>
+            <ng-template matStepperIcon="number"></ng-template>
+
         <mat-step [stepControl]="mailFormGroup" label="" [editable]="editable">
             <form [formGroup]="mailFormGroup">
                 <h2>
@@ -12,13 +20,17 @@
                     Tidymail does not have access to your email inbox or credentials. All email access and processing
                     happens right here in your browser.
                 </p>
+                <p class="text-muted">
+                    Start here by entering the email you want to clean.
+                </p>
                 <div class="space-4em"></div>
-                <mat-form-field class="full-with-field">
-                    <input type="email" matInput placeholder="your@email.com" formControlName="email" required>
+                <mat-form-field class="full-with-field" appearance="outline">
+                    <mat-label>Your email</mat-label>
+                    <input type="email" matInput placeholder="your@email.com" formControlName="email">
+                    <mat-error *ngIf="mailFormGroup.invalid">Please enter a valid email</mat-error>
                 </mat-form-field>
                 <div class="text-right">
-                    <button [disabled]="!mailFormGroup.valid" mat-flat-button color="primary"
-                        matStepperNext>CONTINUE</button>
+                    <button mat-flat-button color="primary" matStepperNext>CONTINUE</button>
                 </div>
             </form>
         </mat-step>
@@ -181,5 +193,5 @@
 </mat-card>
 
 <div class="version-info">
-    {{ version }} 
+    {{ version }}
 </div>
