@@ -1,0 +1,65 @@
+<div>
+    <img class="logo" src="assets/logo.svg">
+</div>
+
+<mat-card class="settings-content">
+    <div class="back-button">
+        <button routerLink="/"  mat-fab color="primary">BACK</button>
+    </div>
+    <mat-card-header>
+        <div mat-card-avatar>
+            <mat-icon aria-hidden="false" aria-label="Example home icon">email</mat-icon>
+        </div>
+        <mat-card-title> {{userConfig.email}} </mat-card-title>
+    </mat-card-header>
+    <img mat-card-image src="{{ 'https://via.placeholder.com/400x200.png?text=tidymail' }}" alt="">
+    <mat-card-content>
+        <div class="row">
+            <div class="col">
+                Provider
+            </div>
+            <div class="col">
+                {{ userConfig.isGmailProvider ? 'Gmail' : 'Custom' }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                Username
+            </div>
+            <div class="col">
+                {{ userConfig.username }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                Password
+            </div>
+            <div class="col">
+                <!--<a href="#">change</a>-->
+                ******
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                Datum Rewards
+            </div>
+            <div class="col">
+                <span *ngIf="userConfig.hasJoinedRewardProgram">
+                    joined {{ (userConfig.rewardJoinDate | date:'short')  }}
+                </span>
+                <span *ngIf="!userConfig.hasJoinedRewardProgram">
+                    <a routerLink="/register/3">join now</a>
+                </span>
+            </div>
+        </div>
+
+    </mat-card-content>
+    <mat-card-actions>
+        <button mat-raised-button (click)="removeAccount()">REMOVE ACCOUNT</button>
+        <button mat-raised-button (click)="resetDatabase()" color="warn">CLEAR LOCAL DATABASE</button>
+    </mat-card-actions>
+</mat-card>
+
+<div class="version-info">
+    {{ version }} 
+</div>

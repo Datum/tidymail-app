@@ -1,0 +1,38 @@
+.logo {
+    max-width:120px;
+    padding-top:15px;
+}
+
+.settings-content {
+    max-width: 450px;
+    margin: auto;
+    margin-top: 10%;
+  }
+
+
+  .settings-content img {
+      min-height: 225px;
+      background-color: #bbb;
+  }
+
+
+.mat-card-header .mat-card-title {
+    font-size:18px;
+}
+
+.back-button {
+    position: absolute;
+    margin-left:175px;
+    margin-top:-80px !important;
+}
+
+.version-info {
+    position: absolute;
+    left:0;
+    right:0;
+    bottom: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    color:#555;
+    font-size: small;
+  }
