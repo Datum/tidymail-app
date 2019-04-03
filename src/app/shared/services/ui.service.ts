@@ -18,10 +18,10 @@ export class UIService {
         });
     }
 
-    showAlert(msg, callback = null) {
+    showAlert(msg, msgExtra = "", callback = null) {
         const dialogRef = this.dialog.open(DialogAlert, {
             width: '250px',
-            data: { title: "Warning", content: msg }
+            data: { title: "Warning", content: msg ,  extraContent: msgExtra }
         });
 
         dialogRef.afterClosed().subscribe(result => {

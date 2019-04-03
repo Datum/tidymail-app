@@ -4,12 +4,12 @@
 <mat-card class="wizard-content">
     <mat-horizontal-stepper [linear]="true" class="card tm-stepper" labelPosition="bottom" #stepper>
         <ng-template matStepperIcon="edit">
-            
+
         </ng-template>
         <ng-template matStepperIcon="done">
-            
-            </ng-template>
-            <ng-template matStepperIcon="number"></ng-template>
+
+        </ng-template>
+        <ng-template matStepperIcon="number"></ng-template>
 
         <mat-step [stepControl]="mailFormGroup" label="" [editable]="editable">
             <form [formGroup]="mailFormGroup">
@@ -30,11 +30,12 @@
                     <mat-error *ngIf="mailFormGroup.invalid">Please enter a valid email</mat-error>
                 </mat-form-field>
                 <div class="text-right">
-                    <button mat-flat-button color="primary" matStepperNext>CONTINUE</button>
+                    <button mat-flat-button color="primary" (click)="mailEntered()" matStepperNext>CONTINUE</button>
                 </div>
             </form>
         </mat-step>
-        <mat-step [stepControl]="passwordFormGroup" label="" [editable]="editable">
+        <mat-step [stepControl]="!customProvider ? passwordFormGroup : customImapFormGroup" label=""
+            [editable]="editable">
             <form *ngIf="customProvider" [formGroup]="customImapFormGroup">
                 <h2>
                     Configure Mail Access
@@ -43,9 +44,16 @@
                     Tidymail is just like a normal email client and requires the same settings as Outlook or Thunderbird
                     to access your email account.
                 </p>
-                <div class="space-2em"></div>
+                <p>
+                    <span style="cursor:pointer;" (click)="customProvider = !customProvider"><small>BACK TO
+                            GMAIL</small></span>
+                </p>
+
                 <mat-form-field class="full-with-field">
-                    <input type="text" matInput placeholder="imap.gmail.com:993" formControlName="host" required>
+                    <input type="text" matInput placeholder="imap.gmail.com:993" formControlName="imaphost" required>
+                </mat-form-field>
+                <mat-form-field class="full-with-field">
+                    <input type="text" matInput placeholder="smtp.gmail.com:[465/587]" formControlName="smtphost" required>
                 </mat-form-field>
                 <mat-form-field class="full-with-field">
                     <input type="text" matInput placeholder="youremail@gmail.com" formControlName="username" required>

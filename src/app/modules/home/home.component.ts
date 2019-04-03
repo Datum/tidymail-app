@@ -43,6 +43,17 @@ export class HomeComponent implements OnInit {
         this.userConfig = this._userService.getConfig();
 
 
+        /*
+        var gmailBoxes = mboxes.children.filter(function (e) {
+            return e.name == "[Gmail]";
+        });
+        if (gmailBoxes.length > 0) {
+            var trashBox = findMailboxWithFlag("Trash", gmailBoxes[0]);
+            this.customImapFormGroup.value.trashBoxPath = trashBox == null ? "Trash" : trashBox.path;
+        }
+        */
+
+
         //if password is not in config, prompt user
         if (this.userConfig.password == "") {
             return;
@@ -93,7 +104,7 @@ export class HomeComponent implements OnInit {
             this.statusMessage = "connecting to server...";
 
             //create client with config
-            await this._smtpService.create(this.userConfig.email, this.userConfig.password);
+            await this._smtpService.create(this.userConfig.email, this.userConfig.password, this.userConfig.smtpurl, this.userConfig.smtpport);
 
             //open
             await this._smtpService.open();
@@ -247,7 +258,7 @@ export class HomeComponent implements OnInit {
 function getUnsubscriptionInfo(unsubString) {
     var r = { email: '', url: '' };
     var parts = unsubString.split(',');
-    
+
     for (var i = 0; i < parts.length; i++) {
         parts[i] = parts[i].trim();
         parts[i] = parts[i].split('<').join('');

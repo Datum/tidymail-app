@@ -36,8 +36,7 @@ export class ImapService {
 
     //by default use gmail syntax
     useGmailSearchSyntax: boolean = false;
-    trashBoxPath:string;
-
+    trashBoxPath: string;
 
 
     create(username, password, host = "imap.gmail.com", port = 993, trashBox = null) {
@@ -66,12 +65,10 @@ export class ImapService {
                     }
                 });
 
+                certSocket.onerror = (error) => { reject(error) } // A handler for the error event.
 
                 //fired, if certificate received (works only if ciphers are supported by browser!)
                 certSocket.oncert = pemEncodedCertificate => {
-
-                    console.log(pemEncodedCertificate);
-
                     //close the socket
                     certSocket.close();
 
@@ -110,6 +107,7 @@ export class ImapService {
             console.log(error);
             throw new Error(error);
         };
+
         return this.client.connect();
     }
 
@@ -138,7 +136,7 @@ export class ImapService {
     send() {
         return this.client.upload('inbox', 'MIME-Version: 1.0\r\nDate: Wed, 9 Jul 2014 15:07:47 +0200\r\nDelivered-To: test@test.com\r\nMessage-ID: <CAHftYYQo=5fqbtnv-DazXhL2j5AxVP1nWarjkztn-N9SV91Z2w@mail.gmail.com>\r\nSubject: test\r\nFrom: Test Test <test@test.com>\r\nTo: Test Test <test@test.com>\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\ntest', {
             flags: ['\\Seen', '\\Answered', '\\$MyFlag']
-          })
+        })
     }
 
     //check if current imap instance is gmail instance and support gmail search syntax
