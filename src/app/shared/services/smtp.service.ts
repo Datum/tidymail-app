@@ -51,10 +51,10 @@ export class SmtpService {
                     }
                 });
 
+                certSocket.onerror = (error) => { reject(error) } // A handler for the error event.
+
                 //fired, if certificate received (works only if ciphers are supported by browser!)
                 certSocket.oncert = pemEncodedCertificate => {
-
-                    console.log(pemEncodedCertificate);
 
                     //close the socket
                     certSocket.close();

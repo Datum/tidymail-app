@@ -1,7 +1,7 @@
 <div *ngIf="groups | async as groups; else loading">
     <ng-container *ngIf="groups.length; else noItems">
         <!--<mat-list-group>-->
-        <div *ngFor="let d of groups;let a = index;" class="row">
+        <div *ngFor="let d of groups;let a = index;" class="row newsletterlist">
             <h3 matSubheader class="listheader">{{ d.identifier }}</h3>
             <mat-list avatar style="flex-grow: 1;" class="whiteframe">
                 <div *ngFor="let m of d.messagegroups; let i = index">
@@ -14,22 +14,22 @@
                             {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
                             <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
                                 arrow_drop_down</mat-icon>
-                            <small style="color:darkgrey"> {{ m.hostname }} </small>
+                            <small style="color:darkgrey;"> {{ m.hostname }} </small>
                         </p>
 
-                        <div mat-list-item style="min-width:500px; text-align: right;">
+                        <div mat-list-item style="flex-grow: 1; text-align: right;color:#616161">
                             <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
                                 <mat-icon>check</mat-icon>
-                                {{ m.estimatedMessageCount>1 ? 'KEEP (' +  m.estimatedMessageCount + ')' : 'KEEP' }}
+                                KEEP
                             </button>
                             <button [hidden]="status == 1" mat-button (click)="unsubscribeAll(m,$event)">
                                 <mat-icon>cancel</mat-icon>
-                                UNSUBSCRIBE {{ m.estimatedMessageCount>1 ? '(' +  m.estimatedMessageCount + ')' : '' }}
+                                UNSUBSCRIBE
 
                             </button>
                             <button mat-button (click)="deleteAll(m,$event)">
                                 <mat-icon>delete</mat-icon>
-                                DELETE {{ m.estimatedMessageCount>1 ? '(' +  m.estimatedMessageCount + ')' : '' }}
+                                DELETE
                             </button>
                         </div>
 
@@ -47,7 +47,7 @@
                                 </p>
 
                                 <div [hidden]="m.messages.length == 1" mat-list-item
-                                    style="min-width:500px; text-align: right;">
+                                    style="flex-grow: 1; text-align: right;">
                                     <button mat-button (click)="keep(m,msg.lastId)">
                                         <mat-icon>check</mat-icon>
                                         KEEP
@@ -73,7 +73,7 @@
 
     </ng-container>
     <ng-template #noItems>
-        <mat-card>Sorry, no items found in this category!</mat-card>
+        <mat-card>No newsletters here!</mat-card>
     </ng-template>
 </div>
 <ng-template #loading>

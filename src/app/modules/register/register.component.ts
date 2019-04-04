@@ -18,13 +18,16 @@ export class RegisterComponent implements OnInit {
     mailFormGroup: FormGroup;
     passwordFormGroup: FormGroup;
     customImapFormGroup: FormGroup;
+    verifyFormGroup: FormGroup;
     customProvider: boolean = false;
+    verifying: boolean = false;
     editable: boolean = true;
     showPrivacy: boolean = false;
     hasError: boolean = false;
     errorMessage: string = "";
     rewardOnlyRegister: boolean = false;
-    version: string = require( '../../../../package.json').version;
+    imapResponded: boolean = false;
+    version: string = require('../../../../package.json').version;
 
 
     constructor(
@@ -48,29 +51,50 @@ export class RegisterComponent implements OnInit {
             rememberMe: ['true']
         });
 
+        this.verifyFormGroup = this._formBuilder.group({
+        });
+
         this.customImapFormGroup = this._formBuilder.group({
-            host: ['', Validators.required],
+            imaphost: ['', Validators.required],
+            smtphost: ['', Validators.required],
             username: ['', Validators.required],
             password: ['', Validators.required],
             trashBoxPath: ['Trash'],
-            rememberMe: ['']
+            rememberMe: ['true']
         });
 
         //check if reward join only, so user already exists
         var self = this;
         let id = this._route.snapshot.paramMap.get('step');
         if (id == "3") {
-            var userConfig = this._userService.createOrLoadConfig();
-            this.rewardOnlyRegister = true;
-            this.mailFormGroup.setValue({ email : userConfig.email});
-            this.passwordFormGroup.setValue({ password : userConfig.password, rememberMe : true});
-            this.editable = false;
+
             setTimeout(function () {
+                self.stepper.reset();
+
+                var userConfig = self._userService.createOrLoadConfig();
+                self.rewardOnlyRegister = true;
+                self.mailFormGroup.patchValue({ email: userConfig.email });
+                self.passwordFormGroup.patchValue({ password: userConfig.password });
+                self.editable = false;
+
+
                 self.stepper.next();
                 self.stepper.next();
                 self.stepper.next();
             }, 200);
         }
+    }
+
+    mailEntered() {
+        this.customImapFormGroup.patchValue({
+            username: this.mailFormGroup.value.email,
+        });
+    }
+
+    goBack() {
+        this.hasError=false;
+        this.verifying=false;
+        this.stepper.previous();
     }
 
     async doRegister(joinReward: boolean) {
@@ -94,8 +118,10 @@ export class RegisterComponent implements OnInit {
                 userConfig.rewardJoinDate = Date.now();
 
             if (this.customProvider) {
-                userConfig.imapurl = this.customImapFormGroup.value.host.split(':')[0];
-                userConfig.imapport = this.customImapFormGroup.value.host.split(':').length > 1 ? this.customImapFormGroup.value.host.split(':')[1] : 993;
+                userConfig.imapurl = this.customImapFormGroup.value.imaphost.split(':')[0];
+                userConfig.imapport = this.customImapFormGroup.value.imaphost.split(':').length > 1 ? this.customImapFormGroup.value.imaphost.split(':')[1] : 993;
+                userConfig.smtpurl = this.customImapFormGroup.value.smtphost.split(':')[0];
+                userConfig.smtpport = this.customImapFormGroup.value.smtphost.split(':').length > 1 ? this.customImapFormGroup.value.smtphost.split(':')[1] : 587;
                 userConfig.isGmailProvider = false;
                 userConfig.username = this.customImapFormGroup.value.username;
                 userConfig.email = this.mailFormGroup.value.email;
@@ -122,16 +148,41 @@ export class RegisterComponent implements OnInit {
 
 
     async verifiy() {
-        var host = this.customProvider ? this.customImapFormGroup.value.host.split(':')[0] : "imap.gmail.com";
-        var port = this.customProvider ? this.customImapFormGroup.value.host.split(':').length > 1 ? this.customImapFormGroup.value.host.split(':')[1] : 993 : 993;
-
+        if (this.customProvider) {
+            this.customImapFormGroup.updateValueAndValidity();
+            if (!this.customImapFormGroup.valid) return;
+        } else {
+            this.passwordFormGroup.updateValueAndValidity();
+            if (!this.passwordFormGroup.valid) return;
+        }
+        var imaphost = this.customProvider ? this.customImapFormGroup.value.imaphost.split(':')[0] : "imap.gmail.com";
+        var imapport = this.customProvider ? this.customImapFormGroup.value.imaphost.split(':').length > 1 ? this.customImapFormGroup.value.imaphost.split(':')[1] : 993 : 993;
+        this.hasError = false;
+        this.verifying=true;
+        var self = this;
 
         try {
+            //start checker for timeout because of e.g. invalid hostnames... WORKAROUND
+            setTimeout(function () {
+                if (!self.imapResponded) {
+                    //looks like error
+                    // self._uiService.showAlert("Something goes wrong! Please check your imap host settings.");
+                    //self.stepper.selected.reset();
+                    // self.stepper.previous();
+
+                    this.hasError = true;
+                    this.errorMessage = "Could not connect to your mail server. Please go back and check your settings.";
+                }
+            }, 5000);
+
             //create imap client
             await this._imapService.create(this.customProvider ?
                 this.customImapFormGroup.value.username : this.mailFormGroup.value.email,
                 this.customProvider ?
-                    this.customImapFormGroup.value.password : this.passwordFormGroup.value.password, host, port);
+                    this.customImapFormGroup.value.password : this.passwordFormGroup.value.password, imaphost, imapport);
+
+
+            this.imapResponded = true;
 
             //try to connect
             await this._imapService.open();
@@ -144,6 +195,21 @@ export class RegisterComponent implements OnInit {
             if (gmailBoxes.length > 0) {
                 var trashBox = findMailboxWithFlag("Trash", gmailBoxes[0]);
                 this.customImapFormGroup.value.trashBoxPath = trashBox == null ? "Trash" : trashBox.path;
+            } else {
+                var path = "";
+                for (var index in mboxes.children) {
+                    var node = mboxes.children[index];
+                    for (var i = 0; i < node.flags.length; i++) {
+                        if (typeof node.flags[i] === 'string' || node.flags[i] instanceof String) {
+                            if (node.flags[i].indexOf('Trash') != -1) {
+                                path = node.path;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                this.customImapFormGroup.value.trashBoxPath = path == "" ? "Trash" : path;
             }
 
             //close after connection without error
@@ -155,8 +221,10 @@ export class RegisterComponent implements OnInit {
             //set stepper to next step
             this.stepper.next();
         } catch (error) {
-            //show error as alert
-            this._uiService.showAlert(error);
+            this.imapResponded = true;
+            this.hasError = true;
+
+            this.errorMessage = error.data ? error.data.message : error;
         }
     }
 }
