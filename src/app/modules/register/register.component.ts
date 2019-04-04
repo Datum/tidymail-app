@@ -18,7 +18,9 @@ export class RegisterComponent implements OnInit {
     mailFormGroup: FormGroup;
     passwordFormGroup: FormGroup;
     customImapFormGroup: FormGroup;
+    verifyFormGroup: FormGroup;
     customProvider: boolean = false;
+    verifying: boolean = false;
     editable: boolean = true;
     showPrivacy: boolean = false;
     hasError: boolean = false;
@@ -47,6 +49,9 @@ export class RegisterComponent implements OnInit {
         this.passwordFormGroup = this._formBuilder.group({
             password: ['', Validators.required],
             rememberMe: ['true']
+        });
+
+        this.verifyFormGroup = this._formBuilder.group({
         });
 
         this.customImapFormGroup = this._formBuilder.group({
@@ -84,6 +89,12 @@ export class RegisterComponent implements OnInit {
         this.customImapFormGroup.patchValue({
             username: this.mailFormGroup.value.email,
         });
+    }
+
+    goBack() {
+        this.hasError=false;
+        this.verifying=false;
+        this.stepper.previous();
     }
 
     async doRegister(joinReward: boolean) {
@@ -137,8 +148,17 @@ export class RegisterComponent implements OnInit {
 
 
     async verifiy() {
+        if (this.customProvider) {
+            this.customImapFormGroup.updateValueAndValidity();
+            if (!this.customImapFormGroup.valid) return;
+        } else {
+            this.passwordFormGroup.updateValueAndValidity();
+            if (!this.passwordFormGroup.valid) return;
+        }
         var imaphost = this.customProvider ? this.customImapFormGroup.value.imaphost.split(':')[0] : "imap.gmail.com";
         var imapport = this.customProvider ? this.customImapFormGroup.value.imaphost.split(':').length > 1 ? this.customImapFormGroup.value.imaphost.split(':')[1] : 993 : 993;
+        this.hasError = false;
+        this.verifying=true;
         var self = this;
 
         try {
@@ -146,9 +166,12 @@ export class RegisterComponent implements OnInit {
             setTimeout(function () {
                 if (!self.imapResponded) {
                     //looks like error
-                    self._uiService.showAlert("Something goes wrong! Please check your imap host settings.");
+                    // self._uiService.showAlert("Something goes wrong! Please check your imap host settings.");
                     //self.stepper.selected.reset();
-                    self.stepper.previous();
+                    // self.stepper.previous();
+
+                    this.hasError = true;
+                    this.errorMessage = "Could not connect to your mail server. Please go back and check your settings.";
                 }
             }, 5000);
 
@@ -199,19 +222,9 @@ export class RegisterComponent implements OnInit {
             this.stepper.next();
         } catch (error) {
             this.imapResponded = true;
+            this.hasError = true;
 
-            var errorMsg = 'Something goes wrong! ';
-            if (this.customProvider) {
-                errorMsg += 'Please check your imap settings and try again.';
-            } else {
-                errorMsg += 'Please check your email address and password and try again.';
-            }
-
-            //show error as alert
-            this._uiService.showAlert(errorMsg, (error.data ? error.data.message : error));
-
-            //set stepper to previous step
-            this.stepper.previous();
+            this.errorMessage = error.data ? error.data.message : error;
         }
     }
 }
