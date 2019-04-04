@@ -54,12 +54,23 @@ export class HomeComponent implements OnInit {
         */
 
 
+            
+
+
         //if password is not in config, prompt user
         if (this.userConfig.password == "") {
             return;
         }
 
         await this.bind();
+
+
+        if(!this.userConfig.firsttime) {
+            console.log('not first');
+            await this.sync();
+        } else {
+            console.log('first');
+        }
     }
 
     async bind() {
