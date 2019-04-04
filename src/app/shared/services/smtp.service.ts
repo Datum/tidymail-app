@@ -51,7 +51,13 @@ export class SmtpService {
                     }
                 });
 
-                certSocket.onerror = (error) => { reject(error) } // A handler for the error event.
+                certSocket.onerror = (error) => { 
+                    if(error.data)
+                        reject(error.data.message);
+                    
+                    reject(error); 
+                } // A handler for the error event.
+
 
                 //fired, if certificate received (works only if ciphers are supported by browser!)
                 certSocket.oncert = pemEncodedCertificate => {
@@ -85,9 +91,7 @@ export class SmtpService {
 
     //open the imap client instance
     open() {
-
         var self = this;
-
         return new Promise<string>(
             (resolve, reject) => {
                 self.client.onerror = function (error) {
@@ -107,7 +111,7 @@ export class SmtpService {
         return this.client.close();
     }
 
-    send(from: string, to: string, body: string = 'Please unsubscribe.') {
+    send(from: string, to: string, subject: string = "Unsubscribe", body: string = 'Please unsubscribe.') {
 
         var self = this;
 
@@ -115,11 +119,13 @@ export class SmtpService {
             (resolve, reject) => {
                 self.client.useEnvelope({
                     from: from,
-                    to: to
+                    to: [to]
                 });
 
                 self.client.onready = function (failedRecipients) {
-                    self.client.send('Subject: Unsubscribe\r\n\r\n' + body)
+                    self.client.send("From: " + from + "\n");
+                    self.client.send("To: " +  to + "\n");
+                    self.client.send("Subject: " + subject + "\n" + body);
                     self.client.end();
                 };
 

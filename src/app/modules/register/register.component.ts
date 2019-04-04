@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { UserService, ImapService, UIService } from '../../shared';
+import { UserService, ImapService, UIService, SmtpService } from '../../shared';
 import { MatHorizontalStepper } from '@angular/material/stepper';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
@@ -36,6 +36,7 @@ export class RegisterComponent implements OnInit {
         private _imapService: ImapService,
         private _uiService: UIService,
         private _route: ActivatedRoute,
+        private _smtpService: SmtpService,
         private _router: Router) { }
 
 
@@ -92,8 +93,8 @@ export class RegisterComponent implements OnInit {
     }
 
     goBack() {
-        this.hasError=false;
-        this.verifying=false;
+        this.hasError = false;
+        this.verifying = false;
         this.stepper.previous();
     }
 
@@ -121,7 +122,7 @@ export class RegisterComponent implements OnInit {
                 userConfig.imapurl = this.customImapFormGroup.value.imaphost.split(':')[0];
                 userConfig.imapport = this.customImapFormGroup.value.imaphost.split(':').length > 1 ? this.customImapFormGroup.value.imaphost.split(':')[1] : 993;
                 userConfig.smtpurl = this.customImapFormGroup.value.smtphost.split(':')[0];
-                userConfig.smtpport = this.customImapFormGroup.value.smtphost.split(':').length > 1 ? this.customImapFormGroup.value.smtphost.split(':')[1] : 587;
+                userConfig.smtpport = this.customImapFormGroup.value.smtphost.split(':').length > 1 ? this.customImapFormGroup.value.smtphost.split(':')[1] : 465;
                 userConfig.isGmailProvider = false;
                 userConfig.username = this.customImapFormGroup.value.username;
                 userConfig.email = this.mailFormGroup.value.email;
@@ -158,7 +159,7 @@ export class RegisterComponent implements OnInit {
         var imaphost = this.customProvider ? this.customImapFormGroup.value.imaphost.split(':')[0] : "imap.gmail.com";
         var imapport = this.customProvider ? this.customImapFormGroup.value.imaphost.split(':').length > 1 ? this.customImapFormGroup.value.imaphost.split(':')[1] : 993 : 993;
         this.hasError = false;
-        this.verifying=true;
+        this.verifying = true;
         var self = this;
 
         try {
@@ -214,6 +215,24 @@ export class RegisterComponent implements OnInit {
 
             //close after connection without error
             await this._imapService.close();
+
+
+            var smtphost = this.customProvider ? this.customImapFormGroup.value.smtphost.split(':')[0] : "smtp.gmail.com";
+            var smtpport = this.customProvider ? this.customImapFormGroup.value.smtphost.split(':').length > 1 ? this.customImapFormGroup.value.smtphost.split(':')[1] : 465 : 465;
+
+            //try smtp server
+            await this._smtpService.create(this.customProvider ?
+                this.customImapFormGroup.value.username : this.mailFormGroup.value.email,
+                this.customProvider ?
+                    this.customImapFormGroup.value.password : this.passwordFormGroup.value.password, smtphost, smtpport);
+
+
+            //try to connect
+            await this._smtpService.open();
+
+
+            //close after connection without error
+            await this._smtpService.close();
 
             //disable editing for previous steps 
             this.editable = false;

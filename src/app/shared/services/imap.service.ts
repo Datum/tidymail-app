@@ -48,9 +48,7 @@ export class ImapService {
 
         this.trashBoxPath = trashBox;
 
-        if (host == "imap.gmail.com") {
-            this.useGmailSearchSyntax = true;
-        }
+        this.useGmailSearchSyntax = (host == "imap.gmail.com");
 
         return new Promise<string>(
             (resolve, reject) => {

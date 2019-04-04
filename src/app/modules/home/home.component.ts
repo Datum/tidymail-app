@@ -42,35 +42,18 @@ export class HomeComponent implements OnInit {
         //get config
         this.userConfig = this._userService.getConfig();
 
-
-        /*
-        var gmailBoxes = mboxes.children.filter(function (e) {
-            return e.name == "[Gmail]";
-        });
-        if (gmailBoxes.length > 0) {
-            var trashBox = findMailboxWithFlag("Trash", gmailBoxes[0]);
-            this.customImapFormGroup.value.trashBoxPath = trashBox == null ? "Trash" : trashBox.path;
-        }
-        */
-
-
-            
-
-
         //if password is not in config, prompt user
         if (this.userConfig.password == "") {
             return;
         }
 
+        //bind lists
         await this.bind();
 
-
+        //by default start a sync
         if(!this.userConfig.firsttime) {
-            console.log('not first');
             await this.sync();
-        } else {
-            console.log('first');
-        }
+        } 
     }
 
     async bind() {
@@ -217,7 +200,7 @@ export class HomeComponent implements OnInit {
             await this.connectSmtp();
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
             if (unSubInfo.email != "") {
-                this._smtpService.send(self.userConfig.email, unSubInfo.email);
+                await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
                 await this._dbService.unsubscribe(id);
             } else {
                 if (unSubInfo.url != "") {
@@ -267,7 +250,7 @@ export class HomeComponent implements OnInit {
 
 
 function getUnsubscriptionInfo(unsubString) {
-    var r = { email: '', url: '' };
+    var r = { email: '', url: '', subject: '' };
     var parts = unsubString.split(',');
 
     for (var i = 0; i < parts.length; i++) {
@@ -280,6 +263,18 @@ function getUnsubscriptionInfo(unsubString) {
                 parts[i] = parts[i].substr(parts[i].indexOf(':') + 1);
             }
             r.email = parts[i];
+
+            var iWithParameter = r.email.indexOf('?');
+            if(iWithParameter != -1) {
+                var params = r.email.substr(iWithParameter+1);
+                var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g,"\":\"")) + '"}');
+                if(paramsObject.subject) {
+                    r.subject = paramsObject.subject;
+                }
+                r.email = r.email.substring(0, iWithParameter);
+            }
+            //check if email has subject included
+
             return r;
         } else {
             r.url = parts[i];
