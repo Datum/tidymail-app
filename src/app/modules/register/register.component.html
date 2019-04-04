@@ -34,9 +34,10 @@
                 </div>
             </form>
         </mat-step>
-        <mat-step [stepControl]="!customProvider ? passwordFormGroup : customImapFormGroup" label=""
-            [editable]="editable">
-            <form *ngIf="customProvider" [formGroup]="customImapFormGroup">
+        <mat-step
+            [stepControl]="!verifying ? (!customProvider ? passwordFormGroup : customImapFormGroup) : verifyFormGroup"
+            label="" [editable]="editable">
+            <form *ngIf="customProvider && !verifying" [formGroup]="customImapFormGroup">
                 <h2>
                     Configure Mail Access
                 </h2>
@@ -53,7 +54,8 @@
                     <input type="text" matInput placeholder="imap.gmail.com:993" formControlName="imaphost" required>
                 </mat-form-field>
                 <mat-form-field class="full-with-field">
-                    <input type="text" matInput placeholder="smtp.gmail.com:[465/587]" formControlName="smtphost" required>
+                    <input type="text" matInput placeholder="smtp.gmail.com:[465/587]" formControlName="smtphost"
+                        required>
                 </mat-form-field>
                 <mat-form-field class="full-with-field">
                     <input type="text" matInput placeholder="youremail@gmail.com" formControlName="username" required>
@@ -63,7 +65,8 @@
                 </mat-form-field>
                 <div class="row">
                     <div class="col">
-                        <mat-checkbox class="example-margin" formControlName="rememberMe">Remember Me</mat-checkbox>
+                        <mat-checkbox class="example-margin" color="primary" formControlName="rememberMe">Remember Me
+                        </mat-checkbox>
                     </div>
                     <div class="col text-right">
                         <button (click)="verifiy()" [disabled]="!customImapFormGroup.valid" mat-flat-button
@@ -71,7 +74,7 @@
                     </div>
                 </div>
             </form>
-            <form *ngIf="!customProvider" [formGroup]="passwordFormGroup">
+            <form *ngIf="!customProvider && !verifying" [formGroup]="passwordFormGroup">
                 <h2>
                     Enter your email password
                 </h2>
@@ -79,68 +82,91 @@
                     Don't use Gmail? <a [routerLink]="" (click)="customProvider = true">Click here</a> for manual setup
                 </p>
                 <p class="text-muted">
-                    <b>Enable IMAP:</b> To use tidymail you must enable IMAP access at Gmail. <a href="#">Click here</a>
+                    <b>Enable IMAP:</b> To use tidymail you must enable IMAP access at Gmail. <a href="https://support.google.com/mail/answer/7126229?hl=en" target="_blank">Click here</a>
                     to learn how.
                 </p>
                 <p class="text-muted">
-                    <b>Using 2-Factor Authentication? </b> Great! You must use an app specific password for tidaymail.
-                    <a href="#">Click here</a> to add one and then use that password below
-                    to learn how.
+                    <b>Using 2-Factor Authentication? </b> Great! You must use an app specific password for tidymail.
+                    <a href="https://support.google.com/accounts/answer/185833?hl=en#generate" target="_blank">Click here</a> to learn how and then use that password below.
                 </p>
                 <p class="text-muted">
-                    <b>Not using 2-Factor Authentication? </b> :(, you must allow less secure apps access for tidaymail.
-                    <a href="#">Click here</a> to learn how.
+                    <b>Not using 2-Factor Authentication? </b> :(, you must allow less secure apps access for tidymail.
+                    <a href="https://support.google.com/accounts/answer/6010255?hl=en" target="_blank">Click here</a> to learn how.
                 </p>
 
                 <div class="space-2em"></div>
-                <mat-form-field class="full-with-field">
-                    <input type="password" matInput placeholder="your email password" formControlName="password"
-                        required>
+                <mat-form-field class="full-with-field" appearance="outline">
+                    <mat-label>Your email password</mat-label>
+                    <input type="password" matInput placeholder="your email password" formControlName="password">
+                    <mat-error *ngIf="passwordFormGroup.invalid">Please enter your email password</mat-error>
                 </mat-form-field>
                 <div class="row">
                     <div class="col">
-                        <mat-checkbox class="example-margin" formControlName="rememberMe">Remember Me</mat-checkbox>
+                        <mat-checkbox class="example-margin" color="primary" formControlName="rememberMe">Remember Me
+                        </mat-checkbox>
                     </div>
                     <div class="col text-right">
-                        <button (click)="verifiy()" [disabled]="!passwordFormGroup.valid" mat-flat-button
-                            color="primary" matStepperNext>CONTINUE</button>
+                        <button (click)="verifiy()" mat-flat-button color="primary">CONTINUE</button>
                     </div>
                 </div>
             </form>
-        </mat-step>
-        <mat-step label="" [editable]="editable">
-            <div *ngIf="!hasError">
-                <h2>
-                    Verifying
-                </h2>
-                <p class="text-muted">
-                    This may take a few seconds
-                </p>
-                <div class="space-2em"></div>
-                <p class="verify-loader">
-                    <mat-spinner style="margin:0 auto;" [diameter]=50></mat-spinner>
-                </p>
-                <div class="space-2em"></div>
-                <button (click)="cancel()" mat-flat-button color="primary" matStepperPrevious>CANCEL</button>
-            </div>
-            <div *ngIf="hasError">
-                <h2>
-                    Oops, somthing went wrong
-                </h2>
-                <p class="text-muted">
-                    Check, if your email and password is correct. If you still have problems try the manual
-                    configuration.
-                </p>
-                <div class="space-2em"></div>
-                <p class="text-danger">
-                    {{ errorMessage }}
-                </p>
-                <div class="space-2em"></div>
-                <button mat-flat-button color="primary" matStepperPrevious>CANCEL</button>
-            </div>
+            <form *ngIf="verifying" [formGroup]="verifyFormGroup">
+                <div *ngIf="!hasError">
+                    <h2>
+                        Verifying
+                    </h2>
+                    <p class="text-muted">
+                        This may take a few seconds
+                    </p>
+                    <div class="space-2em"></div>
+                    <p class="verify-loader">
+                        <mat-spinner style="margin:0 auto;" [diameter]=50></mat-spinner>
+                    </p>
+                    <div class="space-2em"></div>
+                    <button (click)="cancel()" mat-flat-button color="primary" matStepperPrevious>CANCEL</button>
+                </div>
+                <div *ngIf="hasError">
+                    <h2>
+                        Oops, something went wrong
+                    </h2>
+                    <p class="text-muted">
+                        Check, if your email settings and password is correct.
+                    </p>
+                    <div class="space-2em"></div>
+                    <p class="text-danger">
+                        {{ errorMessage }}
+                    </p>
+                    <div class="space-2em"></div>
+                    <button mat-flat-button color="primary" type="button" (click)="goBack()">BACK</button>
+                </div>
+            </form>
         </mat-step>
         <mat-step label="">
             <div *ngIf="!showPrivacy">
+                <h2>
+                    Almost done, just one more thing
+                </h2>
+                <p class="text-muted">
+                    Join Datum Rewards to automatically earn rewards (we call it DAT) for receiving occasional email offers
+                    from select partners.<br>
+                    The best part? You can redeem your rewards for cryptocurrency or gift cards.
+                </p>
+                <div class="space-2em"></div>
+                <p class="text-muted">
+                    Datum Rewards is run by Datum, the same team behind tidymail.
+                </p>
+                <div class="space-2em"></div>
+                <div class="row">
+                    <div class="col">
+                        <button (click)="doRegister(0)" mat-flat-button matStepperNext>NO THANKS</button>
+                    </div>
+                    <div class="col text-right">
+                        <button (click)="showPrivacy = true" mat-flat-button color="primary"
+                            matStepperNext>CONTINUE</button>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="showPrivacy">
                 <h2>
                     We care about your privacy
                 </h2>
@@ -152,7 +178,7 @@
                 <p class="text-muted">
                     <b>Your email address</b>
                     <br>
-                    Used the send you promotional email offers. You can unsubscribe at any time.
+                    Used to send you promotional email offers. You can unsubscribe at any time.
                     <br>
                     <b>Your newsletter subscriptions</b>
                     <br>
@@ -160,36 +186,13 @@
                 </p>
                 <div class="space-2em"></div>
                 <p class="text-muted">
-                    By continueing you agree to our <a>Pricavy Policy</a> and <a>Terms</a>.
+                    By continuing you agree to our <a id="privacypolicy" href="https://www.iubenda.com/privacy-policy/53523996" target="_blank" class="iubenda-nostyle no-brand iubenda-embed" title="Privacy Policy" data-iub-overflow="false">Privacy Policy</a><script type="text/javascript">(function (w, d) { var loader = function () { var s = d.createElement("script"), tag = d.getElementsByTagName("script")[0]; s.src = "https://cdn.iubenda.com/iubenda.js"; tag.parentNode.insertBefore(s, tag); }; if (w.addEventListener) { w.addEventListener("load", loader, false); } else if (w.attachEvent) { w.attachEvent("onload", loader); } else { w.onload = loader; } })(window, document);</script>
+                     and <a href="https://datum.org/terms/#terms" target="_blank">Terms</a>.
+                    
                 </p>
                 <div class="row">
                     <div class="col">
                         <button (click)="doRegister(0)" mat-flat-button>NO THANKS</button>
-                    </div>
-                    <div class="col text-right">
-                        <button (click)="showPrivacy = true" mat-flat-button color="primary"
-                            matStepperNext>CONTINUE</button>
-                    </div>
-                </div>
-            </div>
-            <div *ngIf="showPrivacy">
-                <h2>
-                    Almost done, just one more thing
-                </h2>
-                <p class="text-muted">
-                    Join Datum Rewards to automatically earn rewards (we call DAT) for receiving occasinal email offers
-                    from
-                    selected partners.
-                    The best part? You can redeem your rewards for cryptocurrency or gift cards.
-                </p>
-                <div class="space-2em"></div>
-                <p class="text-muted">
-                    Datum Rewards is run by Datum, the same team behind tidymail.
-                </p>
-                <div class="space-2em"></div>
-                <div class="row">
-                    <div class="col">
-                        <button (click)="doRegister(0)" mat-flat-button matStepperNext>NO THANKS</button>
                     </div>
                     <div class="col text-right">
                         <button (click)="doRegister(1)" mat-flat-button color="primary" matStepperNext>AGREE</button>
