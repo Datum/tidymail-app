@@ -60,6 +60,7 @@ export class DbService {
     }
 
     async init() {
+        /*
         this._newGroups = await this.db.newMails.toArray();
         this._newGroupsObservable.next(this._newGroups);
 
@@ -68,6 +69,7 @@ export class DbService {
 
         this._keepGroups = await this.db.keepMails.toArray();
         this._keepGroupsObservable.next(this._keepGroups);
+        */
 
         // setup an in memory copy of the indexedDB to perform fast searches on
         this.memdb = new loki('tidymail.db');
@@ -86,6 +88,18 @@ export class DbService {
         this.memdb_newMails.insert(await this.db.newMails.toArray());
         this.memdb_keepMails.insert(await this.db.keepMails.toArray());
         this.memdb_unsubbedMails.insert(await this.db.unsubbedMails.toArray());
+
+
+        //bind to observables
+        this._newGroups = this.memdb_newMails.data;
+        this._newGroupsObservable.next(this._newGroups);
+
+        this._unsubbedGroups = this.memdb_unsubbedMails.data;
+        this._unsubbedGroupsObservable.next(this._unsubbedGroups);
+
+        this._keepGroups = this.memdb_keepMails.data;
+        this._keepGroupsObservable.next(this._keepGroups);
+       
     }
 
     exists(msgId: number) {
@@ -171,11 +185,18 @@ export class DbService {
               });
             */
             if (keyCount === undefined) {
+                //add ui
                 await this.memdb_mails.insert(msg);
+                await this.db.mails.add(msg)
+                await this.addOrUpdateMsg(msg);
 
+                //add to db layer
+                /*
                 this.db.mails.add(msg).then(async () => {
-                    await this.addOrUpdateMsg(msg);
+                    //await this.addOrUpdateMsg(msg);
                 });
+                */
+                
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 let updaterecord = this.memdb_mails.by('lastId', keyCount.lastId);
@@ -236,15 +257,17 @@ export class DbService {
 
     private async addOrUpdateMsg(msg: Message, source: number = 0) {
 
+        //console.log(msg);
+
         //Set key group index, here 1st letter
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
 
-        var dbEntity = await this.getGroupEntity(source).where("identifier").equalsIgnoreCase(groupIndex).first();
+        //var dbEntity = await this.getGroupEntity(source).where("identifier").equalsIgnoreCase(groupIndex).first();
         var gpOb = this.getGroupObservables(source);
 
         //check if already exists
         var dgExists = gpOb.find(x => x.identifier === groupIndex);
-        if (dgExists === undefined || dbEntity === undefined) {
+        if (dgExists === undefined) {
             //add new group
             var mg: MessageGroup = new MessageGroup();
             mg.hostname = msg.hostname;
@@ -257,16 +280,17 @@ export class DbService {
             dg.displayName = groupIndex;
 
             if (dgExists === undefined)
+            {
                 this.getGroupObservables(source).push(dg);
-            if (dbEntity === undefined)
                 await this.getGroupEntity(source).add(dg);
+            }
 
+            
             this.getGroupObservables(source).sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
             this.updateGroupObservables(source);
         } else {
             var mgExists = dgExists.messagegroups.find(x => x.key === msg.hostname);
-            var mgExistsDb = dbEntity.messagegroups.find(x => x.key === msg.hostname);
-            if (mgExists === undefined || mgExistsDb === undefined) {
+            if (mgExists === undefined) {
                 var mg: MessageGroup = new MessageGroup();
                 mg.key = msg.hostname;
                 mg.hostname = msg.hostname;
@@ -274,19 +298,17 @@ export class DbService {
                 mg.estimatedMessageCount = 1;
 
                 if (mgExists === undefined)
+                {
                     dgExists.messagegroups.push(mg);
-
-                if (mgExistsDb === undefined) {
-                    dbEntity.messagegroups.push(mg);
-                    await this.getGroupEntity(source).update(groupIndex, { messagegroups: dbEntity.messagegroups });
+                    await this.getGroupEntity(source).update(groupIndex, { messagegroups: dgExists.messagegroups });
                 }
             } else {
                 //check mails exists with same id
-                var fromExistsCount = await this.db.mails.where("from").equalsIgnoreCase(msg.from).count();
-                if (fromExistsCount == 1) {
+                var keyCount = this.memdb_mails.find({from: msg.from }, true); // true means firstOnly
+                if (keyCount.length == 1) {
                     mgExists.estimatedMessageCount = mgExists.estimatedMessageCount + 1;
-                    mgExistsDb.estimatedMessageCount = mgExistsDb.estimatedMessageCount + 1;
-                    await this.getGroupEntity(source).update(groupIndex, { messagegroups: dbEntity.messagegroups });
+                    //mgExistsDb.estimatedMessageCount = mgExistsDb.estimatedMessageCount + 1;
+                    await this.getGroupEntity(source).update(groupIndex, { messagegroups: dgExists.messagegroups });
                 }
             }
         }
