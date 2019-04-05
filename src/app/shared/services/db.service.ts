@@ -69,24 +69,23 @@ export class DbService {
         this._keepGroups = await this.db.keepMails.toArray();
         this._keepGroupsObservable.next(this._keepGroups);
 
-        let testmails = await this.db.mails.toArray();
-        console.log("this._mail", testmails);
-
         // setup an in memory copy of the indexedDB to perform fast searches on
         this.memdb = new loki('tidymail.db');
         this.memdb_mails = this.memdb.addCollection("mails", { unique: ['lastId'] });
         this.memdb_newMails = this.memdb.addCollection("newMails", { unique: ['identifier'] });
         this.memdb_keepMails = this.memdb.addCollection("keepMails", { unique: ['identifier'] });
         this.memdb_unsubbedMails = this.memdb.addCollection("unsubbedMails", { unique: ['identifier'] });
+
         // fill memory db with records from IndexedDB
-        this.memdb_mails.insert(await this.db.mails.toArray());
+        var mails = await this.db.mails.toArray();
+
+        //remove loki id...
+        mails.forEach(function(v){ delete v["$loki"] });
+
+        this.memdb_mails.insert(mails);
         this.memdb_newMails.insert(await this.db.newMails.toArray());
         this.memdb_keepMails.insert(await this.db.keepMails.toArray());
         this.memdb_unsubbedMails.insert(await this.db.unsubbedMails.toArray());
-
-        var odin = this.memdb_mails.findOne({ lastId:96609 });
-        console.log("odin",odin);
-
     }
 
     exists(msgId: number) {
@@ -109,7 +108,6 @@ export class DbService {
 
     //adds an email object to storage and observable
     async add(fetchedMailObject) {
-        console.time("addfunction");
         var msg = new Message();
         msg.lastId = fetchedMailObject.uid;
         msg.from = mimeWordsDecode(fetchedMailObject['body[header.fields (from)]'].substr(6)).replace(/"/g, '');
@@ -131,10 +129,8 @@ export class DbService {
         console.log("mailExists",mailExists);
         */
 
-        console.time("mailExists");
         //get mail with id
-        let mailExists = this.memdb_mails.by('lastId',msg.lastId);
-        console.timeEnd("mailExists");
+        let mailExists = this.memdb_mails.by('lastId', msg.lastId);
         // console.log("mailExistsLoki",mailExistsLoki);
 
         //if mail id exists, skip
@@ -149,15 +145,13 @@ export class DbService {
             }).first();
             console.timeEnd("keyCount");
             console.log("keyCount", keyCount);
-            */ 
-            console.time("keyCount");
-            var keyCount = this.memdb_mails.find({ hostname:msg.hostname, from:msg.from }, true); // true means firstOnly
+            */
+            var keyCount = this.memdb_mails.find({ hostname: msg.hostname, from: msg.from }, true); // true means firstOnly
             if (keyCount[0]) {
-                keyCount=keyCount[0];
+                keyCount = keyCount[0];
             } else {
-                keyCount=undefined;
+                keyCount = undefined;
             }
-            console.timeEnd("keyCount");
             // console.log("keyCountLoki", keyCountLoki);
 
             /*
@@ -176,28 +170,21 @@ export class DbService {
                 });
               });
             */
-
-            console.time("db.mails.add");
             if (keyCount === undefined) {
-                this.memdb_mails.insert(msg);
-                
-                this.db.mails.add(msg).then(data => {
-                    this.addOrUpdateMsg(msg);
+                await this.memdb_mails.insert(msg);
+
+                this.db.mails.add(msg).then(async () => {
+                    await this.addOrUpdateMsg(msg);
                 });
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
-                let updaterecord = this.memdb_mails.by('lastId',keyCount.lastId);
+                let updaterecord = this.memdb_mails.by('lastId', keyCount.lastId);
                 updaterecord.ignoreIds = keyCount.ignoreIds;
-                this.memdb_mails.update(updaterecord);
+                await this.memdb_mails.update(updaterecord);
 
                 this.db.mails.update(keyCount.lastId, { ignoreIds: keyCount.ignoreIds });
             }
-            console.timeEnd("db.mails.add");
-        } else {
-            console.log('exists');
         }
-
-        console.timeEnd("addfunction");
     }
 
     private getGroupEntity(status: number) {
@@ -454,9 +441,9 @@ function extractHostname(url) {
         var domain = url.substr(at + 1);
         //get only root domain
         var extractdomain = parseDomain(domain);
-        if (extractdomain && extractdomain.domain && extractdomain.tld) { 
+        if (extractdomain && extractdomain.domain && extractdomain.tld) {
             return extractdomain.domain + '.' + extractdomain.tld; // return domain with subdomain chopped off
-        } else { 
+        } else {
             return domain; // got some null values while parsing, so just return full domain
         }
     }
