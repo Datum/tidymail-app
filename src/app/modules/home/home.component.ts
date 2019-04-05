@@ -146,7 +146,9 @@ export class HomeComponent implements OnInit {
                     if (cancelled) {
                         break;
                     }
+                    console.time("dbService.add");
                     await self._dbService.add(fetchedMails[i]);
+                    console.timeEnd("dbService.add");
                 }
             });
 

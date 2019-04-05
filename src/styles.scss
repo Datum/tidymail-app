@@ -115,6 +115,7 @@ body {
 .newsletterlist .listheader {
     align-items: start;
     padding-top: 18px;
+    min-width: 49px;
 }
 
 .newsletterlist img.favimg {
@@ -122,4 +123,5 @@ body {
     position: relative;
     bottom: -2px;
     padding-right:10px;
+    min-width: 26px;
 }
