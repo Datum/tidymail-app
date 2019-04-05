@@ -178,7 +178,7 @@ export class DbService {
             msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
         } else {
             console.log('header not found or invalid for <list-unsubscribe>: ' + fetchedMailObject);
-            throw new Error();
+            //throw new Error();
         }
 
 
