@@ -10,6 +10,8 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import { HomeModule } from './modules/home.module'
 import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 
+import { Angulartics2Module } from 'angulartics2';
+import { Angulartics2GoogleAnalytics } from 'angulartics2/ga';
 
 import {
     //GmailService,
@@ -34,7 +36,8 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
     HttpClientModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    HomeModule
+    HomeModule,
+    Angulartics2Module.forRoot()
   ],
   providers: [DbService, UserService,ImapService, UIService, SmtpService],
   bootstrap: [AppComponent],

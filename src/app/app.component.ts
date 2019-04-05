@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService, UIService } from './shared';
 import { Router } from '@angular/router';
+import { Angulartics2GoogleAnalytics } from 'angulartics2/ga';
 
 @Component({
     selector: 'app-root',
@@ -12,7 +13,10 @@ export class AppComponent implements OnInit {
     constructor(
         private _userService: UserService,
         private _uiService:UIService,
-        private router: Router) { }
+        private router: Router,
+        angulartics2GoogleAnalytics: Angulartics2GoogleAnalytics) {
+            angulartics2GoogleAnalytics.startTracking();
+        }
 
     async ngOnInit() {
         try {

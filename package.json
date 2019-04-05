@@ -23,6 +23,7 @@
     "@angular/platform-browser": "~7.2.0",
     "@angular/platform-browser-dynamic": "~7.2.0",
     "@angular/router": "~7.2.0",
+    "angulartics2": "^7.4.1",
     "bootstrap": "^4.3.1",
     "core-js": "^2.5.4",
     "dexie": "^2.0.4",
