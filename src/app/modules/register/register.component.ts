@@ -176,6 +176,7 @@ export class RegisterComponent implements OnInit {
                 }
             }, 5000);
 
+            
             //create imap client
             await this._imapService.create(this.customProvider ?
                 this.customImapFormGroup.value.username : this.mailFormGroup.value.email,
@@ -216,7 +217,8 @@ export class RegisterComponent implements OnInit {
             //close after connection without error
             await this._imapService.close();
 
-
+            
+            
             var smtphost = this.customProvider ? this.customImapFormGroup.value.smtphost.split(':')[0] : "smtp.gmail.com";
             var smtpport = this.customProvider ? this.customImapFormGroup.value.smtphost.split(':').length > 1 ? this.customImapFormGroup.value.smtphost.split(':')[1] : 465 : 465;
 
@@ -229,7 +231,6 @@ export class RegisterComponent implements OnInit {
 
             //try to connect
             await this._smtpService.open();
-
 
             //close after connection without error
             await this._smtpService.close();

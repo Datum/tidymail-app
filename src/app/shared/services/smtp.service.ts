@@ -19,7 +19,7 @@
 import { Injectable } from '@angular/core';
 
 import { LOG_LEVEL_NONE, LOG_LEVEL_ERROR, LOG_LEVEL_DEBUG } from 'emailjs-smtp-client'
-import SmtpClient from 'emailjs-imap-client'
+import SmtpClient from 'emailjs-smtp-client'
 import TCPSocket from 'emailjs-tcp-socket'
 import { environment } from '../../../environments/environment';
 import {
@@ -98,6 +98,7 @@ export class SmtpService {
         return new Promise<string>(
             (resolve, reject) => {
                 self.client.onerror = function (error) {
+                    console.log(error);
                     reject(error);
                 };
                 self.client.onidle = function() {

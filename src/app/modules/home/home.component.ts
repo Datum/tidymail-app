@@ -126,7 +126,7 @@ export class HomeComponent implements OnInit {
             this.statusMessage = "searching for new newsletters...";
 
             //get all ids with given search term
-            var ids = await this._imapService.getMailIds();
+            var ids = await this._imapService.getMailIds(true);
 
             //exclude all processed
             var processedKeys = await this._dbService.getProcessedIds();
@@ -139,7 +139,6 @@ export class HomeComponent implements OnInit {
 
             //start with newest first
             ids = ids.reverse();
-
 
             //download all mails
             var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {

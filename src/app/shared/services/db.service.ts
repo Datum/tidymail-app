@@ -181,6 +181,13 @@ export class DbService {
             console.log(fetchedMailObject)
         }
 
+        //if no unscribe info here, add mail to ignore list and return
+        if(msg.unsubscribeEmail === undefined) {
+            msg.status = 4;
+            await this.memdb_mails.insert(msg);
+            await this.db.mails.add(msg)
+            return;
+        }
 
         msg.ignoreIds = [];
 
