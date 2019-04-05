@@ -60,7 +60,7 @@ export class DbService {
     }
 
     async init() {
-        
+
         /*
         this._newGroups = await this.db.newMails.toArray();
         this._newGroupsObservable.next(this._newGroups);
@@ -71,7 +71,7 @@ export class DbService {
         this._keepGroups = await this.db.keepMails.toArray();
         this._keepGroupsObservable.next(this._keepGroups);
         */
-        
+
 
         // setup an in memory copy of the indexedDB to perform fast searches on
         this.memdb = new loki('tidymail.db');
@@ -87,10 +87,10 @@ export class DbService {
         var unsubGroups = await this.db.unsubbedMails.toArray();
 
         //remove loki id...
-        mails.forEach(function(v){ delete v["$loki"] });
-        newGroups.forEach(function(v){ delete v["$loki"] });
-        keepGroups.forEach(function(v){ delete v["$loki"] });
-        unsubGroups.forEach(function(v){ delete v["$loki"] });
+        mails.forEach(function (v) { delete v["$loki"] });
+        newGroups.forEach(function (v) { delete v["$loki"] });
+        keepGroups.forEach(function (v) { delete v["$loki"] });
+        unsubGroups.forEach(function (v) { delete v["$loki"] });
 
         this.memdb_mails.insert(mails);
         this.memdb_newMails.insert(newGroups);
@@ -106,14 +106,13 @@ export class DbService {
 
         this._keepGroups = this.memdb_keepMails.data;
         this._keepGroupsObservable.next(this._keepGroups);
-        
-       
+
+
     }
 
     syncToStorage() {
         //sort
         this._newGroups.sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
-
 
         return Promise.all[
             this.db.mails.bulkPut(this.memdb_mails.data),
@@ -122,7 +121,7 @@ export class DbService {
             this.db.unsubbedMails.bulkPut(this._unsubbedGroups)
         ];
 
-        
+
     }
 
 
@@ -148,80 +147,63 @@ export class DbService {
     async add(fetchedMailObject) {
         var msg = new Message();
         msg.lastId = fetchedMailObject.uid;
-        msg.from = mimeWordsDecode(fetchedMailObject['body[header.fields (from)]'].substr(6)).replace(/"/g, '');
-        msg.lastDate = Date.parse(fetchedMailObject['body[header.fields (date)]'].substr(6));
-        msg.lastSubject = mimeWordsDecode(fetchedMailObject['body[header.fields (subject)]'].substr(9));
-        msg.unsubscribeEmail = mimeWordsDecode(fetchedMailObject['body[header.fields (list-unsubscribe)]'].substr(18));
-        //msg.ignoreIds = fetchedMailObject.sameFromIds !== undefined ? fetchedMailObject.sameFromIds : [];
+
+
+        var mailFrom = fetchedMailObject['body[header.fields (from)]'];
+        if (mailFrom !== undefined && mailFrom.length > 6) {
+            msg.from = mimeWordsDecode(mailFrom.substr(6)).replace(/"/g, '');
+        } else {
+            console.log('header not found or invalid for <from>: ' + fetchedMailObject);
+            throw new Error();
+        }
+
+        var mailDate = fetchedMailObject['body[header.fields (date)]'];
+        if (mailDate !== undefined && mailDate.length > 6) {
+            msg.lastDate = Date.parse(mailDate.substr(6));
+        } else {
+            console.log('header not found or invalid for <date>: ' + fetchedMailObject);
+            throw new Error();
+        }
+
+        var mailSubject = fetchedMailObject['body[header.fields (subject)]'];
+        if (mailSubject !== undefined && mailSubject.length > 9) {
+            msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
+        } else {
+            console.log('header not found or invalid for <subject>: ' + fetchedMailObject);
+            throw new Error();
+        }
+
+        var mailUnsubscribeInfo = fetchedMailObject['body[header.fields (list-unsubscribe)]'];
+        if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
+            msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
+        } else {
+            console.log('header not found or invalid for <list-unsubscribe>: ' + fetchedMailObject);
+            throw new Error();
+        }
+
+
         msg.ignoreIds = [];
 
         //hostname as key for 1st level
         var hostname = extractHostname(msg.from);
         msg.hostname = hostname;
 
-        /*
-        console.time("mailExists");
-        //get mail with id
-        let mailExists = await this.db.mails.get(msg.lastId);
-        console.timeEnd("mailExists");
-        console.log("mailExists",mailExists);
-        */
-
         //get mail with id
         let mailExists = this.memdb_mails.by('lastId', msg.lastId);
-        // console.log("mailExistsLoki",mailExistsLoki);
 
         //if mail id exists, skip
         if (mailExists === undefined) {
-            //add msg itself to db, for ui they will attached on demand (lazy load)
-            //Check again for active key, here host + from, because imap search could return wrong results
-
-            /*
-            console.time("keyCount");
-            var keyCount = await this.db.mails.where('hostname').equalsIgnoreCase(msg.hostname).filter(function (mail) {
-                return mail.from === msg.from;
-            }).first();
-            console.timeEnd("keyCount");
-            console.log("keyCount", keyCount);
-            */
             var keyCount = this.memdb_mails.find({ hostname: msg.hostname, from: msg.from }, true); // true means firstOnly
             if (keyCount[0]) {
                 keyCount = keyCount[0];
             } else {
                 keyCount = undefined;
             }
-            // console.log("keyCountLoki", keyCountLoki);
-
-            /*
-            console.time("keyCountNativeTest");
-            this.db.transaction ('r', 'mails', trans => {
-                return new Promise (resolve => {
-                  var store = trans.idbtrans.objectStore('mails');
-                  var tick = Date.now();
-                  console.time("tick");
-                  store.get(1).onsuccess = ev => {
-                    console.log("Time taken: ", Date.now() - tick, ev);
-                    console.timeEnd("keyCountNativeTest");
-                    console.timeEnd("tick");
-                    resolve();
-                  };
-                });
-              });
-            */
+         
             if (keyCount === undefined) {
-                //add ui
                 await this.memdb_mails.insert(msg);
                 await this.db.mails.add(msg)
-                //await this.addOrUpdateMsg(msg);
                 await this.addOrUpdateMsgUI(msg);
-
-                //add to db layer
-                /*
-                this.db.mails.add(msg).then(async () => {
-                    //await this.addOrUpdateMsg(msg);
-                });
-                */
-                
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 await this.memdb_mails.update(keyCount);
@@ -288,7 +270,7 @@ export class DbService {
     }
 
     private async addOrUpdateMsg(msg: Message, source: number = 0) {
-   
+
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
 
         //var dbEntity = await this.getGroupEntity(source).where("identifier").equalsIgnoreCase(groupIndex).first();
@@ -308,13 +290,12 @@ export class DbService {
             dg.messagegroups = [mg];
             dg.displayName = groupIndex;
 
-            if (dgExists === undefined)
-            {
+            if (dgExists === undefined) {
                 this.getGroupObservables(source).push(dg);
                 await this.getGroupEntity(source).add(dg);
             }
 
-            
+
             this.getGroupObservables(source).sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
             this.updateGroupObservables(source);
         } else {
@@ -326,14 +307,13 @@ export class DbService {
                 mg.name = extractMailFromName(msg.from);
                 mg.estimatedMessageCount = 1;
 
-                if (mgExists === undefined)
-                {
+                if (mgExists === undefined) {
                     dgExists.messagegroups.push(mg);
                     await this.getGroupEntity(source).update(groupIndex, { messagegroups: dgExists.messagegroups });
                 }
             } else {
                 //check mails exists with same id
-                var keyCount = this.memdb_mails.find({from: msg.from }, true); // true means firstOnly
+                var keyCount = this.memdb_mails.find({ from: msg.from }, true); // true means firstOnly
                 if (keyCount.length == 1) {
                     mgExists.estimatedMessageCount = mgExists.estimatedMessageCount + 1;
                     //mgExistsDb.estimatedMessageCount = mgExistsDb.estimatedMessageCount + 1;
@@ -350,7 +330,7 @@ export class DbService {
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
 
         var tt = this.getMemDBTable(source).findOne({ identifier: groupIndex });
-        if(tt == null) {
+        if (tt == null) {
             var mg: MessageGroup = new MessageGroup();
             mg.hostname = msg.hostname;
             mg.key = msg.hostname;
@@ -361,12 +341,9 @@ export class DbService {
             dg.messagegroups = [mg];
             dg.displayName = groupIndex;
             this.getMemDBTable(source).insert(dg);
-
-            //this.getMemDBTable(source).sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
-
         } else {
             var rr = tt.messagegroups.find(x => x.key === msg.hostname);
-            if(rr === undefined) {
+            if (rr === undefined) {
                 var mg: MessageGroup = new MessageGroup();
                 mg.key = msg.hostname;
                 mg.hostname = msg.hostname;
@@ -374,16 +351,16 @@ export class DbService {
                 mg.estimatedMessageCount = 1;
                 tt.messagegroups.push(mg);
             } else {
-                rr.estimatedMessageCount = rr.estimatedMessageCount + 1;   
+                rr.estimatedMessageCount = rr.estimatedMessageCount + 1;
             }
         }
-                
+
 
         return;
 
         //console.log(msg);
 
-     
+
     }
 
 
@@ -498,8 +475,8 @@ export class DbService {
         return this.db.mails.where(field).equals(value);
     }
 
-    getMailsWithHostnameAndStatus(hostname,status) {
-        return this.memdb_mails.find({ hostname: hostname, status:status }); // true means firstOnly
+    getMailsWithHostnameAndStatus(hostname, status) {
+        return this.memdb_mails.find({ hostname: hostname, status: status }); // true means firstOnly
     }
 
     getUniqueKeys(field) {
@@ -512,10 +489,17 @@ export class DbService {
 
     async  getProcessedIds() {
         var ids = [];
-        await this.db.mails.toCollection().each(function (mail) {
-            ids.push(mail.lastId);
-            ids = ids.concat(mail.ignoreIds)
-        });
+
+        this.memdb_mails.mapReduce(
+            function (obj) { return { id: obj.lastId, ids: obj.ignoreIds } },
+            function (objReduced) {
+                for (var i = 0; i < objReduced.length; i++) {
+                    ids = ids.concat(objReduced[i].ids);
+                    ids.push(objReduced[i].id);
+                }
+
+                return ids.length;
+            });
 
         return ids;
     }

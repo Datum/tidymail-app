@@ -130,15 +130,16 @@ export class HomeComponent implements OnInit {
 
             //exclude all processed
             var processedKeys = await this._dbService.getProcessedIds();
+
             ids = ids.filter(function (el) {
                 return processedKeys.indexOf(el) < 0;
             });
-
             //get total count of mails to process
             var totalCount = ids.length;
 
             //start with newest first
             ids = ids.reverse();
+
 
             //download all mails
             var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
