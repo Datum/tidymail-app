@@ -154,16 +154,13 @@ export class HomeComponent implements OnInit {
                     await self._dbService.add(fetchedMails[i]);
                     //console.timeEnd("dbService.add");
                 }
+
+                //sync ui to storage
+                await self._dbService.syncToStorage();
             });
 
             //set cancel back
             this.bCancel = false;
-
-            //set ui info
-            this.statusMessage = "sync to local storage...";
-
-            //sync ui to storage
-            await this._dbService.syncToStorage();
 
             //set sync mode OFF for UI
             this.isSyncing = false;

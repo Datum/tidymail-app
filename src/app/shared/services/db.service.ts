@@ -111,11 +111,18 @@ export class DbService {
     }
 
     syncToStorage() {
+        //sort
+        this._newGroups.sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
+
+
         return Promise.all[
-            this.db.newMails.bulkPut(this.memdb_newMails.data),
-            this.db.keepMails.bulkPut(this.memdb_unsubbedMails.data),
-            this.db.unsubbedMails.bulkPut(this.memdb_keepMails.data)
+            this.db.mails.bulkPut(this.memdb_mails.data),
+            this.db.newMails.bulkPut(this._newGroups),
+            this.db.keepMails.bulkPut(this._keepGroups),
+            this.db.unsubbedMails.bulkPut(this._unsubbedGroups)
         ];
+
+        
     }
 
 
@@ -216,12 +223,8 @@ export class DbService {
                 */
                 
             } else {
-                
                 keyCount.ignoreIds.push(msg.lastId);
                 await this.memdb_mails.update(keyCount);
-
-                //this.db.mails.update(keyCount.lastId, { ignoreIds: keyCount.ignoreIds });
-                
             }
         }
     }
@@ -357,7 +360,10 @@ export class DbService {
             dg.identifier = groupIndex;
             dg.messagegroups = [mg];
             dg.displayName = groupIndex;
-            this.memdb_newMails.insert(dg);
+            this.getMemDBTable(source).insert(dg);
+
+            //this.getMemDBTable(source).sort((a, b) => (a.identifier > b.identifier) ? 1 : ((b.identifier > a.identifier) ? -1 : 0));
+
         } else {
             var rr = tt.messagegroups.find(x => x.key === msg.hostname);
             if(rr === undefined) {
@@ -368,7 +374,6 @@ export class DbService {
                 mg.estimatedMessageCount = 1;
                 tt.messagegroups.push(mg);
             } else {
-                console.log('asdasd');
                 rr.estimatedMessageCount = rr.estimatedMessageCount + 1;   
             }
         }
