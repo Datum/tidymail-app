@@ -5,6 +5,8 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 import { Message, MessageGroup, DisplayGroup } from '../models';
 
+const parseDomain = require('parse-domain');
+
 import {
     mimeWordEncode, mimeWordDecode,
     mimeWordsEncode, mimeWordsDecode
@@ -375,11 +377,12 @@ function extractHostname(url) {
     if (at != -1) {
         var domain = url.substr(at + 1);
         //get only root domain
-        var domainParts = domain.split('.');
-        if (domainParts.length > 1) {
-            return domainParts[domainParts.length - 2] + '.' + domainParts[domainParts.length - 1];
+        var extractdomain = parseDomain(domain);
+        if (extractdomain && extractdomain.domain && extractdomain.tld) { 
+            return extractdomain.domain + '.' + extractdomain.tld; // return domain with subdomain chopped off
+        } else { 
+            return domain; // got some null values while parsing, so just return full domain
         }
-        return domain;
     }
 
     return url;

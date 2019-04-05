@@ -159,6 +159,7 @@ export class HomeComponent implements OnInit {
             //close client
             //await this._imapService.close();
         } catch (error) {
+            console.error(error);
             self._uiService.showAlert(error);
         }
     }

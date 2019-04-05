@@ -240,6 +240,7 @@ export class RegisterComponent implements OnInit {
             //set stepper to next step
             this.stepper.next();
         } catch (error) {
+            console.error(error);
             this.imapResponded = true;
             this.hasError = true;
 

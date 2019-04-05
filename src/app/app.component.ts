@@ -24,6 +24,7 @@ export class AppComponent implements OnInit {
                 this.router.navigateByUrl('/');
             }
         } catch (error) {
+            console.error(error);
             this._uiService.showAlert(error);
         }
     }

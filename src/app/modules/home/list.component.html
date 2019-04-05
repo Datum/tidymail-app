@@ -9,7 +9,7 @@
                         [attr.aria-controls]="'collapse' + a + i">
                         <p matLine class="notwoline">
                             <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
-                                style="padding-right:10px;">
+                                class="favimg">
                             {{ m.name }}
                             {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
                             <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
