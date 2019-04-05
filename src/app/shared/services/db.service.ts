@@ -60,6 +60,7 @@ export class DbService {
     }
 
     async init() {
+        
         /*
         this._newGroups = await this.db.newMails.toArray();
         this._newGroupsObservable.next(this._newGroups);
@@ -70,6 +71,7 @@ export class DbService {
         this._keepGroups = await this.db.keepMails.toArray();
         this._keepGroupsObservable.next(this._keepGroups);
         */
+        
 
         // setup an in memory copy of the indexedDB to perform fast searches on
         this.memdb = new loki('tidymail.db');
@@ -80,15 +82,20 @@ export class DbService {
 
         // fill memory db with records from IndexedDB
         var mails = await this.db.mails.toArray();
+        var newGroups = await this.db.newMails.toArray();
+        var keepGroups = await this.db.keepMails.toArray();
+        var unsubGroups = await this.db.unsubbedMails.toArray();
 
         //remove loki id...
         mails.forEach(function(v){ delete v["$loki"] });
+        newGroups.forEach(function(v){ delete v["$loki"] });
+        keepGroups.forEach(function(v){ delete v["$loki"] });
+        unsubGroups.forEach(function(v){ delete v["$loki"] });
 
         this.memdb_mails.insert(mails);
-        this.memdb_newMails.insert(await this.db.newMails.toArray());
-        this.memdb_keepMails.insert(await this.db.keepMails.toArray());
-        this.memdb_unsubbedMails.insert(await this.db.unsubbedMails.toArray());
-
+        this.memdb_newMails.insert(newGroups);
+        this.memdb_keepMails.insert(keepGroups);
+        this.memdb_unsubbedMails.insert(unsubGroups);
 
         //bind to observables
         this._newGroups = this.memdb_newMails.data;
@@ -99,8 +106,18 @@ export class DbService {
 
         this._keepGroups = this.memdb_keepMails.data;
         this._keepGroupsObservable.next(this._keepGroups);
+        
        
     }
+
+    syncToStorage() {
+        return Promise.all[
+            this.db.newMails.bulkPut(this.memdb_newMails.data),
+            this.db.keepMails.bulkPut(this.memdb_unsubbedMails.data),
+            this.db.unsubbedMails.bulkPut(this.memdb_keepMails.data)
+        ];
+    }
+
 
     exists(msgId: number) {
         return this.db.mails.get(msgId);
@@ -188,7 +205,8 @@ export class DbService {
                 //add ui
                 await this.memdb_mails.insert(msg);
                 await this.db.mails.add(msg)
-                await this.addOrUpdateMsg(msg);
+                //await this.addOrUpdateMsg(msg);
+                await this.addOrUpdateMsgUI(msg);
 
                 //add to db layer
                 /*
@@ -198,12 +216,12 @@ export class DbService {
                 */
                 
             } else {
+                
                 keyCount.ignoreIds.push(msg.lastId);
-                let updaterecord = this.memdb_mails.by('lastId', keyCount.lastId);
-                updaterecord.ignoreIds = keyCount.ignoreIds;
-                await this.memdb_mails.update(updaterecord);
+                await this.memdb_mails.update(keyCount);
 
-                this.db.mails.update(keyCount.lastId, { ignoreIds: keyCount.ignoreIds });
+                //this.db.mails.update(keyCount.lastId, { ignoreIds: keyCount.ignoreIds });
+                
             }
         }
     }
@@ -227,6 +245,17 @@ export class DbService {
                 return this._keepGroups;
             default:
                 return this._newGroups;
+        }
+    }
+
+    private getMemDBTable(status: number) {
+        switch (status) {
+            case 1:
+                return this.memdb_unsubbedMails;
+            case 2:
+                return this.memdb_keepMails;
+            default:
+                return this.memdb_newMails;
         }
     }
 
@@ -256,10 +285,7 @@ export class DbService {
     }
 
     private async addOrUpdateMsg(msg: Message, source: number = 0) {
-
-        //console.log(msg);
-
-        //Set key group index, here 1st letter
+   
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
 
         //var dbEntity = await this.getGroupEntity(source).where("identifier").equalsIgnoreCase(groupIndex).first();
@@ -312,6 +338,47 @@ export class DbService {
                 }
             }
         }
+    }
+
+    private async addOrUpdateMsgUI(msg: Message, source: number = 0) {
+
+
+        //Set key group index, here 1st letter
+        var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
+
+        var tt = this.getMemDBTable(source).findOne({ identifier: groupIndex });
+        if(tt == null) {
+            var mg: MessageGroup = new MessageGroup();
+            mg.hostname = msg.hostname;
+            mg.key = msg.hostname;
+            mg.name = extractMailFromName(msg.from);
+            mg.estimatedMessageCount = 1;
+            var dg: DisplayGroup = new DisplayGroup();
+            dg.identifier = groupIndex;
+            dg.messagegroups = [mg];
+            dg.displayName = groupIndex;
+            this.memdb_newMails.insert(dg);
+        } else {
+            var rr = tt.messagegroups.find(x => x.key === msg.hostname);
+            if(rr === undefined) {
+                var mg: MessageGroup = new MessageGroup();
+                mg.key = msg.hostname;
+                mg.hostname = msg.hostname;
+                mg.name = extractMailFromName(msg.from);
+                mg.estimatedMessageCount = 1;
+                tt.messagegroups.push(mg);
+            } else {
+                console.log('asdasd');
+                rr.estimatedMessageCount = rr.estimatedMessageCount + 1;   
+            }
+        }
+                
+
+        return;
+
+        //console.log(msg);
+
+     
     }
 
 
@@ -424,6 +491,10 @@ export class DbService {
 
     filterEquals(field, value) {
         return this.db.mails.where(field).equals(value);
+    }
+
+    getMailsWithHostnameAndStatus(hostname,status) {
+        return this.memdb_mails.find({ hostname: hostname, status:status }); // true means firstOnly
     }
 
     getUniqueKeys(field) {

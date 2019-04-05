@@ -113,6 +113,9 @@ export class HomeComponent implements OnInit {
     async sync() {
         var self = this;
         try {
+
+            console.time('start.sync');
+
             //connect if needed
             await this.connect();
 
@@ -146,20 +149,29 @@ export class HomeComponent implements OnInit {
                     if (cancelled) {
                         break;
                     }
-                    console.time("dbService.add");
+
+                    //console.time("dbService.add");
                     await self._dbService.add(fetchedMails[i]);
-                    console.timeEnd("dbService.add");
+                    //console.timeEnd("dbService.add");
                 }
             });
 
             //set cancel back
             this.bCancel = false;
 
+            //set ui info
+            this.statusMessage = "sync to local storage...";
+
+            //sync ui to storage
+            await this._dbService.syncToStorage();
+
             //set sync mode OFF for UI
             this.isSyncing = false;
 
             //close client
             //await this._imapService.close();
+
+            console.timeEnd('start.sync');
         } catch (error) {
             console.error(error);
             self._uiService.showAlert(error);

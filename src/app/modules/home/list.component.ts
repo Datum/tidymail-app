@@ -32,14 +32,11 @@ export class ListComponent {
 
         //toogle collpanse
         m.isCollapsed = !m.isCollapsed
-
         //load msg if needed
         if (!m.isCollapsed) {
             if (m.messages.length == 0) {
                 //load messages
-                m.messages = await this._dbService.filterEqualsIgnoreCase("hostname", m.hostname).filter(function (msg) {
-                    return msg.status === self.status;
-                }).toArray();
+                m.messages = await this._dbService.getMailsWithHostnameAndStatus(m.hostname, self.status);
             }
         }
     }
