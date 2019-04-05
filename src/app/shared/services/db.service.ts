@@ -153,32 +153,32 @@ export class DbService {
         if (mailFrom !== undefined && mailFrom.length > 6) {
             msg.from = mimeWordsDecode(mailFrom.substr(6)).replace(/"/g, '');
         } else {
-            console.log('header not found or invalid for <from>: ' + fetchedMailObject);
-            throw new Error();
+            console.log('header not found or invalid for <from>');
+            console.log(fetchedMailObject);
         }
 
         var mailDate = fetchedMailObject['body[header.fields (date)]'];
         if (mailDate !== undefined && mailDate.length > 6) {
             msg.lastDate = Date.parse(mailDate.substr(6));
         } else {
-            console.log('header not found or invalid for <date>: ' + fetchedMailObject);
-            throw new Error();
+            console.log('header not found or invalid for <date>');
+            console.log(fetchedMailObject)
         }
 
         var mailSubject = fetchedMailObject['body[header.fields (subject)]'];
         if (mailSubject !== undefined && mailSubject.length > 9) {
             msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
         } else {
-            console.log('header not found or invalid for <subject>: ' + fetchedMailObject);
-            throw new Error();
+            console.log('header not found or invalid for <subject>');
+            console.log(fetchedMailObject)
         }
 
         var mailUnsubscribeInfo = fetchedMailObject['body[header.fields (list-unsubscribe)]'];
         if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
             msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
         } else {
-            console.log('header not found or invalid for <list-unsubscribe>: ' + fetchedMailObject);
-            //throw new Error();
+            console.log('header not found or invalid for <list-unsubscribe>');
+            console.log(fetchedMailObject)
         }
 
 
