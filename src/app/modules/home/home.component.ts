@@ -70,7 +70,7 @@ export class HomeComponent implements OnInit {
         }
 
         this.updateNewsletterChart();
-        await this.updateMailboxChart(this.userConfig.totalMails);
+        await this.updateMailboxChart(32344);
 
 /*
 
@@ -106,6 +106,7 @@ export class HomeComponent implements OnInit {
         var chartData = new ChartData();
         chartData.numbers = [totalMessagesCount - newsletterMessagesCount, newsletterMessagesCount]
         chartData.labels = ["Others", "Newsletters"];
+        chartData.summaryLabel = totalMessagesCount;
         return chartData;
     }
 
@@ -347,7 +348,7 @@ export class HomeComponent implements OnInit {
 
 function getUnsubscriptionInfo(unsubString) {
     
-    var r = { email: '', url: '', subject: '' };
+    var r = { email: '', url: '', subject: '', body: '' };
     var parts = unsubString.split(',');
 
     for (var i = 0; i < parts.length; i++) {
@@ -360,13 +361,13 @@ function getUnsubscriptionInfo(unsubString) {
                 parts[i] = parts[i].substr(parts[i].indexOf(':') + 1);
             }
             r.email = parts[i];
-
             var iWithParameter = r.email.indexOf('?');
             if (iWithParameter != -1) {
-                var params = r.email.substr(iWithParameter + 1);
-                var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
-                if (paramsObject.subject) {
-                    r.subject = paramsObject.subject;
+                let params = new URLSearchParams(r.email.substr(iWithParameter + 1));
+                //var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
+                var paramsObject = params.get("subject"); // "foo"
+                if (paramsObject) {
+                    r.subject = paramsObject;
                 }
                 r.email = r.email.substring(0, iWithParameter);
             }

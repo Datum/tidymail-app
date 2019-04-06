@@ -1,5 +1,8 @@
 <p>
-    <canvas baseChart style="max-width:180px;margin:auto;" [data]="pieChartData" [labels]="pieChartLabels"
-        [chartType]="pieChartType" [options]="pieChartOptions" (chartHover)="chartHovered($event)"
+    <canvas #mycanvas baseChart style="max-width:180px;margin:auto;" [data]="pieChartData" [labels]="pieChartLabels"
+        [chartType]="pieChartType" [options]="options" (chartHover)="chartHovered($event)"
         (chartClick)="chartClicked($event)"></canvas>
+    <span class="absolute-center text-center">
+        <p>{{ pieChartSummary }}</p>
+    </span>
 </p>

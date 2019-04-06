@@ -6,4 +6,5 @@ export class ChartData {
 
     labels:string[];
     numbers:number[];
+    summaryLabel:string;
 }
