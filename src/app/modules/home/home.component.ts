@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService } from 'src/app/shared';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-home',
@@ -212,7 +213,7 @@ export class HomeComponent implements OnInit {
                 await this._dbService.unsubscribe(id);
             } else {
                 if (unSubInfo.url != "") {
-                    await this.http.get<any>(unSubInfo.url).toPromise();
+                    await this.http.get<any>(environment.corsProxy + encodeURI(unSubInfo.url)).toPromise();
                 }
             }
         }
