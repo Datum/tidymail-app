@@ -4,7 +4,7 @@
 
 <mat-card class="settings-content">
     <div class="back-button">
-        <button routerLink="/"  mat-fab color="primary">BACK</button>
+        <button routerLink="/" mat-fab color="primary">BACK</button>
     </div>
     <mat-card-header>
         <div mat-card-avatar>
@@ -52,6 +52,15 @@
                 </span>
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                Auto-Sync on Startup
+            </div>
+            <div class="col">
+                <mat-checkbox (click)="changeAutoSync()"  (change)="userConfig.autoSync = !userConfig.autoSync" [checked]="userConfig.autoSync" color="primary" >
+                </mat-checkbox>
+            </div>
+        </div>
 
     </mat-card-content>
     <mat-card-actions>
@@ -61,5 +70,5 @@
 </mat-card>
 
 <div class="version-info">
-    {{ version }} 
+    {{ version }}
 </div>

@@ -17,6 +17,7 @@
 */
 
 import { Injectable } from '@angular/core';
+import { LOG_LEVEL_NONE, LOG_LEVEL_ERROR, LOG_LEVEL_DEBUG } from 'emailjs-imap-client'
 import ImapClient from 'emailjs-imap-client'
 import TCPSocket from 'emailjs-tcp-socket'
 import { environment } from '../../../environments/environment';
@@ -72,6 +73,7 @@ export class ImapService {
 
                     //create imap client with given cert und auth
                     self.client = new ImapClient(host, port, {
+                        logLevel: environment.production ? LOG_LEVEL_ERROR : LOG_LEVEL_DEBUG,
                         useSecureTransport: true,
                         auth: {
                             user: username,
@@ -149,12 +151,18 @@ export class ImapService {
     }
 
     //get relavant mail based on searchCommand;
-    getMailIds() {
+    getMailIds(forceImapMode = false) {
         //create search object
         var searchObject = this.useGmailSearchSyntax ?
             environment.gmailSearchQuery
             :
             environment.defaultSearchQuery;
+
+        //if gmail do two searches, one with all that have "unsubscribe header" other that gmails labels as "unsub" what means there should be link in body
+        //force imap for moment
+        if(forceImapMode) {
+            searchObject = environment.defaultSearchQuery;
+        }
 
         //search for ids with given criteria
         return this.client.search('INBOX', searchObject, { byUid: true });
@@ -231,7 +239,13 @@ export class ImapService {
 
         //check open ids amount smaller than batchsize
         if (ids.length > 0 && !self.bCancel) {
-            allMessages = allMessages.concat(await this.client.listMessages('INBOX', ids.join(), environment.fetchImapFlags, { byUid: true }));
+            var msgDetails = await this.client.listMessages('INBOX', ids.join(), environment.fetchImapFlags, { byUid: true });
+            allMessages = allMessages.concat(msgDetails);
+
+            //fire callback if provided
+            if (batchCallBack) {
+                await batchCallBack(allMessages.length, ids.length, msgDetails, self.bCancel);
+            }
         }
 
         //set cancel back

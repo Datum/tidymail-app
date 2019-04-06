@@ -17,6 +17,8 @@
 */
 
 import { Injectable } from '@angular/core';
+
+import { LOG_LEVEL_NONE, LOG_LEVEL_ERROR, LOG_LEVEL_DEBUG } from 'emailjs-smtp-client'
 import SmtpClient from 'emailjs-smtp-client'
 import TCPSocket from 'emailjs-tcp-socket'
 import { environment } from '../../../environments/environment';
@@ -67,6 +69,7 @@ export class SmtpService {
 
                     //create imap client with given cert und auth
                     self.client = new SmtpClient(host, port, {
+                        logLevel: environment.production ? LOG_LEVEL_ERROR : LOG_LEVEL_DEBUG,
                         useSecureTransport: true,
                         auth: {
                             user: username,
@@ -95,6 +98,7 @@ export class SmtpService {
         return new Promise<string>(
             (resolve, reject) => {
                 self.client.onerror = function (error) {
+                    console.log(error);
                     reject(error);
                 };
                 self.client.onidle = function() {
