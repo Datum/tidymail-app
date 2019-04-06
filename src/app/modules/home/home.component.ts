@@ -64,24 +64,22 @@ export class HomeComponent implements OnInit {
 
         //by default start a sync
         if (!this.userConfig.firsttime) {
-            console.log(this.userConfig);
             if (this.userConfig.autoSync || this.userConfig.autoSync === undefined) {
                 await this.sync();
             }
         }
 
+        this.updateNewsletterChart();
+        await this.updateMailboxChart(this.userConfig.totalMails);
 
+/*
 
         this.updateNewsletterChart();
 
 
 
-        await this.connect();
-        var mbInfo = await this._imapService.selectMailBox();
-        var dbCount = this._dbService.getProcessedIds().length;
-        this._mailboxInfoChartObservable.next(this.getMailBoxChartData(mbInfo.exists, dbCount));
-
-
+      
+        */
 
     }
 
@@ -91,6 +89,17 @@ export class HomeComponent implements OnInit {
         var c3 = this._dbService.getMsgCountWithStatus(2);
         var c4 = this._dbService.getMsgCountWithStatus(3);
         this._newsletterInfoChartObservable.next(this.getNewslettersChartData(c1, c2, c3, c4));
+    }
+
+    private async updateMailboxChart(totalMails:number) {
+        var dbCount = this._dbService.getProcessedIds().length;
+        this._mailboxInfoChartObservable.next(this.getMailBoxChartData(totalMails, dbCount));
+        if(totalMails === undefined) {
+            await this.connect();
+            var mbInfo = await this._imapService.selectMailBox();
+            totalMails = mbInfo.exists;
+        } 
+        this._mailboxInfoChartObservable.next(this.getMailBoxChartData(totalMails, dbCount));
     }
 
     private getMailBoxChartData(totalMessagesCount, newsletterMessagesCount) {
@@ -103,7 +112,7 @@ export class HomeComponent implements OnInit {
     private getNewslettersChartData(newCount, keepCount, unsubscribeCount, deleteCount) {
         var chartData = new ChartData();
         chartData.numbers = [newCount, unsubscribeCount, keepCount, deleteCount]
-        chartData.labels = ["new", "unsubscribe", "keep","delete"];
+        chartData.labels = ["new", "unsub", "keep","delete"];
         return chartData;
     }
 
@@ -255,24 +264,21 @@ export class HomeComponent implements OnInit {
         var msg = await this._dbService.getMsgById(id);
         if (msg !== undefined) {
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
-            /*
             if (unSubInfo.email != "") {
-                await this.connectSmtp();
-                await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
+                //await this.connectSmtp();
+                //await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
                 await this._dbService.unsubscribe(id);
                 let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
             } else {
                 if (unSubInfo.url != "") {
-                    await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
+                    //await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
                     await this._dbService.unsubscribe(id);
                     let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
                 }
             }
-            */
-
         }
 
-        this.updateNewsletterChart();
+        //this.updateNewsletterChart();
     }
 
     async onDeleteDomain(hostname) {
@@ -340,6 +346,7 @@ export class HomeComponent implements OnInit {
 
 
 function getUnsubscriptionInfo(unsubString) {
+    
     var r = { email: '', url: '', subject: '' };
     var parts = unsubString.split(',');
 
@@ -370,6 +377,7 @@ function getUnsubscriptionInfo(unsubString) {
             r.url = parts[i];
         }
     }
+    
 
     return r;
 }

@@ -15,4 +15,6 @@ export class UserConfig {
     lastUidProcessed:number;
     trashBoxPath:string;
     autoSync:boolean;
+    totalMails:number;
+    lastSyncDate:number;
 }

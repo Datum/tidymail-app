@@ -57,7 +57,7 @@
                 Auto-Sync on Startup
             </div>
             <div class="col">
-                <mat-checkbox (click)="changeAutoSync()" [checked]="userConfig.autoSync" color="primary" >
+                <mat-checkbox name="selected" (change)="changeAutoSync()"  [(ngModel)]="userConfig.autoSync" color="primary" >
                 </mat-checkbox>
             </div>
         </div>

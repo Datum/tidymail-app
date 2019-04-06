@@ -44,6 +44,37 @@
     </div>
 </div>
 
+
+<!--
+<div class="row">
+    <div class="col">
+        <app-chart [data]="chartDataMailbox"></app-chart>
+    </div>
+    <div class="col">
+        <div *ngIf="isSyncing">
+            <div class="progress-content">
+                <small style="margin:0;">{{ statusMessage }} </small>
+                <button (click)="cancel()" mat-icon-button aria-label="Cancel">
+                    <mat-icon>cancel</mat-icon>
+                </button>
+            </div>
+            <div>
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
+        </div>
+        <div class=" header-row-padding" *ngIf="!isSyncing">
+            <button mat-raised-button (click)="sync()">
+                <mat-icon>sync</mat-icon>
+                SCAN NOW
+            </button>
+        </div>
+    </div>
+    <div class="col text-right">
+        <app-chart [data]="chartDataNewsletters"></app-chart>
+    </div>
+</div>
+-->
+
 <mat-tab-group mat-align-tabs="center">
     <mat-tab label="{{ 'NEW (' + (undhandledMails | async)?.length + ')'}}">
         <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"

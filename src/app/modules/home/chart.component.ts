@@ -14,9 +14,7 @@ export class ChartComponent implements OnInit {
 
   ngOnInit() {
       var self = this;
-      console.log(this.data);
       this.data.subscribe(function(res) {
-        console.log('event');
         self.pieChartLabels = res.labels;
         self.pieChartData = res.numbers;
       })
@@ -29,13 +27,12 @@ export class ChartComponent implements OnInit {
   public pieChartLabels:string[] = [];
   public pieChartData:number[] = [];
   public pieChartType:string = 'doughnut';
-  public pieChartOptions:any = {'legend': { 'display': false}, 'fullWidth': false, 'backgroundColor': [
-               "#FF6384",
+  public pieChartOptions:any = {'legend': { 'display': true, 'position':'right', labels: {boxWidth: 4, fontSize: 12}}, 'fullWidth': false, 'backgroundColor': [
             "#4BC0C0",
             "#FFCE56",
             "#E7E9ED",
             "#36A2EB"
-            ], 'circumference':  Math.PI, 'rotation': -Math.PI}
+            ]}
  
   // events on slice click
   public chartClicked(e:any):void {
