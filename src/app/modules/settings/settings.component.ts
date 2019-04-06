@@ -24,25 +24,20 @@ export class SettingsComponent implements OnInit {
         this.userConfig = this._userService.createOrLoadConfig();
     }
 
-    removeAccount() {
-        var self = this;
-        this._dbService.deleteDb().then(() => {
-            self._dbService.create();
-            return self._userService.reset();
-        }).then(() => {
-            self.router.navigateByUrl('/register');
-        }).catch(error => {
-            alert(error);
-        });
+    async removeAccount() {
+        this._dbService.deleteDb();
+        await this._dbService.create();
+        this._userService.reset();
+        this.router.navigateByUrl('/register');
     }
 
-    resetDatabase() {
-        var self = this;
-        this._dbService.deleteDb().then(() => {
-            self._dbService.create();
-            this._uiService.showAlert("Local database delete.");
-        }).catch(error => {
-            alert(error);
-        });
+    async resetDatabase() {
+        this._dbService.deleteDb();
+        await this._dbService.create();
+        this._uiService.showAlert("Local database delete.");
+    }
+
+    changeAutoSync() {
+        this._userService.save(this.userConfig);
     }
 }
