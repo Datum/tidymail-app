@@ -1,42 +1,33 @@
 <div class="row header-row">
-    <div class="col header-row-padding">
+    <div class="col col-sm-2 header-row-padding">
         <img src="assets/logo.svg">
     </div>
-    <div class="col col-sm-8 text-center">
-        <div class="row">
+    <div class="col col-sm-6 text-center">
+        <div *ngIf="isSyncing">
+            <div class="progress-content">
+                <small style="margin:0;">{{ statusMessage }} </small>
+                <button (click)="cancel()" mat-icon-button aria-label="Cancel">
+                    <mat-icon>cancel</mat-icon>
+                </button>
+            </div>
+            <div>
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
+        </div>
+        <div *ngIf="!isSyncing" class="row">
             <div class="col">
                 <app-chart [data]="chartDataMailbox"></app-chart>
             </div>
             <div class="col">
-                <div *ngIf="isSyncing">
-                    <div class="progress-content">
-                        <small style="margin:0;">{{ statusMessage }} </small>
-                        <button (click)="cancel()" mat-icon-button aria-label="Cancel">
-                            <mat-icon>cancel</mat-icon>
-                        </button>
-                    </div>
-                    <div>
-                        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                    </div>
-                </div>
-                <div class=" header-row-padding" *ngIf="!isSyncing">
-                    <button mat-raised-button (click)="sync()">
-                        <mat-icon>sync</mat-icon>
-                        SCAN NOW
-                    </button>
-                </div>
-            </div>
-            <div class="col text-right">
                 <app-chart [data]="chartDataNewsletters"></app-chart>
             </div>
         </div>
-
-        <!--
-        <app-chart></app-chart>
-      
-    -->
     </div>
-    <div class="col text-right header-row-padding">
+    <div class="col col-sm-4 text-right header-row-padding">
+        <button [disabled]="isSyncing" mat-raised-button (click)="sync()">
+            <mat-icon>sync</mat-icon>
+            SCAN NOW
+        </button>
         <button [disabled]="isSyncing" mat-raised-button routerLink="/settings">
             <mat-icon>build</mat-icon>
             SETTINGS
