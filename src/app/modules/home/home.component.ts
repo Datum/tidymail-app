@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { MatSnackBar } from "@angular/material";
 import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService } from 'src/app/shared';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -17,7 +18,8 @@ export class HomeComponent implements OnInit {
         private _dbService: DbService,
         private _uiService: UIService,
         private _smtpService: SmtpService,
-        private http: HttpClient
+        private http: HttpClient,
+        private snackBar: MatSnackBar
     ) { }
 
 
@@ -206,16 +208,20 @@ export class HomeComponent implements OnInit {
         var self = this;
         var msg = await this._dbService.getMsgById(id);
         if (msg !== undefined) {
-            await this.connectSmtp();
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
             if (unSubInfo.email != "") {
+                await this.connectSmtp();
                 await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
                 await this._dbService.unsubscribe(id);
+                let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, {duration: 2000});
             } else {
                 if (unSubInfo.url != "") {
-                    await this.http.get<any>(environment.corsProxy + encodeURI(unSubInfo.url)).toPromise();
+                    await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
+                    await this._dbService.unsubscribe(id);
+                    let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, {duration: 2000});
                 }
             }
+            
         }
     }
 
