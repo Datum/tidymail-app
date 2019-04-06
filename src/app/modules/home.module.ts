@@ -24,6 +24,10 @@ import { DialogPassword } from '../shared/dialogs/dialog-password';
 import { ListComponent } from './home/list.component';
 
 
+import { ChartsModule } from 'ng4-charts';
+import { ChartComponent } from './home/chart.component';
+
+
 const dataRouting: ModuleWithProviders = RouterModule.forChild([
     {
         path: '',
@@ -51,6 +55,8 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         ListComponent,
         DialogAlert,
         DialogPassword,
+        ChartComponent
+        
     ],
     imports: [
         CommonModule,
@@ -70,7 +76,8 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         MatTabsModule,
         MatListModule,
         MatExpansionModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        ChartsModule
     ]
 })
 export class HomeModule { }

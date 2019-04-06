@@ -25,9 +25,10 @@ import {
 import { DialogAlert } from './shared/dialogs/dialog-alert';
 import { DialogPassword } from './shared/dialogs/dialog-password';
 
+
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule,

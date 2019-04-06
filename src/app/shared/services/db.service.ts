@@ -295,8 +295,16 @@ export class DbService {
         return this.memdb_mails.find({ hostname: hostname, status: status });
     }
 
+    getMsgCountWithStatus(status) {
+        return this.memdb_mails.count({ status: status });
+    }
+
     getMsgById(msgId: number) {
         return this.memdb_mails.by('lastId', msgId);
+    }
+
+    getMsgCount() {
+        return this.memdb_mails.count();
     }
 
     getProcessedIds() {

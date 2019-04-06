@@ -38,6 +38,7 @@ export class SettingsComponent implements OnInit {
     }
 
     changeAutoSync() {
+        this.userConfig.autoSync = !this.userConfig.autoSync;
         this._userService.save(this.userConfig);
     }
 }
