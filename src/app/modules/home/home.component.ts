@@ -78,7 +78,7 @@ export class HomeComponent implements OnInit {
 
         await this.connect();
         var mbInfo = await this._imapService.selectMailBox();
-        var dbCount = this._dbService.getMsgCount();
+        var dbCount = this._dbService.getProcessedIds().length;
         this._mailboxInfoChartObservable.next(this.getMailBoxChartData(mbInfo.exists, dbCount));
 
 
@@ -231,9 +231,11 @@ export class HomeComponent implements OnInit {
         var msg = this._dbService.getMsgById(msgId);
         if (msg !== undefined) {
             try {
+                /*
                 var toDelete = msg.ignoreIds;
                 toDelete.push(msgId);
                 await this._imapService.moveTrash(msg.ignoreIds);
+                */
 
                 //move to delete
                 this._dbService.delete(msgId);
@@ -253,6 +255,7 @@ export class HomeComponent implements OnInit {
         var msg = await this._dbService.getMsgById(id);
         if (msg !== undefined) {
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
+            /*
             if (unSubInfo.email != "") {
                 await this.connectSmtp();
                 await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
@@ -265,6 +268,7 @@ export class HomeComponent implements OnInit {
                     let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
                 }
             }
+            */
 
         }
 
@@ -288,7 +292,7 @@ export class HomeComponent implements OnInit {
                 toDelete.push(allMessagesToDelete[i].lastId);
                 if (toDelete.length > 0) {
                     //move to trash
-                    await this._imapService.moveTrash(allMessagesToDelete[i].ignoreIds);
+                    //await this._imapService.moveTrash(allMessagesToDelete[i].ignoreIds);
 
                     //if moved in imap update status in db
                     this._dbService.delete(allMessagesToDelete[i].lastId);
