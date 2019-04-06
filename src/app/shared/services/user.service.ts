@@ -26,6 +26,7 @@ export class UserService {
             this.userConfig = new UserConfig();
             this.userConfig.firsttime = true;
             this.userConfig.token = randomsecret;
+            this.userConfig.autoSync = true;
         } else {
             this.userConfig = JSON.parse(config);
             if(this.userConfig.password !== undefined)
@@ -71,12 +72,7 @@ export class UserService {
 
 
     reset() {
-        return new Promise(
-            (resolve, reject) => {
-                localStorage.removeItem('config');
-                resolve();
-            }
-        )
+        localStorage.removeItem('config');
     }
 
     getConfig() {

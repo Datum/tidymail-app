@@ -37,7 +37,7 @@ export class HomeComponent implements OnInit {
         var self = this;
 
         //init db
-        this._dbService.create();
+        await this._dbService.create();
 
         //get config
         this.userConfig = this._userService.getConfig();
@@ -51,9 +51,11 @@ export class HomeComponent implements OnInit {
         await this.bind();
 
         //by default start a sync
-        if(!this.userConfig.firsttime) {
-            await this.sync();
-        } 
+        if (!this.userConfig.firsttime) {
+            if(this.userConfig.autoSync || this.userConfig.autoSync === undefined) {
+                await this.sync();
+            }
+        }
     }
 
     async bind() {
@@ -126,7 +128,7 @@ export class HomeComponent implements OnInit {
             this.statusMessage = "searching for new newsletters...";
 
             //get all ids with given search term
-            var ids = await this._imapService.getMailIds(true);
+            var ids = await this._imapService.getMailIds(false);
 
             //exclude all processed
             var processedKeys = await this._dbService.getProcessedIds();
@@ -143,20 +145,14 @@ export class HomeComponent implements OnInit {
             //download all mails
             var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
                 for (var i = 0; i < fetchedMails.length; i++) {
-
                     self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
 
                     if (cancelled) {
                         break;
                     }
 
-                    //console.time("dbService.add");
-                    await self._dbService.add(fetchedMails[i]);
-                    //console.timeEnd("dbService.add");
+                    self._dbService.add(fetchedMails[i]);
                 }
-
-                //sync ui to storage
-                await self._dbService.syncToStorage();
             });
 
             //set cancel back
@@ -183,17 +179,18 @@ export class HomeComponent implements OnInit {
 
 
 
-    async onDeleteMsg(id) {
+    async onDeleteMsg(msgId) {
         await this.connect();
 
-        var msg = await this._dbService.exists(id);
+        var msg = this._dbService.getMsgById(msgId);
         if (msg !== undefined) {
-            //move to delete
-            await this._dbService.delete(id);
-
             try {
-                msg.ignoreIds.push(id);
+                var toDelete = msg.ignoreIds;
+                toDelete.push(msgId);
                 await this._imapService.moveTrash(msg.ignoreIds);
+
+                //move to delete
+                this._dbService.delete(msgId);
             } catch (error) {
                 console.log(error);
             }
@@ -201,13 +198,12 @@ export class HomeComponent implements OnInit {
     }
 
     async onKeepMsg(id) {
-        //await this.connect();
         await this._dbService.keep(id);
     }
 
     async onUnsubscribeMsg(id) {
         var self = this;
-        var msg = await this._dbService.exists(id);
+        var msg = await this._dbService.getMsgById(id);
         if (msg !== undefined) {
             await this.connectSmtp();
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
@@ -225,12 +221,31 @@ export class HomeComponent implements OnInit {
     async onDeleteDomain(hostname) {
         this.isSyncing = true;
 
-        var allMessagesToDelete = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+        //check if imap connected
+        await this.connect();
 
+        //get all messages for domain
+        var allMessagesToDelete = await this._dbService.getMailsByHostname(hostname);
+
+        //delete msg and all in ignored list in imap
         for (var i = 0; i < allMessagesToDelete.length; i++) {
             this.statusMessage = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
-            await this.onDeleteMsg(allMessagesToDelete[i].lastId);
+            try {
+                var toDelete = allMessagesToDelete[i].ignoreIds;
+                toDelete.push(allMessagesToDelete[i].lastId);
+                if (toDelete.length > 0) {
+                    //move to trash
+                    await this._imapService.moveTrash(allMessagesToDelete[i].ignoreIds);
+
+                    //if moved in imap update status in db
+                    this._dbService.delete(allMessagesToDelete[i].lastId);
+                }
+            } catch (error) {
+                console.log(error);
+            }
         }
+
+
 
         this.isSyncing = false;
     }
@@ -238,7 +253,8 @@ export class HomeComponent implements OnInit {
     async onKeepMsgDomain(hostname) {
         this.isSyncing = true;
 
-        var allMessageToKeep = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
+        //get all messages for domain
+        var allMessageToKeep = await this._dbService.getMailsByHostname(hostname);
 
         for (var i = 0; i < allMessageToKeep.length; i++) {
             await this.onKeepMsg(allMessageToKeep[i].lastId);
@@ -246,15 +262,15 @@ export class HomeComponent implements OnInit {
 
         this.isSyncing = false;
     }
+
+
     async onUnsubscribeDomain(hostname) {
         this.isSyncing = true;
-
-        var allMessagesToUnSubscribe = await this._dbService.filterEqualsIgnoreCase("hostname", hostname).toArray();
-
+        //get all messages for domain
+        var allMessagesToUnSubscribe = await this._dbService.getMailsByHostname(hostname);
         for (var i = 0; i < allMessagesToUnSubscribe.length; i++) {
             await this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
         }
-
         this.isSyncing = false;
     }
 
@@ -277,10 +293,10 @@ function getUnsubscriptionInfo(unsubString) {
             r.email = parts[i];
 
             var iWithParameter = r.email.indexOf('?');
-            if(iWithParameter != -1) {
-                var params = r.email.substr(iWithParameter+1);
-                var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g,"\":\"")) + '"}');
-                if(paramsObject.subject) {
+            if (iWithParameter != -1) {
+                var params = r.email.substr(iWithParameter + 1);
+                var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
+                if (paramsObject.subject) {
                     r.subject = paramsObject.subject;
                 }
                 r.email = r.email.substring(0, iWithParameter);

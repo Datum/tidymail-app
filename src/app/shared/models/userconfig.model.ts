@@ -14,4 +14,5 @@ export class UserConfig {
     rewardJoinDate:number;
     lastUidProcessed:number;
     trashBoxPath:string;
+    autoSync:boolean;
 }
