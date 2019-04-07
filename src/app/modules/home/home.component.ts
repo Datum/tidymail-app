@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { MatSnackBar } from "@angular/material";
 import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService } from 'src/app/shared';
 import { Observable } from 'rxjs';
@@ -19,7 +19,8 @@ export class HomeComponent implements OnInit {
         private _uiService: UIService,
         private _smtpService: SmtpService,
         private http: HttpClient,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private _zone: NgZone
     ) { }
 
 
@@ -55,7 +56,7 @@ export class HomeComponent implements OnInit {
 
         //by default start a sync
         if (!this.userConfig.firsttime) {
-            if(this.userConfig.autoSync || this.userConfig.autoSync === undefined) {
+            if (this.userConfig.autoSync || this.userConfig.autoSync === undefined) {
                 await this.sync();
             }
         }
@@ -119,55 +120,62 @@ export class HomeComponent implements OnInit {
         var self = this;
         try {
 
-            console.time('start.sync');
+            await this._zone.runOutsideAngular(async () => {
 
-            //connect if needed
-            await this.connect();
+                console.time('start.sync');
 
-            //set sync mode for UI
-            this.isSyncing = true;
+                //connect if needed
+                await this.connect();
 
-            //set ui info
-            this.statusMessage = "searching for new newsletters...";
+                //set sync mode for UI
+                this.isSyncing = true;
 
-            //get all ids with given search term
-            var ids = await this._imapService.getMailIds(false);
+                //set ui info
+                this.statusMessage = "searching for new newsletters...";
 
-            //exclude all processed
-            var processedKeys = await this._dbService.getProcessedIds();
+                //get all ids with given search term
+                var ids = await this._imapService.getMailIds(false);
 
-            ids = ids.filter(function (el) {
-                return processedKeys.indexOf(el) < 0;
-            });
-            //get total count of mails to process
-            var totalCount = ids.length;
+                //exclude all processed
+                var processedKeys = await this._dbService.getProcessedIds();
 
-            //start with newest first
-            ids = ids.reverse();
+                ids = ids.filter(function (el) {
+                    return processedKeys.indexOf(el) < 0;
+                });
+                //get total count of mails to process
+                var totalCount = ids.length;
 
-            //download all mails
-            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
-                for (var i = 0; i < fetchedMails.length; i++) {
-                    self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
+                //start with newest first
+                ids = ids.reverse();
 
-                    if (cancelled) {
-                        break;
+
+
+                //download all mails
+                var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
+                    for (var i = 0; i < fetchedMails.length; i++) {
+                        self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
+
+                        if (cancelled) {
+                            break;
+                        }
+
+                        self._dbService.add(fetchedMails[i]);
                     }
+                });
 
-                    self._dbService.add(fetchedMails[i]);
-                }
+                //set cancel back
+                this.bCancel = false;
+
+                //set sync mode OFF for UI
+                this.isSyncing = false;
+
+                //close client
+                //await this._imapService.close();
+
+                console.timeEnd('start.sync');
             });
 
-            //set cancel back
-            this.bCancel = false;
 
-            //set sync mode OFF for UI
-            this.isSyncing = false;
-
-            //close client
-            //await this._imapService.close();
-
-            console.timeEnd('start.sync');
         } catch (error) {
             console.error(error);
             self._uiService.showAlert(error);
@@ -213,15 +221,15 @@ export class HomeComponent implements OnInit {
                 await this.connectSmtp();
                 await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
                 await this._dbService.unsubscribe(id);
-                let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, {duration: 2000});
+                let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
             } else {
                 if (unSubInfo.url != "") {
                     await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
                     await this._dbService.unsubscribe(id);
-                    let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, {duration: 2000});
+                    let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
                 }
             }
-            
+
         }
     }
 

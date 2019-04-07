@@ -167,7 +167,7 @@ export class DbService {
 
             if (keyCount === undefined) {
                 this.memdb_mails.insert(msg);
-                this.addMsgGroup(msg,0,true);
+                this.addMsgGroup(msg,0, false);
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 this.memdb_mails.update(keyCount);
@@ -216,6 +216,9 @@ export class DbService {
             dg.messagegroups = [mg];
             dg.displayName = groupIndex;
             this.getMemDBTable(source).insert(dg);
+
+            //always ui update new groups!
+            updateObervables = true;
         } else {
             var mgHost = tt.messagegroups.find(x => x.key === msg.hostname);
             if (mgHost === undefined) {
