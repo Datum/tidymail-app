@@ -128,16 +128,16 @@ export class DbService {
         if (mailSubject !== undefined && mailSubject.length > 9) {
             msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
         } else {
-            console.log('header not found or invalid for <subject>');
-            console.log(fetchedMailObject)
+            //console.log('header not found or invalid for <subject>');
+            //console.log(fetchedMailObject)
         }
 
         var mailUnsubscribeInfo = fetchedMailObject['body[header.fields (list-unsubscribe)]'];
         if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
             msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
         } else {
-            console.log('header not found or invalid for <list-unsubscribe>');
-            console.log(fetchedMailObject)
+            //console.log('header not found or invalid for <list-unsubscribe>');
+            //console.log(fetchedMailObject)
         }
 
         //if no unscribe info here, add mail to ignore list and return
@@ -167,7 +167,7 @@ export class DbService {
 
             if (keyCount === undefined) {
                 this.memdb_mails.insert(msg);
-                this.addMsgGroup(msg,0,true);
+                this.addMsgGroup(msg,0);
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 this.memdb_mails.update(keyCount);
@@ -225,6 +225,7 @@ export class DbService {
                 mg.name = extractMailFromName(msg.from);
                 mg.estimatedMessageCount = 1;
                 tt.messagegroups.push(mg);
+                tt.messagegroups.sort((a,b) => (a.hostname > b.hostname) ? 1 : ((b.hostname > a.hostname) ? -1 : 0));
             } else {
                 mgHost.estimatedMessageCount = mgHost.estimatedMessageCount + 1;
             }
@@ -233,6 +234,8 @@ export class DbService {
         if (updateObervables) {
             this.updateView(source);
         }
+
+     
     }
 
 

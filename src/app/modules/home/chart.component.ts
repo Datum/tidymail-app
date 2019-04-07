@@ -28,7 +28,8 @@ export class ChartComponent implements OnInit {
             self.pieChartData = res.numbers;
             self.pieChartSummary = res.summaryLabel;
             self.options = {
-                'legend': { 'display': res.summaryLabel === undefined, 'position': 'right', labels: { boxWidth: 4, fontSize: 12 } },
+                'responsive': false,
+                'legend': { 'display': res.summaryLabel === undefined, 'fullWidth': false, 'position': 'right', labels: { boxWidth: 4, fontSize: 12 } },
                 'fullWidth': false,
                 'backgroundColor': [
                     "#4BC0C0",

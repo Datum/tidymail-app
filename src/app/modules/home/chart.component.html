@@ -1,8 +1,17 @@
-<p>
-    <canvas #mycanvas baseChart style="max-width:180px;margin:auto;" [data]="pieChartData" [labels]="pieChartLabels"
-        [chartType]="pieChartType" [options]="options" (chartHover)="chartHovered($event)"
-        (chartClick)="chartClicked($event)"></canvas>
-    <span class="absolute-center text-center">
-        <p>{{ pieChartSummary }}</p>
-    </span>
-</p>
+<div class="row">
+    <div class="{{ pieChartSummary === undefined ? 'col-sm-8' : 'col' }} text-left">
+            <canvas #mycanvas baseChart style="max-height:100px;margin:auto;" [data]="pieChartData" [labels]="pieChartLabels"
+            [chartType]="pieChartType" [options]="options" (chartHover)="chartHovered($event)"
+            (chartClick)="chartClicked($event)"></canvas>
+        <span class="absolute-center text-center">
+            <p>{{ pieChartSummary }}</p>
+        </span>
+    </div>
+    <div *ngIf="pieChartSummary === undefined" class="col-sm-4">
+        <div>NEW</div>
+        <div>NEW</div>
+        <div>NEW</div>
+        <div>NEW</div>
+    </div>
+</div>
+

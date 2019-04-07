@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { MatSnackBar } from "@angular/material";
 import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService, ChartData } from 'src/app/shared';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -19,7 +19,8 @@ export class HomeComponent implements OnInit {
         private _uiService: UIService,
         private _smtpService: SmtpService,
         private http: HttpClient,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private _zone: NgZone,
     ) { }
 
 
@@ -72,14 +73,14 @@ export class HomeComponent implements OnInit {
         this.updateNewsletterChart();
         await this.updateMailboxChart(32344);
 
-/*
-
-        this.updateNewsletterChart();
-
-
-
-      
-        */
+        /*
+        
+                this.updateNewsletterChart();
+        
+        
+        
+              
+                */
 
     }
 
@@ -91,14 +92,14 @@ export class HomeComponent implements OnInit {
         this._newsletterInfoChartObservable.next(this.getNewslettersChartData(c1, c2, c3, c4));
     }
 
-    private async updateMailboxChart(totalMails:number) {
+    private async updateMailboxChart(totalMails: number) {
         var dbCount = this._dbService.getProcessedIds().length;
         this._mailboxInfoChartObservable.next(this.getMailBoxChartData(totalMails, dbCount));
-        if(totalMails === undefined) {
+        if (totalMails === undefined) {
             await this.connect();
             var mbInfo = await this._imapService.selectMailBox();
             totalMails = mbInfo.exists;
-        } 
+        }
         this._mailboxInfoChartObservable.next(this.getMailBoxChartData(totalMails, dbCount));
     }
 
@@ -113,7 +114,7 @@ export class HomeComponent implements OnInit {
     private getNewslettersChartData(newCount, keepCount, unsubscribeCount, deleteCount) {
         var chartData = new ChartData();
         chartData.numbers = [newCount, unsubscribeCount, keepCount, deleteCount]
-        chartData.labels = ["new", "unsub", "keep","delete"];
+        chartData.labels = [];
         return chartData;
     }
 
@@ -175,53 +176,58 @@ export class HomeComponent implements OnInit {
         var self = this;
         try {
 
-            //set sync mode for UI
-            this.isSyncing = true;
 
-            console.time('start.sync');
+            await this._zone.runOutsideAngular(async () => {
+                console.time('start.sync');
 
-            //connect if needed
-            await this.connect();
+                //connect if needed
+                await this.connect();
 
-            //set ui info
-            this.statusMessage = "searching for new newsletters...";
+                //set sync mode for UI
+                this.isSyncing = true;
 
-            //get all ids with given search term
-            var ids = await this._imapService.getMailIds();
+                //set ui info
+                this.statusMessage = "searching for new newsletters...";
 
-            //exclude all processed
-            var processedKeys = await this._dbService.getProcessedIds();
+                //get all ids with given search term
+                var ids = await this._imapService.getMailIds();
 
-            ids = ids.filter(function (el) {
-                return processedKeys.indexOf(el) < 0;
-            });
-            //get total count of mails to process
-            var totalCount = ids.length;
+                //exclude all processed
+                var processedKeys = await this._dbService.getProcessedIds();
 
-            //start with newest first
-            ids = ids.reverse();
+                ids = ids.filter(function (el) {
+                    return processedKeys.indexOf(el) < 0;
+                });
+                //get total count of mails to process
+                var totalCount = ids.length;
 
-            //download all mails
-            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
-                for (var i = 0; i < fetchedMails.length; i++) {
-                    self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
-                    if (cancelled) {
-                        break;
+                //start with newest first
+                ids = ids.reverse();
+
+                //download all mails
+                var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
+                    for (var i = 0; i < fetchedMails.length; i++) {
+                        self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
+                        if (cancelled) {
+                            break;
+                        }
+                        self._dbService.add(fetchedMails[i]);
                     }
-                    self._dbService.add(fetchedMails[i]);
-                }
+                });
+
+                //set cancel back
+                this.bCancel = false;
+
+                //set sync mode OFF for UI
+                this.isSyncing = false;
+
+                //close client
+                //await this._imapService.close();
+
+                console.timeEnd('start.sync');
             });
 
-            //set cancel back
-            this.bCancel = false;
 
-            //set sync mode OFF for UI
-            this.isSyncing = false;
-
-            //close client
-            //await this._imapService.close();
-
-            console.timeEnd('start.sync');
         } catch (error) {
             console.error(error);
             self._uiService.showAlert(error);
@@ -347,7 +353,7 @@ export class HomeComponent implements OnInit {
 
 
 function getUnsubscriptionInfo(unsubString) {
-    
+
     var r = { email: '', url: '', subject: '', body: '' };
     var parts = unsubString.split(',');
 
@@ -378,7 +384,7 @@ function getUnsubscriptionInfo(unsubString) {
             r.url = parts[i];
         }
     }
-    
+
 
     return r;
 }
