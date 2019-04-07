@@ -163,6 +163,10 @@ export class HomeComponent implements OnInit {
                     }
                 });
 
+                //force view update for new mail
+                console.log('force view update');
+                this._dbService.updateView(0);
+
                 //set cancel back
                 this.bCancel = false;
 

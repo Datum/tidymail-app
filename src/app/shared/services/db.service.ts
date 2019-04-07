@@ -104,7 +104,7 @@ export class DbService {
     }
 
     //adds an email object to storage and observable
-    add(fetchedMailObject) {
+    add(fetchedMailObject, updateObservable = false) {
         var msg = new Message();
         msg.lastId = fetchedMailObject.uid;
 
@@ -167,7 +167,7 @@ export class DbService {
 
             if (keyCount === undefined) {
                 this.memdb_mails.insert(msg);
-                this.addMsgGroup(msg,0, false);
+                this.addMsgGroup(msg,0, updateObservable);
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 this.memdb_mails.update(keyCount);
@@ -186,7 +186,7 @@ export class DbService {
         }
     }
 
-    private updateView(status: number) {
+    public updateView(status: number) {
         switch (status) {
             case 1:
                 this._unsubbedGroupsObservable.next(this.unsubGroupsSortedView.data());
@@ -228,6 +228,7 @@ export class DbService {
                 mg.name = extractMailFromName(msg.from);
                 mg.estimatedMessageCount = 1;
                 tt.messagegroups.push(mg);
+                tt.messagegroups.sort((a,b) => (a.hostname > b.hostname) ? 1 : ((b.hostname > a.hostname) ? -1 : 0));
             } else {
                 mgHost.estimatedMessageCount = mgHost.estimatedMessageCount + 1;
             }
