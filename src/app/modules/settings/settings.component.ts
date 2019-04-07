@@ -25,14 +25,14 @@ export class SettingsComponent implements OnInit {
     }
 
     async removeAccount() {
-        this._dbService.deleteDb();
+        await this._dbService.deleteDb();
         await this._dbService.create();
         this._userService.reset();
         this.router.navigateByUrl('/register');
     }
 
     async resetDatabase() {
-        this._dbService.deleteDb();
+        await this._dbService.deleteDb();
         await this._dbService.create();
         this._uiService.showAlert("Local database delete.");
     }

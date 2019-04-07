@@ -22,7 +22,9 @@ export class ListComponent {
     @Output() onUnsubscribeDomain = new EventEmitter<string>();
 
 
-    constructor(private _dbService: DbService, private _imapService: ImapService) { }
+    constructor(private _dbService: DbService, private _imapService: ImapService) {
+        
+     }
 
 
 

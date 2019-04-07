@@ -6,6 +6,7 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 
 import { HomeModule } from './modules/home.module'
 import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
@@ -36,6 +37,7 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
     HttpClientModule,
     AppRoutingModule,
     BrowserAnimationsModule,
+    //NoopAnimationsModule,
     HomeModule,
     Angulartics2Module.forRoot()
   ],

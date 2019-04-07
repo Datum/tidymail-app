@@ -49,7 +49,7 @@ export class HomeComponent implements OnInit {
         //if password is not in config, prompt user
         if (this.userConfig.password == "") {
             return;
-        }
+        }   
 
         //bind lists
         await this.bind();
@@ -149,6 +149,9 @@ export class HomeComponent implements OnInit {
                 ids = ids.reverse();
 
 
+                var iUpdateFrequency = 500;
+                var index = 0;
+
 
                 //download all mails
                 var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
@@ -160,11 +163,17 @@ export class HomeComponent implements OnInit {
                         }
 
                         self._dbService.add(fetchedMails[i]);
+
+                        index++;
+
+                        if(index % iUpdateFrequency == 0) {
+                            //self._dbService.updateView(0);        
+                        }
                     }
+                    //self._dbService.updateView(0);
                 });
 
                 //force view update for new mail
-                console.log('force view update');
                 this._dbService.updateView(0);
 
                 //set cancel back

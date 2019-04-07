@@ -38,6 +38,7 @@ export class DbService {
     memdb_newMails: any;
     memdb_keepMails: any;
     memdb_unsubbedMails: any;
+    memdb_indexedAdapter: any;
 
     create(name = "tidymail.db") {
         var self = this;
@@ -46,16 +47,16 @@ export class DbService {
             (resolve, reject) => {
 
 
-                var adapter = new lokiIndexedAdpater();
+                self.memdb_indexedAdapter = new lokiIndexedAdpater("tidymail.db");
                 self.memdb = new loki("tidymail.db", {
-                    adapter: adapter,
+                    adapter: self.memdb_indexedAdapter,
                     autoload: true,
                     autoloadCallback: databaseInitialize,
                     autosave: true,
                     autosaveInterval: 4000
                 });
 
-                function databaseInitialize(success) {
+                function databaseInitialize() {
                     if (!self.memdb.getCollection("mails")) {
                         self.memdb.addCollection("mails", { unique: ['lastId'] });
                     }
@@ -69,6 +70,10 @@ export class DbService {
                         self.memdb.addCollection("unsubbedMails", { unique: ['identifier'] });
                     }
 
+                    if (!self.memdb.getCollection("mails")) {
+                        reject(false);
+                    }
+
                     resolve(true);
                 }
             }
@@ -76,7 +81,16 @@ export class DbService {
     }
 
     deleteDb() {
-        this.memdb.deleteDatabase();
+        var self = this;
+        return new Promise<boolean>(
+            (resolve, reject) => {
+                this.memdb.close();
+                this.memdb.deleteDatabase(function (res) {
+                    res.success ? resolve(true) : reject(false);
+                });
+            }
+        );
+
     }
 
     newGroupsSortedView: any;
@@ -167,7 +181,7 @@ export class DbService {
 
             if (keyCount === undefined) {
                 this.memdb_mails.insert(msg);
-                this.addMsgGroup(msg,0, updateObservable);
+                this.addMsgGroup(msg, 0, updateObservable);
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 this.memdb_mails.update(keyCount);
@@ -199,7 +213,7 @@ export class DbService {
 
 
     //add msg to grouping
-    private addMsgGroup(msg: Message, source: number = 0, updateObervables = true) {
+    private addMsgGroup(msg: Message, source: number = 0, updateObervables = false) {
 
         //Set key group index, here 1st letter
         var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
@@ -228,7 +242,7 @@ export class DbService {
                 mg.name = extractMailFromName(msg.from);
                 mg.estimatedMessageCount = 1;
                 tt.messagegroups.push(mg);
-                tt.messagegroups.sort((a,b) => (a.hostname > b.hostname) ? 1 : ((b.hostname > a.hostname) ? -1 : 0));
+                tt.messagegroups.sort((a, b) => (a.hostname > b.hostname) ? 1 : ((b.hostname > a.hostname) ? -1 : 0));
             } else {
                 mgHost.estimatedMessageCount = mgHost.estimatedMessageCount + 1;
             }
