@@ -80,6 +80,10 @@ export class DbService {
         );
     }
 
+    serialize() {
+        return this.memdb.serialize();
+    }
+
     deleteDb() {
         var self = this;
         return new Promise<boolean>(

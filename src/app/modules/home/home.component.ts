@@ -136,6 +136,8 @@ export class HomeComponent implements OnInit {
                 //get all ids with given search term
                 var ids = await this._imapService.getMailIds(false);
 
+
+                console.time('start.loaddb');
                 //exclude all processed
                 var processedKeys = await this._dbService.getProcessedIds();
 
@@ -147,6 +149,8 @@ export class HomeComponent implements OnInit {
 
                 //start with newest first
                 ids = ids.reverse();
+
+                console.timeEnd('start.loaddb');
 
 
                 var iUpdateFrequency = 500;

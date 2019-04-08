@@ -57,7 +57,7 @@
                 Auto-Sync on Startup
             </div>
             <div class="col">
-                <mat-checkbox (click)="changeAutoSync()"  (change)="userConfig.autoSync = !userConfig.autoSync" [checked]="userConfig.autoSync" color="primary" >
+                <mat-checkbox (change)="changeAutoSync()" [checked]="userConfig.autoSync" color="primary" >
                 </mat-checkbox>
             </div>
         </div>
@@ -65,7 +65,8 @@
     </mat-card-content>
     <mat-card-actions>
         <button mat-raised-button (click)="removeAccount()">REMOVE ACCOUNT</button>
-        <button mat-raised-button (click)="resetDatabase()" color="warn">CLEAR LOCAL DATABASE</button>
+        <button mat-raised-button (click)="resetDatabase()" color="warn">CLEAR DATABASE</button>
+        <button mat-raised-button (click)="exportDatabase()" color="warn">EXPORT</button>
     </mat-card-actions>
 </mat-card>
 

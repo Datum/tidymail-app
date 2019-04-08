@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService, UserConfig, DbService, UIService } from 'src/app/shared';
 import { Router } from '@angular/router';
+import { saveAs } from 'file-saver';
 
 declare var require: any;
 
@@ -13,12 +14,12 @@ export class SettingsComponent implements OnInit {
     constructor(
         private _userService: UserService,
         private _dbService: DbService,
-        private _uiService:UIService,
+        private _uiService: UIService,
         private router: Router
     ) { }
 
     userConfig: UserConfig;
-    version: string = require( '../../../../package.json').version;
+    version: string = require('../../../../package.json').version;
 
     ngOnInit() {
         this.userConfig = this._userService.createOrLoadConfig();
@@ -38,6 +39,34 @@ export class SettingsComponent implements OnInit {
     }
 
     changeAutoSync() {
+        this.userConfig.autoSync = !this.userConfig.autoSync;
         this._userService.save(this.userConfig);
+    }
+
+    exportDatabase() {
+        var data = this._dbService.serialize();
+
+        var parts = [
+            new Blob([data], { type: 'text/plain' }),
+            new Uint16Array([33])
+        ];
+
+
+        // Construct a file
+        var file = new File(parts, 'db.json', {
+            type: "application/json" // optional - default = ''
+        });
+
+
+        //var file = new File(data, "db.json", { type: "text/plain;charset=utf-8" });
+        saveAs(file);
+        /*
+        const blob = new Blob([data], { type: 'text/txt' });
+        const url= window.URL.createObjectURL(blob);
+        window.open(url);
+        */
+
+        //saveAs(data, 'db.json');
+
     }
 }
