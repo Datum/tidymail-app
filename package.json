@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@angular-builders/custom-webpack": "^7.4.3",
+    "@angular-builders/dev-server": "^7.3.1",
     "@angular-devkit/build-angular": "~0.13.0",
     "@angular/cli": "~7.3.7",
     "@angular/compiler-cli": "~7.2.0",
@@ -54,9 +55,7 @@
     "karma-coverage-istanbul-reporter": "~2.0.1",
     "karma-jasmine": "~1.1.2",
     "karma-jasmine-html-reporter": "^0.2.2",
-    "net": "^1.0.2",
     "protractor": "~5.4.0",
-    "tls": "0.0.1",
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
     "typescript": "~3.2.2"
