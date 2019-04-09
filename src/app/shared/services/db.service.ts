@@ -80,6 +80,16 @@ export class DbService {
         );
     }
 
+    importJSON(serialzedDbJSON) {
+        this.memdb.loadJSON(serialzedDbJSON);
+        this.memdb.saveDatabase();
+    }
+
+    importObject(serialzedDbObject) {
+        this.memdb.loadJSONObject(serialzedDbObject);
+        this.memdb.saveDatabase();
+    }
+
     serialize() {
         return this.memdb.serialize();
     }
@@ -322,19 +332,31 @@ export class DbService {
     }
 
     getProcessedIds() {
+
         var ids = [];
-        this.memdb_mails.mapReduce(
-            function (obj) { return { id: obj.lastId, ids: obj.ignoreIds } },
-            function (objReduced) {
-                for (var i = 0; i < objReduced.length; i++) {
-                    ids = ids.concat(objReduced[i].ids);
-                    ids.push(objReduced[i].id);
+
+        function getIds(obj) {
+            var ids = [];
+            ids.push(obj.lastId);
+            if (obj.ignoreIds !== undefined) {
+                ids = ids.concat(obj.ignoreIds);
+            }
+            return ids;
+        }
+
+        function concatIds(array) {
+            var ids = [];
+            var i = array.length >>> 0;
+            while (i--) {
+                if (array[i] != null) {
+                    ids = ids.concat(array[i]);
                 }
+            }
+            return ids;
+        }
 
-                return ids.length;
-            });
-
-        return ids;
+        return this.memdb_mails.mapReduce(getIds, concatIds);
+    
     }
 }
 

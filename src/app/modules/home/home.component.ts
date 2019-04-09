@@ -140,19 +140,23 @@ export class HomeComponent implements OnInit {
                 console.time('start.loaddb');
                 //exclude all processed
                 var processedKeys = await this._dbService.getProcessedIds();
+                console.timeEnd('start.loaddb');
 
+                console.time('start.filter');
                 ids = ids.filter(function (el) {
                     return processedKeys.indexOf(el) < 0;
                 });
                 //get total count of mails to process
                 var totalCount = ids.length;
+                console.timeEnd('start.filter');
 
+
+                console.time('start.reverse');
                 //start with newest first
                 ids = ids.reverse();
+                console.timeEnd('start.reverse');
 
-                console.timeEnd('start.loaddb');
-
-
+                
                 var iUpdateFrequency = 500;
                 var index = 0;
 

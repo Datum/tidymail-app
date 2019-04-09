@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { UserService, UserConfig, DbService, UIService } from 'src/app/shared';
 import { Router } from '@angular/router';
 import { saveAs } from 'file-saver';
+import { HttpClient } from '@angular/common/http';
+
 
 declare var require: any;
 
@@ -15,9 +17,11 @@ export class SettingsComponent implements OnInit {
         private _userService: UserService,
         private _dbService: DbService,
         private _uiService: UIService,
+        private _http:HttpClient,
         private router: Router
     ) { }
 
+    urlEncoded:string = '/assets/db.json';
     userConfig: UserConfig;
     version: string = require('../../../../package.json').version;
 
@@ -41,6 +45,14 @@ export class SettingsComponent implements OnInit {
     changeAutoSync() {
         this.userConfig.autoSync = !this.userConfig.autoSync;
         this._userService.save(this.userConfig);
+    }
+
+    async importDatabase() {
+        await this._dbService.deleteDb();
+        var json = await this._http.get<any>(this.urlEncoded,  { responseType: 'text' as 'json'}).toPromise();
+        this._dbService.importJSON(json);
+        console.log(JSON.parse(json));
+        console.log('import done');
     }
 
     exportDatabase() {
