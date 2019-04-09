@@ -151,18 +151,29 @@ export class ImapService {
     }
 
     //get relavant mail based on searchCommand;
-    getMailIds(forceImapMode = false) {
+    getMailIds(lastUid:number, forceImapMode = false) {
         //create search object
-        var searchObject = this.useGmailSearchSyntax ?
+        let searchObject = this.useGmailSearchSyntax ?
             environment.gmailSearchQuery
             :
             environment.defaultSearchQuery;
+
 
         //if gmail do two searches, one with all that have "unsubscribe header" other that gmails labels as "unsub" what means there should be link in body
         //force imap for moment
         if(forceImapMode) {
             searchObject = environment.defaultSearchQuery;
         }
+
+        searchObject = JSON.parse(JSON.stringify(searchObject));
+
+        //add "since" or "after" filter to search
+        if(lastUid !== undefined) {
+            //if uid smaller than 1, set to 1
+            if(lastUid < 1) lastUid = 1;
+            searchObject['UID'] = lastUid.toString() + ":*";
+        }
+
 
         //search for ids with given criteria
         return this.client.search('INBOX', searchObject, { byUid: true });

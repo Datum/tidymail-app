@@ -4,6 +4,7 @@ import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfi
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { isDevMode } from '@angular/core';
 
 @Component({
     selector: 'app-home',
@@ -49,7 +50,7 @@ export class HomeComponent implements OnInit {
         //if password is not in config, prompt user
         if (this.userConfig.password == "") {
             return;
-        }   
+        }
 
         //bind lists
         await this.bind();
@@ -86,9 +87,6 @@ export class HomeComponent implements OnInit {
             //open
             await this._imapService.open();
 
-            //set sync mode for UI
-            this.isSyncing = false;
-
             this.isConnected = true;
         }
     }
@@ -122,44 +120,44 @@ export class HomeComponent implements OnInit {
 
             await this._zone.runOutsideAngular(async () => {
 
-                console.time('start.sync');
+                //set sync mode for UI
+                this.isSyncing = true;
+
+                if (isDevMode) console.time('start.sync');
 
                 //connect if needed
                 await this.connect();
 
-                //set sync mode for UI
-                this.isSyncing = true;
-
                 //set ui info
                 this.statusMessage = "searching for new newsletters...";
 
-                //get all ids with given search term
-                var ids = await this._imapService.getMailIds(false);
+                //get last id
+                var lastProcessedId = this._dbService.getLastId();
 
+                //get all ids with given search term newer than lastProcessed
+                var ids = await this._imapService.getMailIds(lastProcessedId);
 
-                console.time('start.loaddb');
+                
+                if (isDevMode) console.time('start.loaddb');
                 //exclude all processed
                 var processedKeys = await this._dbService.getProcessedIds();
-                console.timeEnd('start.loaddb');
+                if (isDevMode) console.timeEnd('start.loaddb');
 
-                console.time('start.filter');
+                if (isDevMode) console.time('start.filter');
                 ids = ids.filter(function (el) {
                     return processedKeys.indexOf(el) < 0;
                 });
                 //get total count of mails to process
-                var totalCount = ids.length;
-                console.timeEnd('start.filter');
+                if (isDevMode) console.timeEnd('start.filter');
+                
 
-
-                console.time('start.reverse');
                 //start with newest first
                 ids = ids.reverse();
-                console.timeEnd('start.reverse');
 
-                
+                var totalCount = ids.length;
                 var iUpdateFrequency = 500;
                 var index = 0;
-
+                var lastId = ids.length > 0 ? ids[0] : 1;
 
                 //download all mails
                 var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
@@ -174,7 +172,7 @@ export class HomeComponent implements OnInit {
 
                         index++;
 
-                        if(index % iUpdateFrequency == 0) {
+                        if (index % iUpdateFrequency == 0) {
                             //self._dbService.updateView(0);        
                         }
                     }
@@ -193,7 +191,9 @@ export class HomeComponent implements OnInit {
                 //close client
                 //await this._imapService.close();
 
-                console.timeEnd('start.sync');
+                //this._userService.saveLastUid(lastId);
+
+                if (isDevMode) console.timeEnd('start.sync');
             });
 
 

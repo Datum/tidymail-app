@@ -48,8 +48,8 @@ export class UserService {
     }
 
 
-    storeLastId(lastUid) {
-        this.userConfig.lastUidProcessed = lastUid;
+    saveLastUid(uid:number) {
+        this.userConfig.lastUidProcessed = uid;
         this.save(this.userConfig);
     }
 

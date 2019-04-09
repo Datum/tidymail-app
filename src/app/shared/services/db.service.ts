@@ -331,6 +331,19 @@ export class DbService {
         return this.memdb_mails.by('lastId', msgId);
     }
 
+    getLastId() {
+        var lastId = this.memdb_mails.chain()
+                  .simplesort('lastId', true)
+                  .limit(1)
+                  .data();
+        
+        if(lastId.length == 1) {
+            return lastId[0].lastId;
+        }
+
+        return null;
+    }
+
     getProcessedIds() {
 
         var ids = [];
