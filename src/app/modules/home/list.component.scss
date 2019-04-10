@@ -8,9 +8,22 @@
 }
 
 .whiteframe {
-    background:#fff; border-radius: 4px; padding: 12px;
+    padding: 12px;
     margin-top:20px;
 }
+
+.whiteframe mat-card {
+    background-color: #f8f9fa;
+    padding: 0px;
+    margin-bottom: 12px;
+}
+
+.sublist {
+    padding-top: 0px;
+    margin-top: -8px;
+    margin-bottom: 20px;
+    margin-left: 30px;
+ }
 
 .iconclose {
     margin-left: -5px;

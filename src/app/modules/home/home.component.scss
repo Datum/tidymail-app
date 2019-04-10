@@ -19,7 +19,16 @@
     padding-top:10px;
 }
 
+:host /deep/ .mat-tab-label {
+    color: rgb(97, 97, 97);
+    opacity: 1;
+}
 
+/* Styles for the active tab label */
+:host /deep/ .mat-tab-label.mat-tab-label-active {
+    color: rgb(97, 97, 97);
+    opacity: 1;
+}
 
 @mixin md-icon-size($size: 24px) {
     font-size: $size;
@@ -29,4 +38,15 @@
   
   .material-icons.mat-icon {
     @include md-icon-size(20px);
+  }
+
+  :host /deep/ .tabbar .mat-tab-header {
+    border-bottom-style: none;
+  }
+
+  .header {
+    background-color:#f8f9fa;
+    border-bottom-color: rgba(0, 0, 0, 0.12);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
   }

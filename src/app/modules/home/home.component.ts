@@ -33,7 +33,7 @@ export class HomeComponent implements OnInit {
     bCancel: boolean = false;
     statusMessage: string;
     userConfig: UserConfig;
-
+    selectedTab: number = 0;
 
 
     undhandledMails: Observable<DisplayGroup[]>;
