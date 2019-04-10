@@ -208,6 +208,7 @@ export class DbService {
                 this.addMsgGroup(msg, msg.status, updateObservable);
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
+                keyCount.size = keyCount.size + msg.size;
                 this.memdb_mails.update(keyCount);
             }
         }

@@ -43,7 +43,7 @@
                                     {{ msg.from }}
                                 </p>
                                 <p matLine>
-                                    {{ (msg.ignoreIds.length + 1) + ' mails, last from: ' +  (msg.lastDate | date:'medium') }}
+                                    {{ (msg.ignoreIds.length + 1) + ' mails, ' + msg.size + ', last from: ' +  (msg.lastDate | date:'medium') }}
                                 </p>
 
                                 <div [hidden]="m.messages.length == 1" mat-list-item

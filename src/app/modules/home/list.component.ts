@@ -39,6 +39,9 @@ export class ListComponent {
             if (m.messages.length == 0) {
                 //load messages
                 m.messages = await this._dbService.getMailsWithHostnameAndStatus(m.hostname, self.status);
+                m.messages.forEach(element => {
+                    element.size = bytesToSize(element.size);
+                });
             }
         }
     }
@@ -79,3 +82,10 @@ export class ListComponent {
 
 
 
+
+function bytesToSize(bytes) {
+    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes == 0) return '0 Byte';
+    var i = parseInt((Math.floor(Math.log(bytes) / Math.log(1024)).toString()));
+    return parseFloat((bytes / Math.pow(1024, i)).toString()).toFixed(2) + ' ' + sizes[i];
+ };
