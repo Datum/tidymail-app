@@ -5,8 +5,10 @@
             <h3 matSubheader class="listheader">{{ d.identifier }}</h3>
             <mat-list avatar style="flex-grow: 1;" class="whiteframe">
                 <div *ngFor="let m of d.messagegroups; let i = index">
+                    <mat-card>
                     <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                         [attr.aria-controls]="'collapse' + a + i">
+                        
                         <p matLine class="notwoline">
                             <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
                                 class="favimg">
@@ -17,7 +19,7 @@
                             <small style="color:darkgrey;"> {{ m.hostname }} </small>
                         </p>
 
-                        <div mat-list-item style="flex-grow: 1; text-align: right;color:#616161">
+                        <div mat-list-item style="text-align: right;">
                             <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
                                 <mat-icon>check</mat-icon>
                                 KEEP
@@ -32,22 +34,23 @@
                                 DELETE
                             </button>
                         </div>
-
+                    
                     </mat-list-item>
+                    </mat-card>
 
                     <div [attr.id]="'collapse' + a + i" [hidden]="m.isCollapsed">
-                        <mat-list twoLine interactive=false>
+                        <mat-list twoLine interactive=false class="sublist">
                             <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index"
                                 class="mat-list--two-line">
                                 <p matLine *ngIf="status != 1">
                                     {{ msg.from }}
                                 </p>
                                 <p matLine>
-                                    {{ (msg.ignoreIds.length + 1) + ' mails, ' + msg.size + ', last from: ' +  (msg.lastDate | date:'medium') }}
+                                    {{ (msg.ignoreIds.length + 1) + ' emails, ' + msg.size + ', newest: ' +  (msg.lastDate | date:'medium') }}
                                 </p>
 
                                 <div [hidden]="m.messages.length == 1" mat-list-item
-                                    style="flex-grow: 1; text-align: right;">
+                                    style="text-align: right;">
                                     <button mat-button (click)="keep(m,msg.lastId)">
                                         <mat-icon>check</mat-icon>
                                         KEEP
