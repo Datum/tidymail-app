@@ -14,7 +14,6 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule } from '@angular/material/dialog';
 
 
@@ -63,7 +62,6 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         MatFormFieldModule,
         MatButtonModule,
         MatCheckboxModule,
-        MatProgressSpinnerModule,
         MatDialogModule,
         MatIconModule,
         MatProgressBarModule,
