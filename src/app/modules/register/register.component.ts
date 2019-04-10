@@ -65,6 +65,7 @@ export class RegisterComponent implements OnInit {
             username: ['', Validators.required],
             password: ['', Validators.required],
             trashBoxPath: ['Trash'],
+            sentBoxPath: ['Sent'],
             rememberMe: ['true']
         });
 
@@ -150,6 +151,8 @@ export class RegisterComponent implements OnInit {
             userConfig.firsttime = false;
             userConfig.hasJoinedRewardProgram = joinReward;
             userConfig.trashBoxPath = this.customImapFormGroup.value.trashBoxPath;
+            userConfig.sentBoxPath = this.customImapFormGroup.value.sentBoxPath;
+
             if (joinReward)
                 userConfig.rewardJoinDate = Date.now();
 
@@ -201,11 +204,6 @@ export class RegisterComponent implements OnInit {
             //start checker for timeout because of e.g. invalid hostnames... WORKAROUND
             setTimeout(function () {
                 if (!self.imapResponded) {
-                    //looks like error
-                    // self._uiService.showAlert("Something goes wrong! Please check your imap host settings.");
-                    //self.stepper.selected.reset();
-                    // self.stepper.previous();
-
                     this.hasError = true;
                     this.errorMessage = "Could not connect to your mail server. Please go back and check your settings.";
                 }
@@ -231,22 +229,29 @@ export class RegisterComponent implements OnInit {
             });
             if (gmailBoxes.length > 0) {
                 var trashBox = findMailboxWithFlag("Trash", gmailBoxes[0]);
+                var sentBox = findMailboxWithFlag("Sent", gmailBoxes[0]);
                 this.customImapFormGroup.value.trashBoxPath = trashBox == null ? "Trash" : trashBox.path;
+                this.customImapFormGroup.value.sentBoxPath = sentBox == null ? "Sent" : sentBox.path;
             } else {
-                var path = "";
+                var trashPath = "";
+                var sentPath = "";
                 for (var index in mboxes.children) {
                     var node = mboxes.children[index];
                     for (var i = 0; i < node.flags.length; i++) {
                         if (typeof node.flags[i] === 'string' || node.flags[i] instanceof String) {
                             if (node.flags[i].indexOf('Trash') != -1) {
-                                path = node.path;
-                                break;
+                                trashPath = node.path;
+                            }
+
+                            if (node.flags[i].indexOf('Sent') != -1) {
+                                sentPath = node.path;
                             }
                         }
                     }
                 }
 
-                this.customImapFormGroup.value.trashBoxPath = path == "" ? "Trash" : path;
+                this.customImapFormGroup.value.trashBoxPath = trashPath == "" ? "Trash" : trashPath;
+                this.customImapFormGroup.value.sentBoxPath = sentPath == "" ? "Sent" : sentPath;
             }
 
             //close after connection without error
@@ -295,7 +300,7 @@ function findMailboxWithFlag(flag, currentNode) {
             var node = currentNode.children[index];
             for (var i = 0; i < node.flags.length; i++) {
                 if (typeof node.flags[i] === 'string' || node.flags[i] instanceof String) {
-                    if (node.flags[i].indexOf('Trash') != -1) {
+                    if (node.flags[i].indexOf(flag) != -1) {
                         node.flag = flag;
                         return node;
                     }

@@ -17,9 +17,9 @@ export class ListComponent {
     @Output() onKeepMsg = new EventEmitter<string>();
     @Output() onUnsubscribeMsg = new EventEmitter<string>();
 
-    @Output() onDeleteDomain = new EventEmitter<string>();
-    @Output() onKeepMsgDomain = new EventEmitter<string>();
-    @Output() onUnsubscribeDomain = new EventEmitter<string>();
+    @Output() onDeleteDomain = new EventEmitter<any>();
+    @Output() onKeepMsgDomain = new EventEmitter<any>();
+    @Output() onUnsubscribeDomain = new EventEmitter<any>();
 
 
     constructor(private _dbService: DbService, private _imapService: ImapService) {
@@ -66,17 +66,17 @@ export class ListComponent {
 
     async deleteAll(mg, event) {
         event.stopPropagation();
-        this.onDeleteDomain.emit(mg.hostname);
+        this.onDeleteDomain.emit({ hostname: mg.hostname, status: this.status});
     }
 
     async keepAll(mg, event) {
         event.stopPropagation();
-        this.onKeepMsgDomain.emit(mg.hostname);
+        this.onKeepMsgDomain.emit({ hostname: mg.hostname, status: this.status});
     }
 
     async unsubscribeAll(mg, event) {
         event.stopPropagation();
-        this.onUnsubscribeDomain.emit(mg.hostname);
+        this.onUnsubscribeDomain.emit({ hostname: mg.hostname, status: this.status});
     }
 }
 

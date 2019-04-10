@@ -38,16 +38,22 @@ export class ImapService {
     //by default use gmail syntax
     useGmailSearchSyntax: boolean = false;
     trashBoxPath: string;
+    sentBoxPath: string;
 
 
-    create(username, password, host = "imap.gmail.com", port = 993, trashBox = null) {
+    create(username, password, host = "imap.gmail.com", port = 993, trashBox = null, sentBox = null) {
         var self = this;
 
         if (trashBox == null) {
             trashBox = "Trash";
         }
 
+        if (sentBox == null) {
+            sentBox = "Sent";
+        }
+
         this.trashBoxPath = trashBox;
+        this.sentBoxPath = sentBox;
 
         this.useGmailSearchSyntax = (host == "imap.gmail.com");
 
@@ -129,8 +135,8 @@ export class ImapService {
 
 
     //move given mail id to trash
-    moveTrash(ids) {
-        return this.client.moveMessages('INBOX', ids.join(), this.trashBoxPath, { byUid: true });
+    moveTrash(ids, sourcePath = 'INBOX') {
+        return this.client.moveMessages(sourcePath, ids.join(), this.trashBoxPath, { byUid: true });
     }
 
     send() {
@@ -150,8 +156,17 @@ export class ImapService {
         return isGmail;
     }
 
+
+    deleteSentMails(to) {
+        var self = this;
+        //search for ids with given criteria
+        return this.client.search(this.sentBoxPath, { 'TO': to }, { byUid: true }).then(function(mails) {
+            return self.moveTrash(mails, self.sentBoxPath);
+        });
+    }
+
     //get relavant mail based on searchCommand;
-    getMailIds(lastUid:number, forceImapMode = false) {
+    getMailIds(lastUid: number, forceImapMode = false) {
         //create search object
         let searchObject = this.useGmailSearchSyntax ?
             environment.gmailSearchQuery
@@ -161,16 +176,16 @@ export class ImapService {
 
         //if gmail do two searches, one with all that have "unsubscribe header" other that gmails labels as "unsub" what means there should be link in body
         //force imap for moment
-        if(forceImapMode) {
+        if (forceImapMode) {
             searchObject = environment.defaultSearchQuery;
         }
 
         searchObject = JSON.parse(JSON.stringify(searchObject));
 
         //add "since" or "after" filter to search
-        if(lastUid !== undefined) {
+        if (lastUid !== undefined) {
             //if uid smaller than 1, set to 1
-            if(lastUid < 1) lastUid = 1;
+            if (lastUid < 1) lastUid = 1;
             searchObject['UID'] = lastUid.toString() + ":*";
         }
 

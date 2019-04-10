@@ -3,7 +3,7 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-    production: true,
+    production: false,
     //proxyUrl: "http://127.0.0.1:8888/",
     proxyUrl: "https://gw.tidymail.io:443/",
     defaultSearchQuery: { 'HEADER': ['list-unsubscribe', '@'] },

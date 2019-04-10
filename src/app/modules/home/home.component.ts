@@ -102,7 +102,7 @@ export class HomeComponent implements OnInit {
             this.statusMessage = "connecting to server...";
 
             //create client with config
-            await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.trashBoxPath);
+            await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.trashBoxPath, this.userConfig.sentBoxPath);
 
             //open
             await this._imapService.open();
@@ -128,9 +128,6 @@ export class HomeComponent implements OnInit {
             await this._smtpService.open();
 
             this.isSmtpConnected = true;
-
-            //set sync mode for UI
-            this.isSyncing = false;
         }
     }
 
@@ -140,86 +137,86 @@ export class HomeComponent implements OnInit {
 
             await this._zone.runOutsideAngular(async () => {
 
-            //set sync mode for UI
-            this.isSyncing = true;
-            this.showProgress = true;
+                //set sync mode for UI
+                this.isSyncing = true;
+                this.showProgress = true;
 
-            if (!environment.production) console.time('start.sync');
+                if (!environment.production) console.time('start.sync');
 
-            //connect if needed
-            await this.connect();
+                //connect if needed
+                await this.connect();
 
-            //set ui info
-            this.statusMessage = "searching for new newsletters...";
+                //set ui info
+                this.statusMessage = "searching for new newsletters...";
 
-            //get last id
-            var lastProcessedId = this._dbService.getLastId();
+                //get last id
+                var lastProcessedId = this._dbService.getLastId();
 
-            //get all ids with given search term newer than lastProcessed
-            var ids = await this._imapService.getMailIds(lastProcessedId);
-
-
-            if (!environment.production) console.time('start.loaddb');
-            //exclude all processed
-            var processedKeys = await this._dbService.getProcessedIds();
-            if (!environment.production) console.timeEnd('start.loaddb');
-
-            if (!environment.production) console.time('start.filter');
-            ids = ids.filter(function (el) {
-                return processedKeys.indexOf(el) < 0;
-            });
-            //get total count of mails to process
-            if (!environment.production) console.timeEnd('start.filter');
+                //get all ids with given search term newer than lastProcessed
+                var ids = await this._imapService.getMailIds(lastProcessedId);
 
 
-            //start with newest first
-            ids = ids.reverse();
+                if (!environment.production) console.time('start.loaddb');
+                //exclude all processed
+                var processedKeys = await this._dbService.getProcessedIds();
+                if (!environment.production) console.timeEnd('start.loaddb');
 
-            var totalCount = ids.length;
-            var iUpdateFrequency = 500;
-            var index = 0;
-            var lastId = ids.length > 0 ? ids[0] : 1;
+                if (!environment.production) console.time('start.filter');
+                ids = ids.filter(function (el) {
+                    return processedKeys.indexOf(el) < 0;
+                });
+                //get total count of mails to process
+                if (!environment.production) console.timeEnd('start.filter');
 
-            var dNewTab = new Date();
-            dNewTab = new Date(dNewTab.setMonth(dNewTab.getMonth() - environment.countAsNewInMonth));
+
+                //start with newest first
+                ids = ids.reverse();
+
+                var totalCount = ids.length;
+                var iUpdateFrequency = 500;
+                var index = 0;
+                var lastId = ids.length > 0 ? ids[0] : 1;
+
+                var dNewTab = new Date();
+                dNewTab = new Date(dNewTab.setMonth(dNewTab.getMonth() - environment.countAsNewInMonth));
 
 
-            //download all mails
-            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
-                self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
-                self.syncProgress = Math.round(((workedCount) / totalCount) * 100);
-                for (var i = 0; i < fetchedMails.length; i++) {
-                    if (cancelled) {
-                        break;
+                //download all mails
+                var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
+                    self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
+                    self.syncProgress = Math.round(((workedCount) / totalCount) * 100);
+                    for (var i = 0; i < fetchedMails.length; i++) {
+                        if (cancelled) {
+                            break;
+                        }
+
+                        self._dbService.add(fetchedMails[i], dNewTab);
+
+                        index++;
+
+                        if (index % iUpdateFrequency == 0) {
+                            //self._dbService.updateView(0);        
+                        }
                     }
+                    //self._dbService.updateView(0);
+                });
 
-                    self._dbService.add(fetchedMails[i], dNewTab);
+                //force view update for new mail
+                this._dbService.updateView(0);
 
-                    index++;
+                //set cancel back
+                this.bCancel = false;
 
-                    if (index % iUpdateFrequency == 0) {
-                        //self._dbService.updateView(0);        
-                    }
-                }
-                //self._dbService.updateView(0);
-            });
+                //set sync mode OFF for UI
+                this.isSyncing = false;
+                this.showProgress = false;
 
-            //force view update for new mail
-            this._dbService.updateView(0);
+                //close client
+                //await this._imapService.close();
 
-            //set cancel back
-            this.bCancel = false;
+                //this._userService.saveLastUid(lastId);
 
-            //set sync mode OFF for UI
-            this.isSyncing = false;
-            this.showProgress = false;
-
-            //close client
-            //await this._imapService.close();
-
-            //this._userService.saveLastUid(lastId);
-
-            if (!environment.production) console.timeEnd('start.sync');
+                if (!environment.production) console.timeEnd('start.sync');
             });
 
 
@@ -260,14 +257,32 @@ export class HomeComponent implements OnInit {
     }
 
     async onUnsubscribeMsg(id) {
+        this.isSyncing = true;
+
         var self = this;
         var msg = await this._dbService.getMsgById(id);
         if (msg !== undefined) {
             var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
             if (unSubInfo.email != "") {
+                this.statusMessage = 'Connecting SMTP...';
+
+                //connect to smtp if needed
                 await this.connectSmtp();
+
+                //connect to imap if needed
+                await this.connect();
+
+                //send unsubscribe mail
                 await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
+
+                this.statusMessage = 'Move sent mail to trash...';
+
+                //delete unsubscribe mail from sent box
+                await this._imapService.deleteSentMails(unSubInfo.email);
+
+                //move in db
                 await this._dbService.unsubscribe(id);
+
                 let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
             } else {
                 if (unSubInfo.url != "") {
@@ -278,16 +293,19 @@ export class HomeComponent implements OnInit {
             }
 
         }
+
+        this.isSyncing = false;
+
     }
 
-    async onDeleteDomain(hostname) {
+    async onDeleteDomain(obj) {
         this.isSyncing = true;
 
         //check if imap connected
         await this.connect();
 
         //get all messages for domain
-        var allMessagesToDelete = await this._dbService.getMailsByHostname(hostname);
+        var allMessagesToDelete = await this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
 
         //delete msg and all in ignored list in imap
         for (var i = 0; i < allMessagesToDelete.length; i++) {
@@ -312,11 +330,11 @@ export class HomeComponent implements OnInit {
         this.isSyncing = false;
     }
 
-    async onKeepMsgDomain(hostname) {
+    async onKeepMsgDomain(obj) {
         this.isSyncing = true;
 
         //get all messages for domain
-        var allMessageToKeep = await this._dbService.getMailsByHostname(hostname);
+        var allMessageToKeep = await this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
 
         for (var i = 0; i < allMessageToKeep.length; i++) {
             await this.onKeepMsg(allMessageToKeep[i].lastId);
@@ -326,13 +344,15 @@ export class HomeComponent implements OnInit {
     }
 
 
-    async onUnsubscribeDomain(hostname) {
+    async onUnsubscribeDomain(obj) {
         this.isSyncing = true;
         //get all messages for domain
-        var allMessagesToUnSubscribe = await this._dbService.getMailsByHostname(hostname);
+        var allMessagesToUnSubscribe = await this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
+
         for (var i = 0; i < allMessagesToUnSubscribe.length; i++) {
             await this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
         }
+
         this.isSyncing = false;
     }
 
@@ -340,7 +360,7 @@ export class HomeComponent implements OnInit {
 
 
 function getUnsubscriptionInfo(unsubString) {
-    var r = { email: '', url: '', subject: '' };
+    var r = { email: '', url: '', subject: '', body: '' };
     var parts = unsubString.split(',');
 
     for (var i = 0; i < parts.length; i++) {
@@ -356,12 +376,25 @@ function getUnsubscriptionInfo(unsubString) {
 
             var iWithParameter = r.email.indexOf('?');
             if (iWithParameter != -1) {
-                var params = r.email.substr(iWithParameter + 1);
-                var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
-                if (paramsObject.subject) {
-                    r.subject = paramsObject.subject;
+                try {
+                    var params = r.email.substr(iWithParameter + 1);
+                    //if any space in it truncate all behind space
+                    params = params.split(' ')[0].trim();
+                    var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
+                    if (paramsObject.subject) {
+                        r.subject = paramsObject.subject;
+                    }
+                    if (paramsObject.body) {
+                        r.body = paramsObject.body;
+                    }
+                    r.email = r.email.substring(0, iWithParameter);
+                } catch(error) {
+                    var queryString = r.email.substr(iWithParameter + 1).toLowerCase();
+                    if(queryString.indexOf('subject=') != -1) {
+                        r.subject = queryString.substr(queryString.indexOf('subject=') + 8);
+                    }
+                    r.email = r.email.substring(0, iWithParameter);
                 }
-                r.email = r.email.substring(0, iWithParameter);
             }
             //check if email has subject included
 
