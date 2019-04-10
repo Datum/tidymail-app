@@ -66,7 +66,15 @@
                     </mat-checkbox>
                 </div>
             </div>
-
+            <div class="row">
+                    <div class="col">
+                        Show confirmation by delete
+                    </div>
+                    <div class="col">
+                        <mat-checkbox (change)="changeDeleteConfirmation()" [checked]="userConfig.showDeleteConfirm" color="primary">
+                        </mat-checkbox>
+                    </div>
+                </div>
         </mat-card-content>
         <mat-card-actions>
             <button mat-raised-button (click)="removeAccount()">REMOVE ACCOUNT</button>

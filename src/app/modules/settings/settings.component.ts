@@ -47,12 +47,15 @@ export class SettingsComponent implements OnInit {
         this._userService.save(this.userConfig);
     }
 
+    changeDeleteConfirmation() {
+        this.userConfig.showDeleteConfirm = !this.userConfig.showDeleteConfirm;
+        this._userService.save(this.userConfig);
+    }
+
     async importDatabase() {
         await this._dbService.deleteDb();
         var json = await this._http.get<any>(this.urlEncoded,  { responseType: 'text' as 'json'}).toPromise();
         this._dbService.importJSON(json);
-        console.log(JSON.parse(json));
-        console.log('import done');
     }
 
     exportDatabase() {

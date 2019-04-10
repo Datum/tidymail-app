@@ -113,7 +113,6 @@ export class ImapService {
             console.log(error);
             throw new Error(error);
         };
-
         return this.client.connect();
     }
 

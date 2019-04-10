@@ -6,18 +6,25 @@ export interface DialogData {
     title: string;
     content: string;
     extraContent: string;
+    checkboxText:string;
   }
 
 @Component({
     templateUrl: 'dialog-alert.html',
 })
-export class DialogAlert {
-
+export class DialogAlert 
+{
     constructor(
         public dialogRef: MatDialogRef<DialogAlert>,
         @Inject(MAT_DIALOG_DATA) public data: DialogData) { }
 
-    onNoClick(): void {
-        this.dialogRef.close();
+    checked:boolean = false;
+
+    onCancel(): void {
+        this.dialogRef.close({ state: 'cancel', checked: this.checked});
+    }
+
+    onOk(): void {
+        this.dialogRef.close({ state: 'ok', checked: this.checked});
     }
 }

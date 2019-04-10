@@ -4,7 +4,12 @@
     <p class="text-danger">
         <small>{{ data.extraContent }}</small>
     </p>
+    <p *ngIf="data.checkboxText != ''">
+        <mat-checkbox [checked]="checked" (change)="checked = !checked" color="primary">{{ data.checkboxText }}
+        </mat-checkbox>
+    </p>
 </div>
 <div mat-dialog-actions>
-    <button mat-flat-button color="primary" (click)="onNoClick()">Dismiss</button>
+    <button mat-flat-button color="primary" (click)="onOk()">OK</button>
+    <button style="margin-left:5px;" mat-flat-button color="warn" (click)="onCancel()">CANCEL</button>
 </div>

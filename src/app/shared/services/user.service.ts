@@ -27,6 +27,7 @@ export class UserService {
             this.userConfig.firsttime = true;
             this.userConfig.token = randomsecret;
             this.userConfig.autoSync = true;
+            this.userConfig.showDeleteConfirm = true;
         } else {
             this.userConfig = JSON.parse(config);
             if(this.userConfig.password !== undefined)

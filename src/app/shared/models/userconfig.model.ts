@@ -16,4 +16,5 @@ export class UserConfig {
     trashBoxPath:string;
     sentBoxPath:string;
     autoSync:boolean;
+    showDeleteConfirm:boolean;
 }

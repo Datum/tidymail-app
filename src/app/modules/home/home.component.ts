@@ -235,6 +235,15 @@ export class HomeComponent implements OnInit {
 
 
     async onDeleteMsg(msgId) {
+
+        this.isSyncing = true;
+
+        //if canceled, stop
+        if (!await this.showDeleteConfirmation()) {
+            return;
+        }
+
+        //connect if needed
         await this.connect();
 
         var msg = this._dbService.getMsgById(msgId);
@@ -250,6 +259,8 @@ export class HomeComponent implements OnInit {
                 console.log(error);
             }
         }
+
+        this.isSyncing = false;
     }
 
     async onKeepMsg(id) {
@@ -298,7 +309,32 @@ export class HomeComponent implements OnInit {
 
     }
 
+    showDeleteConfirmation() {
+        var self = this;
+        return new Promise<boolean>(
+            (resolve, reject) => {
+                if (this.userConfig.showDeleteConfirm || this.userConfig.showDeleteConfirm === undefined) {
+                    this._uiService.showAlert("The Emails will be moved to your mailbox trash folder. Are you sure ?", "Confirmation", "They will be deleted after certain time depending on your settings.", "Remember?", function (result) {
+                        if (result.checked) {
+                            self.userConfig.showDeleteConfirm = false;
+                            self._userService.save(self.userConfig);
+                        }
+
+                        resolve(result.state == 'ok' ? true : false);
+                    });
+                } else {
+                    resolve(true);
+                }
+            }
+        );
+    }
+
     async onDeleteDomain(obj) {
+        //if canceled, stop
+        if (!await this.showDeleteConfirmation()) {
+            return;
+        }
+
         this.isSyncing = true;
 
         //check if imap connected
@@ -324,8 +360,6 @@ export class HomeComponent implements OnInit {
                 console.log(error);
             }
         }
-
-
 
         this.isSyncing = false;
     }
@@ -388,9 +422,9 @@ function getUnsubscriptionInfo(unsubString) {
                         r.body = paramsObject.body;
                     }
                     r.email = r.email.substring(0, iWithParameter);
-                } catch(error) {
+                } catch (error) {
                     var queryString = r.email.substr(iWithParameter + 1).toLowerCase();
-                    if(queryString.indexOf('subject=') != -1) {
+                    if (queryString.indexOf('subject=') != -1) {
                         r.subject = queryString.substr(queryString.indexOf('subject=') + 8);
                     }
                     r.email = r.email.substring(0, iWithParameter);
