@@ -258,13 +258,11 @@ export class DbService {
             dg.identifier = groupIndex;
             dg.messagegroups = [mg];
             dg.displayName = groupIndex;
-            dg.totalEntries = 1;
             this.getMemDBTable(source).insert(dg);
 
             //always ui update new groups!
             updateObervables = true;
         } else {
-            tt.totalEntries = tt.totalEntries + 1;
             var mgHost = tt.messagegroups.find(x => x.key === msg.hostname);
             if (mgHost === undefined) {
                 var mg: MessageGroup = new MessageGroup();

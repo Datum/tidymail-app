@@ -33,16 +33,16 @@ export class HomeComponent implements OnInit {
     bCancel: boolean = false;
     statusMessage: string;
     userConfig: UserConfig;
-    
+
 
 
     undhandledMails: Observable<DisplayGroup[]>;
     keepMails: Observable<DisplayGroup[]>;
     unsubscribedMails: Observable<DisplayGroup[]>;
 
-    undhandledMailsCount:number = 0;
-    keepMailsCount:number = 0;
-    unsubMailsCount:number = 0;
+    undhandledMailsCount: number = 0;
+    keepMailsCount: number = 0;
+    unsubMailsCount: number = 0;
 
     async ngOnInit() {
 
@@ -78,17 +78,17 @@ export class HomeComponent implements OnInit {
         this.keepMails = this._dbService.keepMails;
         this.unsubscribedMails = this._dbService.unsubbedMails;
 
-        this.undhandledMails.subscribe(function(msgs) {
-            if(msgs.length > 0)
-                self.undhandledMailsCount = msgs.map(item => item.totalEntries).reduce((prev, next) => prev + next);
+        this.undhandledMails.subscribe(function (msgs) {
+            if (msgs.length > 0)
+                self.undhandledMailsCount = msgs.map(item => item.messagegroups).reduce((a, b) => a.concat(b), []).map(item => item.estimatedMessageCount).reduce((prev, next) => prev + next);
         })
-        this.keepMails.subscribe(function(msgs) {
-            if(msgs.length > 0)
-                self.keepMailsCount = msgs.map(item => item.totalEntries).reduce((prev, next) => prev + next);
+        this.keepMails.subscribe(function (msgs) {
+            if (msgs.length > 0)
+                self.keepMailsCount = msgs.map(item => item.messagegroups).reduce((a, b) => a.concat(b), []).map(item => item.estimatedMessageCount).reduce((prev, next) => prev + next);
         })
-        this.unsubscribedMails.subscribe(function(msgs) {
-            if(msgs.length > 0)
-                self.unsubMailsCount = msgs.map(item => item.totalEntries).reduce((prev, next) => prev + next);
+        this.unsubscribedMails.subscribe(function (msgs) {
+            if (msgs.length > 0)
+                self.unsubMailsCount = msgs.map(item => item.messagegroups).reduce((a, b) => a.concat(b), []).map(item => item.estimatedMessageCount).reduce((prev, next) => prev + next);
         })
     }
 
