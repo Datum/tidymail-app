@@ -306,7 +306,7 @@ export class DbService {
     keep(msgId: string) {
         let msg = this.memdb_mails.by('lastId', msgId);
         if (msg !== undefined) {
-            this.addMsgGroup(msg, 2);
+            this.addMsgGroup(msg, 2,true);
             this.removeMsgGroup(msg, msg.status);
             msg.status = 2;
         }
@@ -326,7 +326,7 @@ export class DbService {
     unsubscribe(msgId: string) {
         let msg = this.memdb_mails.by('lastId', msgId);
         if (msg !== undefined) {
-            this.addMsgGroup(msg, 1);
+            this.addMsgGroup(msg, 1,true);
             this.removeMsgGroup(msg, msg.status);
             msg.status = 1;
         }

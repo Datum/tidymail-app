@@ -138,7 +138,7 @@ export class HomeComponent implements OnInit {
         var self = this;
         try {
 
-            //await this._zone.runOutsideAngular(async () => {
+            await this._zone.runOutsideAngular(async () => {
 
             //set sync mode for UI
             this.isSyncing = true;
@@ -220,7 +220,7 @@ export class HomeComponent implements OnInit {
             //this._userService.saveLastUid(lastId);
 
             if (!environment.production) console.timeEnd('start.sync');
-            //});
+            });
 
 
         } catch (error) {
