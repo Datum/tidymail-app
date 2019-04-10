@@ -15,12 +15,14 @@
                 <mat-progress-bar [hidden]="!showProgress" [value]="syncProgress" mode="determinate"></mat-progress-bar>
             </div>
         </div>
+        <!--
         <div class=" header-row-padding" *ngIf="!isSyncing">
             <button mat-raised-button (click)="sync()">
                 <mat-icon>sync</mat-icon>
                 SCAN NOW
             </button>
         </div>
+        -->
     </div>
     <div class="col text-right header-row-padding">
         <button [disabled]="isSyncing" mat-raised-button routerLink="/settings">

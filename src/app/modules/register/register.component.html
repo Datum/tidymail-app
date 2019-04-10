@@ -30,7 +30,7 @@
                     <mat-error *ngIf="mailFormGroup.invalid">Please enter a valid email</mat-error>
                 </mat-form-field>
                 <div class="text-right">
-                    <button mat-flat-button color="primary" (click)="mailEntered()" matStepperNext>CONTINUE</button>
+                    <button mat-flat-button color="primary" (click)="mailEntered()">CONTINUE</button>
                 </div>
             </form>
         </mat-step>
@@ -123,7 +123,7 @@
                         <mat-spinner style="margin:0 auto;" [diameter]=50></mat-spinner>
                     </p>
                     <div class="space-2em"></div>
-                    <button (click)="cancel()" mat-flat-button color="primary" matStepperPrevious>CANCEL</button>
+                    <button mat-flat-button color="primary" matStepperPrevious>CANCEL</button>
                 </div>
                 <div *ngIf="hasError">
                     <h2>

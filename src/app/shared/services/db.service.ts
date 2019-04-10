@@ -13,6 +13,7 @@ import {
     mimeWordsEncode, mimeWordsDecode
 } from 'emailjs-mime-codec';
 import { ResolveEnd } from '@angular/router';
+import { environment } from 'src/environments/environment.prod';
 
 
 
@@ -132,9 +133,10 @@ export class DbService {
     }
 
     //adds an email object to storage and observable
-    add(fetchedMailObject, updateObservable = false) {
+    add(fetchedMailObject, newDate, updateObservable = false) {
         var msg = new Message();
         msg.lastId = fetchedMailObject.uid;
+        msg.size = fetchedMailObject['rfc822.size'];
 
         var mailFrom = fetchedMailObject['body[header.fields (from)]'];
         if (mailFrom !== undefined && mailFrom.length > 6) {
@@ -194,8 +196,16 @@ export class DbService {
             }
 
             if (keyCount === undefined) {
+                //if msg is older than value in config, move directly to unsubscribed
+                if (msg.lastDate !== undefined) {
+                    var d = new Date(msg.lastDate);
+                    if (d < newDate) {
+                        msg.status = 1
+                    }
+                }
+
                 this.memdb_mails.insert(msg);
-                this.addMsgGroup(msg, 0, updateObservable);
+                this.addMsgGroup(msg, msg.status, updateObservable);
             } else {
                 keyCount.ignoreIds.push(msg.lastId);
                 this.memdb_mails.update(keyCount);
@@ -333,11 +343,11 @@ export class DbService {
 
     getLastId() {
         var lastId = this.memdb_mails.chain()
-                  .simplesort('lastId', true)
-                  .limit(1)
-                  .data();
-        
-        if(lastId.length == 1) {
+            .simplesort('lastId', true)
+            .limit(1)
+            .data();
+
+        if (lastId.length == 1) {
             return lastId[0].lastId;
         }
 
@@ -369,7 +379,7 @@ export class DbService {
         }
 
         return this.memdb_mails.mapReduce(getIds, concatIds);
-    
+
     }
 }
 

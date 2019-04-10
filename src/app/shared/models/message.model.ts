@@ -25,4 +25,5 @@ export class Message {
     unsubscribeDate:number;
     statusDate:number;
     status:Status;
+    size:number;
 }

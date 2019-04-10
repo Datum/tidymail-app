@@ -5,6 +5,7 @@ import { MatHorizontalStepper } from '@angular/material/stepper';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
 
 declare var require: any;
 
@@ -28,6 +29,8 @@ export class RegisterComponent implements OnInit {
     rewardOnlyRegister: boolean = false;
     imapResponded: boolean = false;
     version: string = require('../../../../package.json').version;
+    emailSettingsFinderUrl: string = "https://emailsettings.firetrust.com/settings?q=";
+    dnsCheckUrl: string = "https://dns-api.org/AAAA/";
 
 
     constructor(
@@ -37,7 +40,8 @@ export class RegisterComponent implements OnInit {
         private _uiService: UIService,
         private _route: ActivatedRoute,
         private _smtpService: SmtpService,
-        private _router: Router) { }
+        private _router: Router,
+        private _http: HttpClient) { }
 
 
     ngOnInit() {
@@ -86,10 +90,41 @@ export class RegisterComponent implements OnInit {
         }
     }
 
-    mailEntered() {
-        this.customImapFormGroup.patchValue({
-            username: this.mailFormGroup.value.email,
-        });
+    async mailEntered() {
+        var lower = this.mailFormGroup.value.email.toLowerCase();
+        if (!lower.endsWith("gmail.com")) {
+            this.customProvider = true;
+            this.customImapFormGroup.patchValue({
+                username: this.mailFormGroup.value.email,
+            });
+            var chunks = this.mailFormGroup.value.email.split("@");
+            var domain = chunks[1];
+            //try to get settings with discovery service url, send only domain
+            var result = await this._http.get<any>(this.emailSettingsFinderUrl + domain).toPromise();
+
+            //there is a special password set hint for this domain
+            if (result.password != "") {
+                this._uiService.showAlert("Please set an app specific password. Help cound be found here: " + result.password);
+            }
+
+            //check if IMAP exists
+            var bFound = false;
+            result.settings.forEach(element => {
+                if (element.protocol == "IMAP") {
+                    this.customImapFormGroup.patchValue({
+                        imaphost: element.address + ":" + element.port,
+                    });
+                    bFound = true;
+                }
+                if (element.protocol == "SMTP") {
+                    this.customImapFormGroup.patchValue({
+                        smtphost: element.address + ":" + element.port,
+                    });
+                }
+            });
+        }
+
+        this.stepper.next();
     }
 
     goBack() {
@@ -176,7 +211,7 @@ export class RegisterComponent implements OnInit {
                 }
             }, 5000);
 
-            
+
             //create imap client
             await this._imapService.create(this.customProvider ?
                 this.customImapFormGroup.value.username : this.mailFormGroup.value.email,
@@ -217,8 +252,8 @@ export class RegisterComponent implements OnInit {
             //close after connection without error
             await this._imapService.close();
 
-            
-            
+
+
             var smtphost = this.customProvider ? this.customImapFormGroup.value.smtphost.split(':')[0] : "smtp.gmail.com";
             var smtpport = this.customProvider ? this.customImapFormGroup.value.smtphost.split(':').length > 1 ? this.customImapFormGroup.value.smtphost.split(':')[1] : 465 : 465;
 

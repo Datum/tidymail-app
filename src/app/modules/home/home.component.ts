@@ -162,6 +162,10 @@ export class HomeComponent implements OnInit {
                 var index = 0;
                 var lastId = ids.length > 0 ? ids[0] : 1;
 
+                var dNewTab = new Date();
+                dNewTab = new Date(dNewTab.setMonth(dNewTab.getMonth()-environment.countAsNewInMonth));
+                
+
                 //download all mails
                 var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
                     self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
@@ -171,7 +175,7 @@ export class HomeComponent implements OnInit {
                             break;
                         }
 
-                        self._dbService.add(fetchedMails[i]);
+                        self._dbService.add(fetchedMails[i],dNewTab);
 
                         index++;
 
