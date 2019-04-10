@@ -9,7 +9,7 @@ import { SettingsComponent } from './settings/settings.component';
 import { RouterModule } from '@angular/router';
 import { ModuleWithProviders } from '@angular/compiler/src/core';
 
-import { MatCardModule, MatInputModule, MatIconModule, MatProgressBarModule, MatTabsModule, MatListModule, MatExpansionModule, MatSnackBarModule } from '@angular/material';
+import { MatCardModule, MatInputModule, MatIconModule, MatProgressBarModule, MatTabsModule, MatListModule, MatExpansionModule, MatSnackBarModule, MatGridListModule, MatChipsModule } from '@angular/material';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
@@ -68,7 +68,9 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         MatTabsModule,
         MatListModule,
         MatExpansionModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatGridListModule,
+        MatChipsModule
     ]
 })
 export class HomeModule { }

@@ -25,6 +25,11 @@
     margin-left: 30px;
  }
 
+ .sublist .mat-list-base {
+     padding-top:0;
+     
+ }
+
 .iconclose {
     margin-left: -5px;
 }
@@ -58,4 +63,9 @@
     font-weight: 400;
     letter-spacing: 0.01785714em;
   
+}
+
+.test {
+    padding: 10px;
+    border:6px solid #fff;
 }

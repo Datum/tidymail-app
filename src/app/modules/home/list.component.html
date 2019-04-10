@@ -6,39 +6,79 @@
             <mat-list avatar style="flex-grow: 1;" class="whiteframe">
                 <div *ngFor="let m of d.messagegroups; let i = index">
                     <mat-card>
-                    <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
-                        [attr.aria-controls]="'collapse' + a + i">
-                        
-                        <p matLine class="notwoline">
-                            <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
-                                class="favimg">
-                            {{ m.name }}
-                            {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
-                            <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
-                                arrow_drop_down</mat-icon>
-                            <small style="color:darkgrey;"> {{ m.hostname }} </small>
-                        </p>
+                        <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
+                            [attr.aria-controls]="'collapse' + a + i">
 
-                        <div mat-list-item style="text-align: right;">
-                            <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
-                                <mat-icon>check</mat-icon>
-                                KEEP
-                            </button>
-                            <button [hidden]="status == 1" mat-button (click)="unsubscribeAll(m,$event)">
-                                <mat-icon>cancel</mat-icon>
-                                UNSUBSCRIBE
+                            <p matLine class="notwoline">
+                                <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
+                                    class="favimg">
+                                {{ m.name }}
+                                {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
+                                <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
+                                    arrow_drop_down</mat-icon>
+                                <small style="color:darkgrey;"> {{ m.hostname }} </small>
+                            </p>
 
-                            </button>
-                            <button mat-button (click)="deleteAll(m,$event)">
-                                <mat-icon>delete</mat-icon>
-                                DELETE
-                            </button>
-                        </div>
-                    
-                    </mat-list-item>
+                            <div mat-list-item style="text-align: right;">
+                                <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
+                                    <mat-icon>check</mat-icon>
+                                    KEEP
+                                </button>
+                                <button [hidden]="status == 1" mat-button (click)="unsubscribeAll(m,$event)">
+                                    <mat-icon>cancel</mat-icon>
+                                    UNSUBSCRIBE
+
+                                </button>
+                                <button mat-button (click)="deleteAll(m,$event)">
+                                    <mat-icon>delete</mat-icon>
+                                    DELETE
+                                </button>
+                            </div>
+
+                        </mat-list-item>
                     </mat-card>
 
                     <div [attr.id]="'collapse' + a + i" [hidden]="m.isCollapsed">
+
+                        <mat-card class="sublist">
+                            <mat-list interactive=false>
+                                <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index">
+                                    <p matLine *ngIf="status != 1" style="max-width:400px;">
+                                        {{ msg.lastSubject }}
+
+                                    </p>
+                                    <p style="margin-top:15px;">
+                                        <mat-chip-list>
+                                            <mat-chip>
+                                                <mat-icon>email</mat-icon>{{ (msg.ignoreIds.length + 1) }}
+                                            </mat-chip>
+                                            <mat-chip color="primary" selected>
+                                                <mat-icon>storage</mat-icon>{{ msg.size }}
+                                            </mat-chip>
+                                            <mat-chip>
+                                                <mat-icon>today</mat-icon>{{ (msg.lastDate | date:'short') }}
+                                            </mat-chip>
+                                        </mat-chip-list>
+                                    </p>
+                                    <div [hidden]="m.messages.length == 1" mat-list-item style="text-align: right;">
+                                        <button mat-button (click)="keep(m,msg.lastId)">
+                                            <mat-icon>check</mat-icon>
+                                            KEEP
+                                        </button>
+                                        <button mat-button (click)="unsubscribe(m,msg.lastId)">
+                                            <mat-icon>cancel</mat-icon>
+                                            UNSUBSCRIBE
+                                        </button>
+                                        <button mat-button (click)="delete(m,msg.lastId)">
+                                            <mat-icon>delete</mat-icon>
+                                            DELETE
+                                        </button>
+                                    </div>
+                                </mat-list-item>
+                            </mat-list>
+                        </mat-card>
+
+                        <!--
                         <mat-list twoLine interactive=false class="sublist">
                             <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index"
                                 class="mat-list--two-line">
@@ -66,7 +106,8 @@
                                 </div>
                             </mat-list-item>
                         </mat-list>
-
+                    -->
+                    
                     </div>
 
                 </div>
