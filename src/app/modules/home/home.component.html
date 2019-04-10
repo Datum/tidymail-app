@@ -33,21 +33,21 @@
 </div>
 
 <mat-tab-group mat-align-tabs="center">
-    <mat-tab label="{{ 'NEW (' + (undhandledMails | async)?.length + ')'}}">
+    <mat-tab label="{{ 'NEW (' + undhandledMailsCount + ')'}}">
         <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
             (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="undhandledMails" [status]="0">
         </grouped-list>
     </mat-tab>
-    <mat-tab label="{{ 'KEEP (' + (keepMails | async)?.length + ')'}}">
+    <mat-tab label="{{ 'KEEP (' + keepMailsCount + ')'}}">
         <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
             (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="keepMails" [status]="2">
         </grouped-list>
     </mat-tab>
-    <mat-tab label="{{ 'UNSUBSCRIBED (' + (unsubscribedMails | async)?.length + ')'}}">
+    <mat-tab label="{{ 'UNSUBSCRIBED (' + unsubMailsCount + ')'}}">
         <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
             (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"

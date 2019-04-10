@@ -4,4 +4,5 @@ export class DisplayGroup {
     messagegroups : MessageGroup[];
     displayName: string;
     identifier:string;
+    totalEntries:number;
 }

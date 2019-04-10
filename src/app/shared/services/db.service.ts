@@ -8,6 +8,7 @@ import * as loki from 'lokijs';
 import * as lokiIndexedAdpater from 'lokijs/src/loki-indexed-adapter.js';
 
 
+
 import {
     mimeWordEncode, mimeWordDecode,
     mimeWordsEncode, mimeWordsDecode
@@ -142,32 +143,32 @@ export class DbService {
         if (mailFrom !== undefined && mailFrom.length > 6) {
             msg.from = mimeWordsDecode(mailFrom.substr(6)).replace(/"/g, '');
         } else {
-            console.log('header not found or invalid for <from>');
-            console.log(fetchedMailObject);
+            if (!environment.production) console.log('header not found or invalid for <from>');
+            if (!environment.production) console.log(fetchedMailObject);
         }
 
         var mailDate = fetchedMailObject['body[header.fields (date)]'];
         if (mailDate !== undefined && mailDate.length > 6) {
             msg.lastDate = Date.parse(mailDate.substr(6));
         } else {
-            console.log('header not found or invalid for <date>');
-            console.log(fetchedMailObject)
+            if (!environment.production) console.log('header not found or invalid for <date>');
+            if (!environment.production) console.log(fetchedMailObject)
         }
 
         var mailSubject = fetchedMailObject['body[header.fields (subject)]'];
         if (mailSubject !== undefined && mailSubject.length > 9) {
             msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
         } else {
-            console.log('header not found or invalid for <subject>');
-            console.log(fetchedMailObject)
+            if (!environment.production) console.log('header not found or invalid for <subject>');
+            if (!environment.production) console.log(fetchedMailObject)
         }
 
         var mailUnsubscribeInfo = fetchedMailObject['body[header.fields (list-unsubscribe)]'];
         if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
             msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
         } else {
-            console.log('header not found or invalid for <list-unsubscribe>');
-            console.log(fetchedMailObject)
+            if (!environment.production) console.log('header not found or invalid for <list-unsubscribe>');
+            if (!environment.production) console.log(fetchedMailObject)
         }
 
         //if no unscribe info here, add mail to ignore list and return
@@ -207,8 +208,11 @@ export class DbService {
                 this.memdb_mails.insert(msg);
                 this.addMsgGroup(msg, msg.status, updateObservable);
             } else {
+                //add id to newsletter
                 keyCount.ignoreIds.push(msg.lastId);
+                //update total size
                 keyCount.size = keyCount.size + msg.size;
+                //update object
                 this.memdb_mails.update(keyCount);
             }
         }
@@ -254,11 +258,13 @@ export class DbService {
             dg.identifier = groupIndex;
             dg.messagegroups = [mg];
             dg.displayName = groupIndex;
+            dg.totalEntries = 1;
             this.getMemDBTable(source).insert(dg);
 
             //always ui update new groups!
             updateObervables = true;
         } else {
+            tt.totalEntries = tt.totalEntries + 1;
             var mgHost = tt.messagegroups.find(x => x.key === msg.hostname);
             if (mgHost === undefined) {
                 var mg: MessageGroup = new MessageGroup();
@@ -332,6 +338,14 @@ export class DbService {
 
     getMailsByHostname(hostname) {
         return this.memdb_mails.find({ hostname: hostname });
+    }
+
+    getMsgCounts() {
+        return {
+            newCount: this.memdb_mails.count({ status: 0 }),
+            keepCount: this.memdb_mails.count({ status: 2 }),
+            unsubCount: this.memdb_mails.count({ status: 1 })
+        }
     }
 
     getMailsWithHostnameAndStatus(hostname, status) {

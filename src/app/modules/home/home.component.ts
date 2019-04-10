@@ -4,7 +4,7 @@ import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfi
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { isDevMode } from '@angular/core';
+
 
 @Component({
     selector: 'app-home',
@@ -28,16 +28,21 @@ export class HomeComponent implements OnInit {
     isConnected: boolean = false;
     isSmtpConnected: boolean = false;
     isSyncing: boolean = false;
-    showProgress:boolean = false;
-    syncProgress:number = 0;
+    showProgress: boolean = false;
+    syncProgress: number = 0;
     bCancel: boolean = false;
     statusMessage: string;
     userConfig: UserConfig;
+    
 
 
     undhandledMails: Observable<DisplayGroup[]>;
     keepMails: Observable<DisplayGroup[]>;
     unsubscribedMails: Observable<DisplayGroup[]>;
+
+    undhandledMailsCount:number = 0;
+    keepMailsCount:number = 0;
+    unsubMailsCount:number = 0;
 
     async ngOnInit() {
 
@@ -66,12 +71,25 @@ export class HomeComponent implements OnInit {
     }
 
     async bind() {
-
+        var self = this;
         await this._dbService.init();
 
         this.undhandledMails = this._dbService.newMails;
         this.keepMails = this._dbService.keepMails;
         this.unsubscribedMails = this._dbService.unsubbedMails;
+
+        this.undhandledMails.subscribe(function(msgs) {
+            if(msgs.length > 0)
+                self.undhandledMailsCount = msgs.map(item => item.totalEntries).reduce((prev, next) => prev + next);
+        })
+        this.keepMails.subscribe(function(msgs) {
+            if(msgs.length > 0)
+                self.keepMailsCount = msgs.map(item => item.totalEntries).reduce((prev, next) => prev + next);
+        })
+        this.unsubscribedMails.subscribe(function(msgs) {
+            if(msgs.length > 0)
+                self.unsubMailsCount = msgs.map(item => item.totalEntries).reduce((prev, next) => prev + next);
+        })
     }
 
     async connect() {
@@ -120,89 +138,89 @@ export class HomeComponent implements OnInit {
         var self = this;
         try {
 
-            await this._zone.runOutsideAngular(async () => {
+            //await this._zone.runOutsideAngular(async () => {
 
-                //set sync mode for UI
-                this.isSyncing = true;
-                this.showProgress = true;
+            //set sync mode for UI
+            this.isSyncing = true;
+            this.showProgress = true;
 
-                if (isDevMode) console.time('start.sync');
+            if (!environment.production) console.time('start.sync');
 
-                //connect if needed
-                await this.connect();
+            //connect if needed
+            await this.connect();
 
-                //set ui info
-                this.statusMessage = "searching for new newsletters...";
+            //set ui info
+            this.statusMessage = "searching for new newsletters...";
 
-                //get last id
-                var lastProcessedId = this._dbService.getLastId();
+            //get last id
+            var lastProcessedId = this._dbService.getLastId();
 
-                //get all ids with given search term newer than lastProcessed
-                var ids = await this._imapService.getMailIds(lastProcessedId);
+            //get all ids with given search term newer than lastProcessed
+            var ids = await this._imapService.getMailIds(lastProcessedId);
 
-                
-                if (isDevMode) console.time('start.loaddb');
-                //exclude all processed
-                var processedKeys = await this._dbService.getProcessedIds();
-                if (isDevMode) console.timeEnd('start.loaddb');
 
-                if (isDevMode) console.time('start.filter');
-                ids = ids.filter(function (el) {
-                    return processedKeys.indexOf(el) < 0;
-                });
-                //get total count of mails to process
-                if (isDevMode) console.timeEnd('start.filter');
-                
+            if (!environment.production) console.time('start.loaddb');
+            //exclude all processed
+            var processedKeys = await this._dbService.getProcessedIds();
+            if (!environment.production) console.timeEnd('start.loaddb');
 
-                //start with newest first
-                ids = ids.reverse();
-
-                var totalCount = ids.length;
-                var iUpdateFrequency = 500;
-                var index = 0;
-                var lastId = ids.length > 0 ? ids[0] : 1;
-
-                var dNewTab = new Date();
-                dNewTab = new Date(dNewTab.setMonth(dNewTab.getMonth()-environment.countAsNewInMonth));
-                
-
-                //download all mails
-                var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
-                    self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
-                    self.syncProgress = Math.round(((workedCount) / totalCount) * 100);
-                    for (var i = 0; i < fetchedMails.length; i++) {
-                        if (cancelled) {
-                            break;
-                        }
-
-                        self._dbService.add(fetchedMails[i],dNewTab);
-
-                        index++;
-
-                        if (index % iUpdateFrequency == 0) {
-                            //self._dbService.updateView(0);        
-                        }
-                    }
-                    //self._dbService.updateView(0);
-                });
-
-                //force view update for new mail
-                this._dbService.updateView(0);
-
-                //set cancel back
-                this.bCancel = false;
-
-                //set sync mode OFF for UI
-                this.isSyncing = false;
-                this.showProgress = false;
-
-                //close client
-                //await this._imapService.close();
-
-                //this._userService.saveLastUid(lastId);
-
-                if (isDevMode) console.timeEnd('start.sync');
+            if (!environment.production) console.time('start.filter');
+            ids = ids.filter(function (el) {
+                return processedKeys.indexOf(el) < 0;
             });
+            //get total count of mails to process
+            if (!environment.production) console.timeEnd('start.filter');
+
+
+            //start with newest first
+            ids = ids.reverse();
+
+            var totalCount = ids.length;
+            var iUpdateFrequency = 500;
+            var index = 0;
+            var lastId = ids.length > 0 ? ids[0] : 1;
+
+            var dNewTab = new Date();
+            dNewTab = new Date(dNewTab.setMonth(dNewTab.getMonth() - environment.countAsNewInMonth));
+
+
+            //download all mails
+            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
+                self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
+                self.syncProgress = Math.round(((workedCount) / totalCount) * 100);
+                for (var i = 0; i < fetchedMails.length; i++) {
+                    if (cancelled) {
+                        break;
+                    }
+
+                    self._dbService.add(fetchedMails[i], dNewTab);
+
+                    index++;
+
+                    if (index % iUpdateFrequency == 0) {
+                        //self._dbService.updateView(0);        
+                    }
+                }
+                //self._dbService.updateView(0);
+            });
+
+            //force view update for new mail
+            this._dbService.updateView(0);
+
+            //set cancel back
+            this.bCancel = false;
+
+            //set sync mode OFF for UI
+            this.isSyncing = false;
+            this.showProgress = false;
+
+            //close client
+            //await this._imapService.close();
+
+            //this._userService.saveLastUid(lastId);
+
+            if (!environment.production) console.timeEnd('start.sync');
+            //});
 
 
         } catch (error) {
