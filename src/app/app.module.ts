@@ -36,8 +36,8 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
     ReactiveFormsModule,
     HttpClientModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
-    //NoopAnimationsModule,
+    //BrowserAnimationsModule,
+    NoopAnimationsModule,
     HomeModule,
     Angulartics2Module.forRoot()
   ],

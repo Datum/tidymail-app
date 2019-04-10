@@ -12,7 +12,7 @@
             </div>
             <div>
                 <!--<mat-icon (click)="cancel()" inline clickable>cancel</mat-icon>-->
-                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                <mat-progress-bar [hidden]="!showProgress" [value]="syncProgress" mode="determinate"></mat-progress-bar>
             </div>
         </div>
         <div class=" header-row-padding" *ngIf="!isSyncing">

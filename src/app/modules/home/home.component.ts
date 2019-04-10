@@ -28,6 +28,8 @@ export class HomeComponent implements OnInit {
     isConnected: boolean = false;
     isSmtpConnected: boolean = false;
     isSyncing: boolean = false;
+    showProgress:boolean = false;
+    syncProgress:number = 0;
     bCancel: boolean = false;
     statusMessage: string;
     userConfig: UserConfig;
@@ -122,6 +124,7 @@ export class HomeComponent implements OnInit {
 
                 //set sync mode for UI
                 this.isSyncing = true;
+                this.showProgress = true;
 
                 if (isDevMode) console.time('start.sync');
 
@@ -161,9 +164,9 @@ export class HomeComponent implements OnInit {
 
                 //download all mails
                 var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
+                    self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
+                    self.syncProgress = Math.round(((workedCount) / totalCount) * 100);
                     for (var i = 0; i < fetchedMails.length; i++) {
-                        self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
-
                         if (cancelled) {
                             break;
                         }
@@ -187,6 +190,7 @@ export class HomeComponent implements OnInit {
 
                 //set sync mode OFF for UI
                 this.isSyncing = false;
+                this.showProgress = false;
 
                 //close client
                 //await this._imapService.close();
