@@ -43,10 +43,10 @@
 
                             <mat-list interactive=false class="sublist">
                                 <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index">
-                                    <p matLine *ngIf="status != 1" style="max-width:490px;">
+                                    <p matLine style="max-width:490px;">
                                         {{ msg.from }}
                                     </p>
-                                    <p matLine *ngIf="status != 1" style="max-width:490px;">
+                                    <p matLine style="max-width:490px;">
                                         <span style="font-weight: 500;">{{ msg.timeago }}</span> "{{ msg.lastSubject }}"
 
                                     </p>
@@ -58,11 +58,11 @@
                                         </mat-chip-list>
                                     </p>
                                     <div [hidden]="m.messages.length == 1" mat-list-item style="text-align: right;">
-                                        <button mat-button (click)="keep(m,msg.lastId)">
+                                        <button  *ngIf="status != 2"  mat-button (click)="keep(m,msg.lastId)">
                                             <mat-icon>check</mat-icon>
                                             KEEP
                                         </button>
-                                        <button mat-button (click)="unsubscribe(m,msg.lastId)">
+                                        <button *ngIf="status != 1" mat-button (click)="unsubscribe(m,msg.lastId)">
                                             <mat-icon>cancel</mat-icon>
                                             UNSUBSCRIBE
                                         </button>
