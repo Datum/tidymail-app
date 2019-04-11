@@ -2,6 +2,7 @@ import { Input, Component, ChangeDetectionStrategy, Output, EventEmitter } from 
 import { DisplayGroup, MessageGroup } from '../../shared/models';
 import { DbService, UserService, UserConfig, ImapService } from '../../shared';
 import { Observable } from 'rxjs';
+import * as moment from 'moment';
 
 @Component({
     selector: 'grouped-list',
@@ -41,6 +42,7 @@ export class ListComponent {
                 m.messages = await this._dbService.getMailsWithHostnameAndStatus(m.hostname, self.status);
                 m.messages.forEach(element => {
                     element.size = bytesToSize(element.size);
+                    element.timeago = formatDate(element.lastDate);
                 });
             }
         }
@@ -89,3 +91,7 @@ function bytesToSize(bytes) {
     var i = parseInt((Math.floor(Math.log(bytes) / Math.log(1024)).toString()));
     return parseFloat((bytes / Math.pow(1024, i)).toString()).toFixed(2) + ' ' + sizes[i];
  };
+
+function formatDate(date) {
+    return moment(date).fromNow();
+};

@@ -40,23 +40,20 @@
 
                     <div [attr.id]="'collapse' + a + i" [hidden]="m.isCollapsed">
 
-                        <mat-card class="sublist">
-                            <mat-list interactive=false>
+
+                            <mat-list interactive=false class="sublist">
                                 <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index">
-                                    <p matLine *ngIf="status != 1" style="max-width:400px;">
-                                        {{ msg.lastSubject }}
+                                    <p matLine *ngIf="status != 1" style="max-width:490px;">
+                                        {{ msg.from }}
+                                    </p>
+                                    <p matLine *ngIf="status != 1" style="max-width:490px;">
+                                        <span style="font-weight: 500;">{{ msg.timeago }}</span> "{{ msg.lastSubject }}"
 
                                     </p>
                                     <p style="margin-top:15px;">
-                                        <mat-chip-list>
+                                        <mat-chip-list style="float:left">
                                             <mat-chip>
-                                                <mat-icon>email</mat-icon>{{ (msg.ignoreIds.length + 1) }}
-                                            </mat-chip>
-                                            <mat-chip color="primary" selected>
-                                                <mat-icon>storage</mat-icon>{{ msg.size }}
-                                            </mat-chip>
-                                            <mat-chip>
-                                                <mat-icon>today</mat-icon>{{ (msg.lastDate | date:'short') }}
+                                                <mat-icon>email</mat-icon>{{ (msg.ignoreIds.length + 1) }} ({{ msg.size }})
                                             </mat-chip>
                                         </mat-chip-list>
                                     </p>
@@ -76,7 +73,7 @@
                                     </div>
                                 </mat-list-item>
                             </mat-list>
-                        </mat-card>
+
 
                         <!--
                         <mat-list twoLine interactive=false class="sublist">
