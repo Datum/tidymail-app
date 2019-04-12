@@ -14,6 +14,9 @@ import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 import { Angulartics2Module } from 'angulartics2';
 import { Angulartics2GoogleAnalytics } from 'angulartics2/ga';
 
+
+
+
 import {
     //GmailService,
     DbService,
@@ -28,7 +31,7 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule,
@@ -39,7 +42,7 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
     //BrowserAnimationsModule,
     NoopAnimationsModule,
     HomeModule,
-    Angulartics2Module.forRoot()
+    Angulartics2Module.forRoot(),
   ],
   providers: [DbService, UserService,ImapService, UIService, SmtpService],
   bootstrap: [AppComponent],

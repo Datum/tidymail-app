@@ -1,20 +1,19 @@
 <div *ngIf="groups | async as groups; else loading">
     <ng-container *ngIf="groups.length; else noItems">
         <!--<mat-list-group>-->
-        <div *ngFor="let d of groups;let a = index;" class="row newsletterlist">
-            <h3 matSubheader class="listheader">{{ d.identifier }}</h3>
+        <div *ngFor="let d of groups | groupBy:'groupIndex';let a = index;" class="row newsletterlist">
+            <h3 matSubheader class="listheader">{{ d.key }}</h3>
             <mat-list avatar style="flex-grow: 1;" class="whiteframe">
-                <div *ngFor="let m of d.messagegroups; let i = index">
+                <div *ngFor="let m of d.value; let i = index">
                     <mat-card>
                         <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                             [attr.aria-controls]="'collapse' + a + i">
-
                             <p matLine class="notwoline">
                                 <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
                                     class="favimg">
-                                {{ m.name }}
-                                {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
-                                <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
+                                {{ m.from }}
+                                {{ m.count>1 ? '('+m.count+')' : ''}}
+                                <mat-icon *ngIf="d.count>1" style="position: relative;bottom: -5px;">
                                     arrow_drop_down</mat-icon>
                                 <small style="color:darkgrey;"> {{ m.hostname }} </small>
                             </p>
@@ -39,21 +38,19 @@
                     </mat-card>
 
                     <div [attr.id]="'collapse' + a + i" [hidden]="m.isCollapsed">
-
-
                             <mat-list interactive=false class="sublist">
                                 <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index">
                                     <p matLine style="max-width:490px;">
                                         {{ msg.from }}
                                     </p>
                                     <p matLine style="max-width:490px;">
-                                        <span style="font-weight: 500;">{{ msg.timeago }}</span> "{{ msg.lastSubject }}"
+                                        <span style="font-weight: 500;">{{ msg.lastDate | timeago }}</span> "{{ msg.lastSubject }}"
 
                                     </p>
                                     <p style="margin-top:15px;">
                                         <mat-chip-list style="float:left">
                                             <mat-chip>
-                                                <mat-icon>email</mat-icon>{{ (msg.ignoreIds.length + 1) }} ({{ msg.size }})
+                                                <mat-icon>email</mat-icon>{{ (msg.ignoreIds.length + 1) }} ({{ msg.size | filesize }})
                                             </mat-chip>
                                         </mat-chip-list>
                                     </p>

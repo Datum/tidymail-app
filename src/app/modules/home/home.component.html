@@ -36,6 +36,18 @@
         </div>
     </div>
 
+   
+    <div *ngIf="showChart" class="row" style="margin-top:10px;">
+        <div class="col">
+            <app-stats-mailbox [mailbox]="userMailbox"></app-stats-mailbox>
+        </div>
+        <div class="col">
+                
+        </div>
+    </div>
+
+    
+
     <mat-tab-group class="tabbar" mat-align-tabs="center" [(selectedIndex)]="selectedTab">
         <mat-tab label="{{ 'NEW (' + undhandledMailsCount + ')'}}">
 
@@ -68,5 +80,6 @@
             (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="unsubscribedMails" [status]="1">
         </grouped-list>
+        
     </div>
 </div>

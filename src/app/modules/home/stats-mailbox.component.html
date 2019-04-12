@@ -1,0 +1,14 @@
+<div class="row">
+    <div class="col text-right">
+        <div style="padding-top:15px;">
+            <div><b>Mailbox Info</b></div>
+            <div>Mails: {{ _mailbox.totalMails }}</div>
+            <div>Newsletters: {{ _mailbox.totalNewsletters }}</div>
+            <div>Size: {{ _mailbox.totalNewsletterSize | filesize}}</div>
+            <div>Overall Read: <span [ngClass]="{ 'text-green': _mailbox.newsletterReadPercentage > 50, 'text-red': _mailbox.newsletterReadPercentage <= 50 }">{{ _mailbox.newsletterReadPercentage }} %</span>  </div>
+        </div>
+    </div>
+    <div class="col">
+        <app-chart [data]="chartData"></app-chart>
+    </div>
+</div>

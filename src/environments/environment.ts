@@ -3,12 +3,12 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-    production: false,
-    //proxyUrl: "http://127.0.0.1:8888/",
-    proxyUrl: "https://gw.tidymail.io:443/",
+    production: true,
+    proxyUrl: "http://127.0.0.1:8888/",
+    //proxyUrl: "https://gw.tidymail.io:443/",
     defaultSearchQuery: { 'HEADER': ['list-unsubscribe', '@'] },
     gmailSearchQuery: { 'X-GM-RAW': "label:^unsub" } ,
-    fetchBatchSize: 100,
+    fetchBatchSize: 200,
     fetchImapFlags: ['uid', 'flags','rfc822.size','BODY.PEEK[HEADER.FIELDS (DATE)]', 'BODY.PEEK[HEADER.FIELDS (SUBJECT)]', 'BODY.PEEK[HEADER.FIELDS (FROM)]', 'BODY.PEEK[HEADER.FIELDS (LIST-UNSUBSCRIBE)]'],
     countAsNewInMonth: 6,
     corsProxy: "https://tidymail.io/backend/cp?url=",

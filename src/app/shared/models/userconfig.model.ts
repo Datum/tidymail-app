@@ -17,4 +17,5 @@ export class UserConfig {
     sentBoxPath:string;
     autoSync:boolean;
     showDeleteConfirm:boolean;
+    totalMails:number;
 }

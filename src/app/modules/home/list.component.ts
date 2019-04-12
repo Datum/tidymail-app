@@ -2,7 +2,6 @@ import { Input, Component, ChangeDetectionStrategy, Output, EventEmitter } from 
 import { DisplayGroup, MessageGroup } from '../../shared/models';
 import { DbService, UserService, UserConfig, ImapService } from '../../shared';
 import { Observable } from 'rxjs';
-import * as moment from 'moment';
 
 @Component({
     selector: 'grouped-list',
@@ -28,11 +27,9 @@ export class ListComponent {
      }
 
 
-
     //open/close group and reload messages if needed
     async toogleGroup(m, event) {
         var self = this;
-
         //toogle collpanse
         m.isCollapsed = !m.isCollapsed
         //load msg if needed
@@ -40,10 +37,6 @@ export class ListComponent {
             if (m.messages.length == 0) {
                 //load messages
                 m.messages = await this._dbService.getMailsWithHostnameAndStatus(m.hostname, self.status);
-                m.messages.forEach(element => {
-                    element.size = bytesToSize(element.size);
-                    element.timeago = formatDate(element.lastDate);
-                });
             }
         }
     }
@@ -84,14 +77,3 @@ export class ListComponent {
 
 
 
-
-function bytesToSize(bytes) {
-    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes == 0) return '0 Byte';
-    var i = parseInt((Math.floor(Math.log(bytes) / Math.log(1024)).toString()));
-    return parseFloat((bytes / Math.pow(1024, i)).toString()).toFixed(2) + ' ' + sizes[i];
- };
-
-function formatDate(date) {
-    return moment(date).fromNow();
-};

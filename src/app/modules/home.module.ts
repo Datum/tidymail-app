@@ -21,6 +21,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DialogAlert } from '../shared/dialogs/dialog-alert';
 import { DialogPassword } from '../shared/dialogs/dialog-password';
 import { ListComponent } from './home/list.component';
+import { ChartComponent } from '../shared/charts/chart.component';
+import { ChartsModule } from 'ng4-charts';
+import { FileSizePipe, GroupByPipe, TimeAgoPipe } from '../shared';
+import { StatsMailboxComponent } from './home/stats-mailbox.component';
 
 
 const dataRouting: ModuleWithProviders = RouterModule.forChild([
@@ -50,6 +54,11 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         ListComponent,
         DialogAlert,
         DialogPassword,
+        ChartComponent,
+        StatsMailboxComponent,
+        FileSizePipe,
+        GroupByPipe,
+        TimeAgoPipe
     ],
     imports: [
         CommonModule,
@@ -70,7 +79,8 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         MatExpansionModule,
         MatSnackBarModule,
         MatGridListModule,
-        MatChipsModule
+        MatChipsModule,
+        ChartsModule
     ]
 })
 export class HomeModule { }
