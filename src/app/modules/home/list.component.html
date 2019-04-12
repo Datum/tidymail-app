@@ -9,13 +9,25 @@
                         <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
                             [attr.aria-controls]="'collapse' + a + i">
                             <p matLine class="notwoline">
+                                <!--{{ m.readCount }} / {{ m.totalMails }}-->
                                 <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
                                     class="favimg">
                                 {{ m.from }}
                                 {{ m.count>1 ? '('+m.count+')' : ''}}
-                                <mat-icon *ngIf="d.count>1" style="position: relative;bottom: -5px;">
+                                <mat-icon *ngIf="m.count>1" style="position: relative;bottom: -5px;">
                                     arrow_drop_down</mat-icon>
-                                <small style="color:darkgrey;"> {{ m.hostname }} </small>
+                                <small style="color:darkgrey;"> 
+                                        {{ m.hostname }} 
+                                </small>
+                                -
+                                <small [ngClass]="{ 'text-green': (m.readCount / m.totalMails * 100) > 50, 'text-red': (m.readCount / m.totalMails * 100) <= 50 }"> 
+                                    {{ (m.readCount / m.totalMails * 100).toFixed(2) }} %
+                                </small>
+                                <!--
+                                <mat-icon style="position: relative;bottom: -5px;">
+                                        filter_1</mat-icon>
+                                        -->
+                                <!--<mat-progress-bar mode="determinate" value="40"></mat-progress-bar>-->
                             </p>
 
                             <div mat-list-item style="text-align: right;">

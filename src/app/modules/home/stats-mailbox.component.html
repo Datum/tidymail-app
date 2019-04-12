@@ -1,11 +1,10 @@
 <div class="row">
     <div class="col text-right">
-        <div style="padding-top:15px;">
-            <div><b>Mailbox Info</b></div>
-            <div>Mails: {{ _mailbox.totalMails }}</div>
-            <div>Newsletters: {{ _mailbox.totalNewsletters }}</div>
-            <div>Size: {{ _mailbox.totalNewsletterSize | filesize}}</div>
-            <div>Overall Read: <span [ngClass]="{ 'text-green': _mailbox.newsletterReadPercentage > 50, 'text-red': _mailbox.newsletterReadPercentage <= 50 }">{{ _mailbox.newsletterReadPercentage }} %</span>  </div>
+        <div style="padding-top:30px;">
+            <div>Mails: <b>{{ _mailbox.totalMails }}</b></div>
+            <div>Newsletters: <b>{{ _mailbox.totalNewsletters }}</b></div>
+            <div>Size: <b>{{ _mailbox.totalNewsletterSize | filesize}}</b></div>
+            <div>Overall Read: <span [ngClass]="{ 'text-green': _mailbox.newsletterReadPercentage > 50, 'text-red': _mailbox.newsletterReadPercentage <= 50 }"><b>{{ _mailbox.newsletterReadPercentage }} %</b></span>  </div>
         </div>
     </div>
     <div class="col">

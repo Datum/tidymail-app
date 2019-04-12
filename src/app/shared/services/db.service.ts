@@ -219,6 +219,8 @@ export class DbService {
                 groupIndex: o.hostname.substr(0, 1).toUpperCase(),
                 hostname: o.hostname,
                 from: o.from,
+                totalMails: o.ignoreIds.length + 1,
+                readCount: o.readCount,
                 messages: [],
                 isCollapsed: true
             }
