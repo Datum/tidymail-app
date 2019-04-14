@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, HostListener } from '@angular/core';
 import { MatSnackBar } from "@angular/material";
 import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService, ChartData } from 'src/app/shared';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -13,7 +13,6 @@ import { MailBox } from 'src/app/shared/models/mailbox.model';
     styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-
     constructor(
         private _userService: UserService,
         private _imapService: ImapService,
@@ -25,36 +24,7 @@ export class HomeComponent implements OnInit {
         private _zone: NgZone
     ) { }
 
-
-    private _mailboxInfoChartObservable: BehaviorSubject<ChartData> = new BehaviorSubject(new ChartData());
-    get chartDataMailbox(): Observable<ChartData> { return this._mailboxInfoChartObservable.asObservable() }
-
-    private _newsletterInfoChartObservable: BehaviorSubject<ChartData> = new BehaviorSubject(new ChartData());
-    get chartDataNewsletter(): Observable<ChartData> { return this._newsletterInfoChartObservable.asObservable() }
-    
-
-    chart:Observable<ChartData>;
-
-    email:string;
-    totalMails:number;
-    totalSize:number;
-    totalNewsletters:number;
-    totalNewsletterSize:number;
-    newsletterReadPercentage:number;
-    
-
-    private getMailBoxChartData(info) {
-        var chartData = new ChartData();
-        chartData.numbers = [info.totalMails - info.totalNewsletters, info.totalNewsletters]
-        chartData.labels = ["OTHERS (" + (info.totalMails - info.totalNewsletters) + ")", "NEWSLETTERS (" + info.totalNewsletters + ")"];
-        return chartData;
-    }
-
-    private async updateMailboxChart(totalMails: number) {
-        var info = this.getMailBoxInfo();
-        this._mailboxInfoChartObservable.next(this.getMailBoxChartData(info));
-    }
-
+    email: string;
     isConnected: boolean = false;
     isSmtpConnected: boolean = false;
     isSyncing: boolean = false;
@@ -64,7 +34,7 @@ export class HomeComponent implements OnInit {
     statusMessage: string;
     userConfig: UserConfig;
     selectedTab: number = 0;
-    showChart:boolean = true;
+    showChart: boolean = true;
 
 
     undhandledMails: Observable<any[]>;
@@ -97,18 +67,7 @@ export class HomeComponent implements OnInit {
         //bind lists
         await this.bind();
 
-
         this._mailboxObservable.next(this.getMailBoxInfo());
-
-        this.updateNewsletterChart();
-
-        if(this.userConfig.totalMails !== undefined) {
-            this.updateMailboxChart(this.userConfig.totalMails);
-        } else {
-            this.showChart = false;
-        }
-
-        
 
         //by default start a sync
         if (!this.userConfig.firsttime) {
@@ -121,26 +80,11 @@ export class HomeComponent implements OnInit {
     private getMailBoxInfo() {
         var mb = new MailBox();
         mb.email = this.userConfig.email;
-        mb.totalMails = this.userConfig.totalMails;
+        mb.totalMails = this.userConfig.totalMails === undefined ? 0 : this.userConfig.totalMails;
         mb.totalNewsletters = this._dbService.getMsgCount();
         mb.totalNewsletterSize = this._dbService.getTotalSize();
         mb.newsletterReadPercentage = parseFloat((this._dbService.getTotalReadCount() / mb.totalNewsletters * 100).toFixed(2));
         return mb;
-    }
-
-    private updateNewsletterChart() {
-        var c1 = this._dbService.getMsgCountWithStatus(0);
-        var c2 = this._dbService.getMsgCountWithStatus(1);
-        var c3 = this._dbService.getMsgCountWithStatus(2);
-        var c4 = this._dbService.getMsgCountWithStatus(3);
-        this._newsletterInfoChartObservable.next(this.getNewslettersChartData(c1, c2, c3, c4));
-    }
-
-    private getNewslettersChartData(newCount, keepCount, unsubscribeCount, deleteCount) {
-        var chartData = new ChartData();
-        chartData.numbers = [newCount, unsubscribeCount, keepCount, deleteCount]
-        chartData.labels = ["New","Unsub","Keep","Delete"];
-        return chartData;
     }
 
     async bind() {
@@ -207,7 +151,6 @@ export class HomeComponent implements OnInit {
     async sync() {
         var self = this;
         try {
-
             await this._zone.runOutsideAngular(async () => {
 
                 //set sync mode for UI
@@ -272,9 +215,9 @@ export class HomeComponent implements OnInit {
 
                         index++;
 
-                        
+
                         if (index % iUpdateFrequency == 0) {
-                            self._dbService.updateViews();        
+                            self._dbService.updateViews();
                             self._mailboxObservable.next(self.getMailBoxInfo());
                         }
                     }
@@ -298,8 +241,6 @@ export class HomeComponent implements OnInit {
                 //this._userService.saveLastUid(lastId);
 
                 if (!environment.production) console.timeEnd('start.sync');
-
-                this.updateMailboxChart(this.userConfig.totalMails);
             });
 
 

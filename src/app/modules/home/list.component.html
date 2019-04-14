@@ -1,5 +1,5 @@
 <div class="group-header">
-    Group by
+    Grouped by
     <ng-container *ngFor="let sort of sortExpressions; let i = index">
         <a [ngClass]="{'selected': i == selectedSortIndex}" href="#" (click)="selectedSortIndex = i">{{ sort.label }}</a> |
     </ng-container>
