@@ -22,6 +22,13 @@ export class ListComponent {
     @Output() onUnsubscribeDomain = new EventEmitter<any>();
 
 
+    sortExpressions:any = [
+        { label: 'Sender',  exp: "current.groupIndex" },
+        { label: 'Unred Percentage', exp: "Math.ceil(parseInt((current.readCount / current.totalMails * 100).toString()) / 10) * 10", reverse: false, suffix: ' %'},
+        { label: 'Size', exp: "parseInt((Math.ceil(current.size / 500000) * 500000) / 1000000)", reverse:true, prefix: '>', suffix: ' MB' }
+    ]
+    selectedSortIndex = 0;
+
     constructor(private _dbService: DbService, private _imapService: ImapService) {
         
      }

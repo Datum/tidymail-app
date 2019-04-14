@@ -82,3 +82,13 @@
     color:darkgreen;
 }
 
+
+.group-header {
+    text-align: center;
+    font-size: 0.8em;
+    padding-top:10px;
+}
+
+.group-header .selected {
+    text-decoration: underline;
+}

@@ -23,7 +23,7 @@ import { DialogPassword } from '../shared/dialogs/dialog-password';
 import { ListComponent } from './home/list.component';
 import { ChartComponent } from '../shared/charts/chart.component';
 import { ChartsModule } from 'ng4-charts';
-import { FileSizePipe, GroupByPipe, TimeAgoPipe } from '../shared';
+import { FileSizePipe, GroupByPipe, TimeAgoPipe, GroupByExpressionPipe } from '../shared';
 import { StatsMailboxComponent } from './home/stats-mailbox.component';
 
 
@@ -58,7 +58,8 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         StatsMailboxComponent,
         FileSizePipe,
         GroupByPipe,
-        TimeAgoPipe
+        TimeAgoPipe,
+        GroupByExpressionPipe,
     ],
     imports: [
         CommonModule,

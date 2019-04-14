@@ -221,6 +221,7 @@ export class DbService {
                 from: o.from,
                 totalMails: o.ignoreIds.length + 1,
                 readCount: o.readCount,
+                size: o.size,
                 messages: [],
                 isCollapsed: true
             }
@@ -230,6 +231,9 @@ export class DbService {
             mails.forEach(element => {
                 if (host == element.hostname) {
                     groupedIds[groupedIds.length - 1].count++;
+                    groupedIds[groupedIds.length - 1].totalMails += element.totalMails;
+                    groupedIds[groupedIds.length - 1].readCount += element.readCount;
+                    groupedIds[groupedIds.length - 1].size += element.size;
                 } else {
                     element.count = 1;
                     groupedIds.push(element);
@@ -246,10 +250,13 @@ export class DbService {
         switch (status) {
             case 1:
                 this._unsubGroupedByHostObservable.next(this.createGroupView(this.unsubGroupsSortedView));
+                break;
             case 2:
                 this._keepGroupedByHostObservable.next(this.createGroupView(this.keepGroupsSortedView));
+                break;
             default:
                 this._newGroupedByHostObservable.next(this.createGroupView(this.newGroupsSortedView));
+                break;
         }
     }
 
@@ -356,11 +363,8 @@ export class DbService {
 
      //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
     getTotalReadCount() {
-        var tt = this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.readCount)).reduce(function(a, b) { return a + b; }, 0);
-
-        console.log('sdfsfdsdsfdsdfsdf');
-        console.log(tt);
-        return tt;
+        var totalReadCount = this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.readCount)).reduce(function(a, b) { return a + b; }, 0);
+        return totalReadCount;
     }
 }
 
