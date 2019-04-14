@@ -258,80 +258,36 @@ export class HomeComponent implements OnInit {
 
 
 
-    async onDeleteMsg(msgId) {
 
-        this.isSyncing = true;
 
-        //if canceled, stop
-        if (!await this.showDeleteConfirmation()) {
-            return;
+
+
+
+    unsubQueue: any = [];
+    private addUnsubscribeQueue(msgId) {
+        this.unsubQueue.push(msgId);
+        if (this.unsubQueue.length == 1) {
+            this.doUnsubscription();
         }
-
-        //connect if needed
-        await this.connect();
-
-        var msg = this._dbService.getMsgById(msgId);
-        if (msg !== undefined) {
-            try {
-                var toDelete = msg.ignoreIds;
-                toDelete.push(msgId);
-                await this._imapService.moveTrash(msg.ignoreIds);
-
-                //move to delete
-                this._dbService.delete(msgId);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        this.isSyncing = false;
     }
 
-    async onKeepMsg(id) {
-        await this._dbService.keep(id);
+
+    onKeepMsg(id) {
+        this._dbService.keep(id);
     }
 
-    async onUnsubscribeMsg(id) {
-        this.isSyncing = true;
 
-        var self = this;
-        var msg = await this._dbService.getMsgById(id);
-        if (msg !== undefined) {
-            var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
-            if (unSubInfo.email != "") {
-                this.statusMessage = 'Connecting SMTP...';
-
-                //connect to smtp if needed
-                await this.connectSmtp();
-
-                //connect to imap if needed
-                await this.connect();
-
-                //send unsubscribe mail
-                await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
-
-                this.statusMessage = 'Move sent mail to trash...';
-
-                //delete unsubscribe mail from sent box
-                await this._imapService.deleteSentMails(unSubInfo.email);
-
-                //move in db
-                await this._dbService.unsubscribe(id);
-
-                let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
-            } else {
-                if (unSubInfo.url != "") {
-                    await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
-                    await this._dbService.unsubscribe(id);
-                    let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, { duration: 2000 });
-                }
-            }
-
-        }
-
-        this.isSyncing = false;
-
+    onUnsubscribeMsg(msgId) {
+        this.addUnsubscribeQueue(msgId);
+        this._dbService.unsubscribe(msgId);
     }
+
+
+    onDeleteMsg(msgId) {
+        this.addDeleteQueue(msgId);
+        this._dbService.delete(msgId);
+    }
+
 
     showDeleteConfirmation() {
         var self = this;
@@ -353,67 +309,106 @@ export class HomeComponent implements OnInit {
         );
     }
 
-    async onDeleteDomain(obj) {
-        //if canceled, stop
-        if (!await this.showDeleteConfirmation()) {
+
+    deleteQueue: any = [];
+
+    private addDeleteQueue(msgId) {
+        this.deleteQueue.push(msgId);
+        if (this.deleteQueue.length == 1) {
+            this.doDeletion();
+        }
+    }
+
+
+
+    private async doUnsubscription() {
+        if (this.unsubQueue.length == 0)
             return;
+
+        var self = this;
+        var msgId = this.unsubQueue[0];
+
+        var msg = this._dbService.getMsgById(msgId);
+        if (msg !== undefined) {
+            var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
+            if (unSubInfo.email != "") {
+                //connect to smtp if needed
+                await this.connectSmtp();
+
+                //connect to imap if needed
+                await this.connect();
+
+                //send unsubscribe mail
+                await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
+
+                //delete unsubscribe mail from sent box
+                await this._imapService.deleteSentMails(unSubInfo.email);
+            } else {
+                if (unSubInfo.url != "") {
+                    await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
+                }
+            }
+
         }
 
-        this.isSyncing = true;
+        this.unsubQueue.shift();
+        this.doUnsubscription();
 
-        //check if imap connected
-        await this.connect();
+    }
 
-        //get all messages for domain
-        var allMessagesToDelete = await this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
 
-        //delete msg and all in ignored list in imap
-        for (var i = 0; i < allMessagesToDelete.length; i++) {
-            this.statusMessage = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
+    private async doDeletion() {
+        if (this.deleteQueue.length == 0)
+            return;
+
+
+        var self = this;
+        var msgId = this.deleteQueue[0];
+
+        var msg = this._dbService.getMsgById(msgId);
+        if (msg !== undefined) {
             try {
-                var toDelete = allMessagesToDelete[i].ignoreIds;
-                toDelete.push(allMessagesToDelete[i].lastId);
-                if (toDelete.length > 0) {
-                    //move to trash
-                    await this._imapService.moveTrash(allMessagesToDelete[i].ignoreIds);
-
-                    //if moved in imap update status in db
-                    this._dbService.delete(allMessagesToDelete[i].lastId);
-                }
+                var toDelete = msg.ignoreIds;
+                toDelete.push(msgId);
+                await this._imapService.moveTrash(msg.ignoreIds);
             } catch (error) {
                 console.log(error);
             }
+
         }
 
-        this.isSyncing = false;
+        this.deleteQueue.shift();
+        this.doDeletion();
     }
 
-    async onKeepMsgDomain(obj) {
-        this.isSyncing = true;
 
+    onDeleteDomain(obj) {
         //get all messages for domain
-        var allMessageToKeep = await this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
+        var allMessageToKeep = this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
 
         for (var i = 0; i < allMessageToKeep.length; i++) {
-            await this.onKeepMsg(allMessageToKeep[i].lastId);
+            this.onDeleteMsg(allMessageToKeep[i].lastId);
         }
+    }
 
-        this.isSyncing = false;
+    onKeepDomain(obj) {
+        //get all messages for domain
+        var allMessageToKeep = this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
+
+        for (var i = 0; i < allMessageToKeep.length; i++) {
+            this.onKeepMsg(allMessageToKeep[i].lastId);
+        }
     }
 
 
-    async onUnsubscribeDomain(obj) {
-        this.isSyncing = true;
+    onUnsubscribeDomain(obj) {
         //get all messages for domain
-        var allMessagesToUnSubscribe = await this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
+        var allMessagesToUnSubscribe = this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
 
         for (var i = 0; i < allMessagesToUnSubscribe.length; i++) {
-            await this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
+            this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
         }
-
-        this.isSyncing = false;
     }
-
 }
 
 

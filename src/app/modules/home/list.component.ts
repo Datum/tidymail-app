@@ -18,13 +18,13 @@ export class ListComponent {
     @Output() onUnsubscribeMsg = new EventEmitter<string>();
 
     @Output() onDeleteDomain = new EventEmitter<any>();
-    @Output() onKeepMsgDomain = new EventEmitter<any>();
+    @Output() onKeepDomain = new EventEmitter<any>();
     @Output() onUnsubscribeDomain = new EventEmitter<any>();
 
 
     sortExpressions:any = [
         { label: 'Sender',  exp: "current.groupIndex" },
-        { label: 'Unred Percentage', exp: "Math.ceil(parseInt((current.readCount / current.totalMails * 100).toString()) / 10) * 10", reverse: false, suffix: ' %'},
+        { label: 'Unread Percentage', exp: "Math.ceil(parseInt((current.readCount / current.totalMails * 100).toString()) / 10) * 10", reverse: false, suffix: ' %'},
         { label: 'Size', exp: "parseInt((Math.ceil(current.size / 500000) * 500000) / 1000000)", reverse:true, prefix: '>', suffix: ' MB' }
     ]
     selectedSortIndex = 0;
@@ -73,7 +73,7 @@ export class ListComponent {
 
     async keepAll(mg, event) {
         event.stopPropagation();
-        this.onKeepMsgDomain.emit({ hostname: mg.hostname, status: this.status});
+        this.onKeepDomain.emit({ hostname: mg.hostname, status: this.status});
     }
 
     async unsubscribeAll(mg, event) {
