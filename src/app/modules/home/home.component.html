@@ -69,17 +69,17 @@
     <div class="container">
         <grouped-list [hidden]="selectedTab!=0" (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            (onKeepDomain)="onKeepDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="undhandledMails" [status]="0">
         </grouped-list>
         <grouped-list [hidden]="selectedTab!=1" (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            (onKeepDomain)="onKeepDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="keepMails" [status]="2">
         </grouped-list>
         <grouped-list [hidden]="selectedTab!=2" (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            (onKeepDomain)="onKeepDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="unsubscribedMails" [status]="1">
         </grouped-list>
         
