@@ -65,7 +65,8 @@ export class ImapService {
                     ws: {
                         url: environment.proxyUrl,
                         options: {
-                            upgrade: false
+                            upgrade: false,
+                            reconnection: true
                         }
                     }
                 });
@@ -89,7 +90,8 @@ export class ImapService {
                         ws: {
                             url: environment.proxyUrl,
                             options: {
-                                upgrade: false
+                                upgrade: false,
+                                reconnection: true
                             }
                         }
                     });
@@ -108,10 +110,11 @@ export class ImapService {
 
     //open the imap client instance
     open() {
+        var self = this;
         this.client.onerror = function (error) {
-            console.log('imap client error');
+            console.log('imap client error. auto reconnect....');
             console.log(error);
-            throw new Error(error);
+            self.client.connect();
         };
         return this.client.connect();
     }

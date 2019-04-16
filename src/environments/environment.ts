@@ -4,8 +4,8 @@
 
 export const environment = {
     production: false,
-    // proxyUrl: "http://127.0.0.1:8888/",
-    proxyUrl: "https://gw.tidymail.io:443/",
+    proxyUrl: "http://127.0.0.1:8888/",
+    //proxyUrl: "https://gw.tidymail.io:443/",
     defaultSearchQuery: { 'HEADER': ['list-unsubscribe', '@'] },
     gmailSearchQuery: { 'X-GM-RAW': "label:^unsub" } ,
     fetchBatchSize: 200,
