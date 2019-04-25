@@ -81,9 +81,12 @@ export class HomeComponent implements OnInit {
         var mb = new MailBox();
         mb.email = this.userConfig.email;
         mb.totalMails = this.userConfig.totalMails === undefined ? 0 : this.userConfig.totalMails;
-        mb.totalNewsletters = this._dbService.getMsgCount();
+        mb.totalNewsletters = this._dbService.getNewsletterCount();
         mb.totalNewsletterSize = this._dbService.getTotalSize();
         mb.newsletterReadPercentage = parseFloat((this._dbService.getTotalReadCount() / mb.totalNewsletters * 100).toFixed(2));
+        mb.totalSenders = this._dbService.getMsgCount();
+        mb.totalNewNewsletters = this._dbService.getMsgCountWithStatus(0);
+        mb.workedNewsletters = 0;
         return mb;
     }
 

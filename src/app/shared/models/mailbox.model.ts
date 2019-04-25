@@ -1,5 +1,6 @@
 export class MailBox {
     constructor() {
+        this.workedNewsletters = 0;
     }
 
     email:string;
@@ -7,5 +8,8 @@ export class MailBox {
     totalSize:number;
     totalNewsletters:number;
     totalNewsletterSize:number;
+    totalNewNewsletters:number;
     newsletterReadPercentage:number;
+    totalSenders:number;
+    workedNewsletters:number;
 }

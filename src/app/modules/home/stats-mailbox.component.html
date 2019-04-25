@@ -14,7 +14,7 @@
     </div>
     <div class="" style="margin-left: 60px;">
             <span class="mat-caption caption">SENDERS</span><br>
-            <span class="mat-headline data">742</span>
+            <span class="mat-headline data">{{ _mailbox.totalSenders }}</span>
         </div>
     <div class="" style="margin-left: 60px;">
         <span class="mat-caption caption">READ PERCENTAGE</span><br>
@@ -22,8 +22,8 @@
     </div>
     <div class="" style="margin-left: 60px;flex-grow:1">
         <span class="mat-caption caption">CLEANUP PROGRESS</span>
-        <span style="float:right;color:#999;font-weight:500">0 / {{ _mailbox.totalNewsletters }}</span><br>
-        <mat-progress-bar class="example-margin" color="primary" mode="determinate" value="50" bufferValue="75">
+        <span style="float:right;color:#999;font-weight:500">{{ _mailbox.workedNewsletters }} / {{ _mailbox.totalNewNewsletters }}</span><br>
+        <mat-progress-bar class="example-margin" color="primary" mode="determinate" value="10" bufferValue="75">
         </mat-progress-bar>
 
     </div>

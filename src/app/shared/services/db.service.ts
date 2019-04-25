@@ -361,6 +361,31 @@ export class DbService {
         return this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.size)).reduce(function(a, b) { return a + b; }, 0);
     }
 
+    getNewsletterCount() {
+        function getIds(obj) {
+            var ids = [];
+            ids.push(obj.lastId);
+            if (obj.ignoreIds !== undefined) {
+                ids = ids.concat(obj.ignoreIds);
+            }
+            return ids;
+        }
+
+        function concatIds(array) {
+            var ids = [];
+            var i = array.length >>> 0;
+            while (i--) {
+                if (array[i] != null) {
+                    ids = ids.concat(array[i]);
+                }
+            }
+            return ids;
+        }
+
+        var totalReadCount = this.memdb_mails.chain().find({'status': { '$ne' : 4 }}).mapReduce(getIds, concatIds);
+        return totalReadCount.length;
+    }
+
      //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
     getTotalReadCount() {
         var totalReadCount = this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.readCount)).reduce(function(a, b) { return a + b; }, 0);
