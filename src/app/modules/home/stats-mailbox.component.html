@@ -1,6 +1,34 @@
-<div class="row">
-    <div class="col text-right">
-        <div style="padding-top:30px;">
+<div *ngIf="_mailbox.totalNewsletters" class="stats mat-typography" style="display: flex;margin-top:30px;margin-bottom:20px">
+    <div class="row" style="margin-left: 36px;">
+        <div style="margin-top: -2px;">
+            <app-chart [data]="chartData"></app-chart>
+        </div>
+        <div>
+            <span class="mat-caption caption">NEWSLETTERS / EMAILS</span><br>
+            <span class="mat-headline data">{{ _mailbox.totalNewsletters }} / {{ _mailbox.totalMails }}</span>
+        </div>
+    </div>
+    <div class="" style="margin-left: 60px;">
+        <span class="mat-caption caption">SIZE</span><br>
+        <span class="mat-headline data">{{ _mailbox.totalNewsletterSize | filesize}}</span>
+    </div>
+    <div class="" style="margin-left: 60px;">
+            <span class="mat-caption caption">SENDERS</span><br>
+            <span class="mat-headline data">742</span>
+        </div>
+    <div class="" style="margin-left: 60px;">
+        <span class="mat-caption caption">READ PERCENTAGE</span><br>
+        <span class="mat-headline data">{{ _mailbox.newsletterReadPercentage }}%</span>
+    </div>
+    <div class="" style="margin-left: 60px;flex-grow:1">
+        <span class="mat-caption caption">CLEANUP PROGRESS</span>
+        <span style="float:right;color:#999;font-weight:500">0 / {{ _mailbox.totalNewsletters }}</span><br>
+        <mat-progress-bar class="example-margin" color="primary" mode="determinate" value="50" bufferValue="75">
+        </mat-progress-bar>
+
+    </div>
+    <!--  <div class="col text-right">
+        <div style="padding-top:30px;" >
             <div><b>{{ _mailbox.email }}</b></div>
             <div>Mails: <b>{{ _mailbox.totalMails }}</b></div>
             <div>Newsletters: <b>{{ _mailbox.totalNewsletters }}</b></div>
@@ -10,5 +38,5 @@
     </div>
     <div class="col">
         <app-chart [data]="chartData"></app-chart>
-    </div>
+    </div> -->
 </div>

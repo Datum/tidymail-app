@@ -16,33 +16,41 @@ export class ChartComponent implements OnInit {
 
 
     options: any;
+    percentage: any;
 
     ngOnInit() {
         var self = this;
         this.data.subscribe(function (res) {
             self.pieChartLabels = res.labels;
-            self.pieChartData = res.numbers;
+            self.pieChartData = [res.numbers[1],res.numbers[0]],
             self.pieChartSummary = res.summaryLabel;
             self.options = {
                 'responsive': false,
-                'legend': { 'position': 'right', labels: { boxWidth: 4, fontSize: 14 } },
+                'legend': false,
                 tooltips: {
                     enabled: false
-                }
-            }
+                },
+                elements: {
+                    arc: {
+                        borderWidth: 0
+                    }
+                },
+                rotation: 1 * Math.PI,
+                circumference: 1 * Math.PI,
+                cutoutPercentage: 60
+            },
+            self.percentage=Math.ceil((res.numbers[1]*100)/res.numbers[0]);
+            // self.colors = ['#304ffe','#c5cae9'];
         })
 
 
     }
 
 
-    chartColors() {
-        return [{
+    private chartColors=[{
           backgroundColor: [
-            "#4BC0C0",
-            "#FFCE56",
-            "#E7E9ED",
-            "#36A2EB",
+            "#304ffe",
+            "#c5cae9"
         ],
         /*
           borderColor: 'rgba(225,10,24,0.2)',
@@ -51,11 +59,10 @@ export class ChartComponent implements OnInit {
           pointHoverBackgroundColor: '#fff',
           pointHoverBorderColor: 'rgba(225,10,24,0.2)'
           */
-      }]
-    }
+      }];
 
     public pieChartLabels: string[] = [];
-    public pieChartData: number[] = [];
+    public pieChartData: any;
     public pieChartType: string = 'doughnut';
     public pieChartSummary: string = '';
 

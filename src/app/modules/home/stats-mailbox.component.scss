@@ -7,6 +7,14 @@
 }
 
 * {
-    font-size:13px;
-    text-transform: uppercase;
+   color:#999;
+}
+
+.stats .mat-caption {
+    color: #AAA;
+}
+
+mat-progress-bar {
+    margin-top: 6px;
+    height: 20px;
 }

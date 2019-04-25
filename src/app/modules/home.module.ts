@@ -12,6 +12,7 @@ import { ModuleWithProviders } from '@angular/compiler/src/core';
 import { MatCardModule, MatInputModule, MatIconModule, MatProgressBarModule, MatTabsModule, MatListModule, MatExpansionModule, MatSnackBarModule, MatGridListModule, MatChipsModule } from '@angular/material';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -70,6 +71,7 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         MatStepperModule,
         MatInputModule,
         MatFormFieldModule,
+        MatSelectModule,
         MatButtonModule,
         MatCheckboxModule,
         MatDialogModule,

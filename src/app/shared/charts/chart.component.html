@@ -1,3 +1,7 @@
-<canvas #mycanvas baseChart [data]="pieChartData"
-[labels]="pieChartLabels" [chartType]="pieChartType" [options]="options" (chartHover)="chartHovered($event)"
-(chartClick)="chartClicked($event)"></canvas>
+<div class="relative">
+<canvas #mycanvas baseChart [data]="pieChartData" [labels]="pieChartLabels" [chartType]="pieChartType"
+    [options]="options" [colors]="chartColors" (chartHover)="chartHovered($event)" (chartClick)="chartClicked($event)" width="120" height="50"></canvas>
+<div class="absolute-center text-center">
+    <p style="margin-bottom:-10px">{{ percentage }}%</p>
+</div>
+</div>
