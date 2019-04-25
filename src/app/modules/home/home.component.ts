@@ -35,6 +35,7 @@ export class HomeComponent implements OnInit {
     userConfig: UserConfig;
     selectedTab: number = 0;
     showChart: boolean = true;
+    workCount:number = 0;
 
 
     undhandledMails: Observable<any[]>;
@@ -86,7 +87,7 @@ export class HomeComponent implements OnInit {
         mb.newsletterReadPercentage = parseFloat((this._dbService.getTotalReadCount() / mb.totalNewsletters * 100).toFixed(2));
         mb.totalSenders = this._dbService.getMsgCount();
         mb.totalNewNewsletters = this._dbService.getMsgCountWithStatus(0);
-        mb.workedNewsletters = 0;
+        mb.workedNewsletters = this.workCount;
         return mb;
     }
 
@@ -276,19 +277,25 @@ export class HomeComponent implements OnInit {
 
 
     onKeepMsg(id) {
+        this.workCount++;
         this._dbService.keep(id);
+        this._mailboxObservable.next(this.getMailBoxInfo());
     }
 
 
     onUnsubscribeMsg(msgId) {
+        this.workCount++;
         this.addUnsubscribeQueue(msgId);
         this._dbService.unsubscribe(msgId);
+        this._mailboxObservable.next(this.getMailBoxInfo());
     }
 
 
     onDeleteMsg(msgId) {
+        this.workCount++;
         this.addDeleteQueue(msgId);
         this._dbService.delete(msgId);
+        this._mailboxObservable.next(this.getMailBoxInfo());
     }
 
 
@@ -374,6 +381,7 @@ export class HomeComponent implements OnInit {
                 var toDelete = msg.ignoreIds;
                 toDelete.push(msgId);
                 await this._imapService.moveTrash(msg.ignoreIds);
+                
             } catch (error) {
                 console.log(error);
             }
