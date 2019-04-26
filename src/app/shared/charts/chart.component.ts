@@ -47,7 +47,7 @@ export class ChartComponent implements OnInit {
     }
 
 
-    private chartColors=[{
+    public chartColors=[{
           backgroundColor: [
             "#304ffe",
             "#c5cae9"
