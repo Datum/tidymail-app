@@ -1,0 +1,42 @@
+<div *ngIf="_mailbox.totalNewsletters" class="stats mat-typography" style="display: flex;margin-top:30px;margin-bottom:20px">
+    <div class="row" style="margin-left: 36px;">
+        <div style="margin-top: -2px;">
+            <app-chart [data]="chartData"></app-chart>
+        </div>
+        <div>
+            <span class="mat-caption caption">NEWSLETTERS / EMAILS</span><br>
+            <span class="mat-headline data">{{ _mailbox.totalNewsletters }} / {{ _mailbox.totalMails }}</span>
+        </div>
+    </div>
+    <div class="" style="margin-left: 60px;">
+        <span class="mat-caption caption">SIZE</span><br>
+        <span class="mat-headline data">{{ _mailbox.totalNewsletterSize | filesize}}</span>
+    </div>
+    <div class="" style="margin-left: 60px;">
+            <span class="mat-caption caption">SENDERS</span><br>
+            <span class="mat-headline data">{{ _mailbox.totalSenders }}</span>
+        </div>
+    <div class="" style="margin-left: 60px;">
+        <span class="mat-caption caption">READ PERCENTAGE</span><br>
+        <span class="mat-headline data">{{ _mailbox.newsletterReadPercentage }}%</span>
+    </div>
+    <div class="" style="margin-left: 60px;flex-grow:1">
+        <span class="mat-caption caption">CLEANUP PROGRESS</span>
+        <span style="float:right;color:#999;font-weight:500">{{ _mailbox.workedNewsletters }} / {{ _mailbox.totalNewNewsletters }}</span><br>
+        <mat-progress-bar class="example-margin" color="primary" mode="determinate" value="{{ _mailbox.workedNewsletters / (_mailbox.totalNewNewsletters + _mailbox.workedNewsletters)  * 100 }}">
+        </mat-progress-bar>
+
+    </div>
+    <!--  <div class="col text-right">
+        <div style="padding-top:30px;" >
+            <div><b>{{ _mailbox.email }}</b></div>
+            <div>Mails: <b>{{ _mailbox.totalMails }}</b></div>
+            <div>Newsletters: <b>{{ _mailbox.totalNewsletters }}</b></div>
+            <div>Size: <b>{{ _mailbox.totalNewsletterSize | filesize}}</b></div>
+            <div>Overall Read: <span [ngClass]="{ 'text-green': _mailbox.newsletterReadPercentage > 50, 'text-red': _mailbox.newsletterReadPercentage <= 50 }"><b>{{ _mailbox.newsletterReadPercentage }} %</b></span>  </div>
+        </div>
+    </div>
+    <div class="col">
+        <app-chart [data]="chartData"></app-chart>
+    </div> -->
+</div>

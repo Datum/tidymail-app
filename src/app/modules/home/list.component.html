@@ -1,53 +1,122 @@
+<div *ngIf="groups | async as groups;" class="group-header">
+    Sort by
+    <mat-form-field>
+        <mat-select [(value)]="selectedSortIndex">
+            <mat-option *ngFor="let sort of sortExpressions; let i = index" [value]="i">
+                {{sort.label}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+    <!-- <ng-container *ngFor="let sort of sortExpressions; let i = index">
+        <a [ngClass]="{'selected': i == selectedSortIndex}" href="#" (click)="selectedSortIndex = i">{{ sort.label }}</a> |
+    </ng-container> -->
+</div>
 <div *ngIf="groups | async as groups; else loading">
     <ng-container *ngIf="groups.length; else noItems">
         <!--<mat-list-group>-->
-        <div *ngFor="let d of groups;let a = index;" class="row newsletterlist">
-            <h3 matSubheader class="listheader">{{ d.identifier }}</h3>
+        <div *ngFor="let d of groups | groupByExpression:sortExpressions[selectedSortIndex];let a = index;"
+            class="row newsletterlist">
+            <h3 matSubheader class="listheader">{{ d.key }}</h3>
             <mat-list avatar style="flex-grow: 1;" class="whiteframe">
-                <div *ngFor="let m of d.messagegroups; let i = index">
-                    <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
-                        [attr.aria-controls]="'collapse' + a + i">
-                        <p matLine class="notwoline">
-                            <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
-                                class="favimg">
-                            {{ m.name }}
-                            {{ m.estimatedMessageCount>1 ? '('+m.estimatedMessageCount+')' : ''}}
-                            <mat-icon *ngIf="m.estimatedMessageCount>1" style="position: relative;bottom: -5px;">
-                                arrow_drop_down</mat-icon>
-                            <small style="color:darkgrey;"> {{ m.hostname }} </small>
-                        </p>
+                <div *ngFor="let m of d.value; let i = index">
+                    <mat-card>
+                        <mat-list-item (click)="toogleGroup(m,$event)" [attr.aria-expanded]="!m.isCollapsed"
+                            [attr.aria-controls]="'collapse' + a + i">
+                            <p matLine class="notwoline">
+                                <!--{{ m.readCount }} / {{ m.totalMails }}-->
+                                <img src="{{ 'https://s2.googleusercontent.com/s2/favicons?domain=' + m.hostname}}"
+                                    class="favimg">
+                                {{ m.from }}
+                                {{ m.count>1 ? '('+m.count+')' : ''}}
+                                <mat-icon *ngIf="m.count>1" style="position: relative;bottom: -5px;">
+                                    arrow_drop_down</mat-icon>
+                                <small style="color:darkgrey;">
+                                    {{ m.hostname }}
+                                </small>
+                                -
+                                <small
+                                    [ngClass]="{ 'text-green': (m.readCount / m.totalMails * 100) > 50, 'text-red': (m.readCount / m.totalMails * 100) <= 50 }">
+                                    {{ (m.readCount / m.totalMails * 100).toFixed(2) }} %
+                                </small>
+                                <!--
+                                <mat-icon style="position: relative;bottom: -5px;">
+                                        filter_1</mat-icon>
+                                        -->
+                                <!--<mat-progress-bar mode="determinate" value="40"></mat-progress-bar>-->
+                            </p>
 
-                        <div mat-list-item style="flex-grow: 1; text-align: right;color:#616161">
-                            <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
-                                <mat-icon>check</mat-icon>
-                                KEEP
-                            </button>
-                            <button [hidden]="status == 1" mat-button (click)="unsubscribeAll(m,$event)">
-                                <mat-icon>cancel</mat-icon>
-                                UNSUBSCRIBE
+                            <div mat-list-item style="text-align: right;">
+                                <button [hidden]="status != 0" mat-button (click)="keepAll(m,$event)">
+                                    <mat-icon>check</mat-icon>
+                                    KEEP
+                                </button>
+                                <button [hidden]="status == 1" mat-button (click)="unsubscribeAll(m,$event)">
+                                    <mat-icon>cancel</mat-icon>
+                                    UNSUBSCRIBE
 
-                            </button>
-                            <button mat-button (click)="deleteAll(m,$event)">
-                                <mat-icon>delete</mat-icon>
-                                DELETE
-                            </button>
-                        </div>
+                                </button>
+                                <button mat-button (click)="deleteAll(m,$event)">
+                                    <mat-icon>delete</mat-icon>
+                                    DELETE
+                                </button>
+                            </div>
 
-                    </mat-list-item>
+                        </mat-list-item>
+                    </mat-card>
 
                     <div [attr.id]="'collapse' + a + i" [hidden]="m.isCollapsed">
-                        <mat-list twoLine interactive=false>
+                        <mat-list interactive=false class="sublist">
+                            <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index">
+                                <p matLine style="max-width:490px;">
+                                    {{ msg.from }}
+                                </p>
+                                <p matLine style="max-width:490px;">
+                                    <span style="font-weight: 500;">{{ msg.lastDate | timeago }}</span>
+                                    "{{ msg.lastSubject }}"
+                                    <span
+                                        [ngClass]="{ 'text-green': (msg.readCount / msg.ignoreIds.length * 100) > 50, 'text-red': (msg.readCount / msg.ignoreIds.length * 100) <= 50 }">
+                                        - {{ (msg.readCount / (msg.ignoreIds.length+1) * 100).toFixed(2) }} %
+                                    </span>
+                                </p>
+                                <p style="margin-top:15px;">
+                                    <mat-chip-list style="float:left">
+                                        <mat-chip>
+                                            <mat-icon>email</mat-icon>{{ (msg.ignoreIds.length + 1) }}
+                                            ({{ msg.size | filesize }})
+                                        </mat-chip>
+                                    </mat-chip-list>
+                                </p>
+                                <div [hidden]="m.messages.length == 1" mat-list-item style="text-align: right;">
+                                    <button *ngIf="status != 2" mat-button (click)="keep(m,msg.lastId)">
+                                        <mat-icon>check</mat-icon>
+                                        KEEP
+                                    </button>
+                                    <button *ngIf="status != 1" mat-button (click)="unsubscribe(m,msg.lastId)">
+                                        <mat-icon>cancel</mat-icon>
+                                        UNSUBSCRIBE
+                                    </button>
+                                    <button mat-button (click)="delete(m,msg.lastId)">
+                                        <mat-icon>delete</mat-icon>
+                                        DELETE
+                                    </button>
+                                </div>
+                            </mat-list-item>
+                        </mat-list>
+
+
+                        <!--
+                        <mat-list twoLine interactive=false class="sublist">
                             <mat-list-item *ngFor="let msg of m.messages; let msgIndex = index"
                                 class="mat-list--two-line">
                                 <p matLine *ngIf="status != 1">
                                     {{ msg.from }}
                                 </p>
                                 <p matLine>
-                                    {{ (msg.ignoreIds.length + 1) + ' mails, last from: ' +  (msg.lastDate | date:'medium') }}
+                                    {{ (msg.ignoreIds.length + 1) + ' emails, ' + msg.size + ', newest: ' +  (msg.lastDate | date:'medium') }}
                                 </p>
 
                                 <div [hidden]="m.messages.length == 1" mat-list-item
-                                    style="flex-grow: 1; text-align: right;">
+                                    style="text-align: right;">
                                     <button mat-button (click)="keep(m,msg.lastId)">
                                         <mat-icon>check</mat-icon>
                                         KEEP
@@ -63,6 +132,7 @@
                                 </div>
                             </mat-list-item>
                         </mat-list>
+                    -->
 
                     </div>
 

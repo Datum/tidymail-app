@@ -18,10 +18,10 @@ export class UIService {
         });
     }
 
-    showAlert(msg, msgExtra = "", callback = null) {
+    showAlert(msg, title = "Warning", msgExtra = "", checkboxText = "", callback = null) {
         const dialogRef = this.dialog.open(DialogAlert, {
             width: '250px',
-            data: { title: "Warning", content: msg ,  extraContent: msgExtra }
+            data: { title: title, content: msg ,  extraContent: msgExtra, checkboxText : checkboxText }
         });
 
         dialogRef.afterClosed().subscribe(result => {

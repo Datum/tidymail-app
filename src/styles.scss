@@ -23,7 +23,7 @@ html, body {
     height: 100%; 
 }
 body { 
-    background:rgb(249,249,249);
+    background-color: #fff;
     margin: 0; 
     font-family: Roboto, "Helvetica Neue", sans-serif; 
 }
@@ -109,7 +109,13 @@ body {
 }
 
 .newsletterlist .mat-list-text {
-    max-width: 490px;
+    flex-grow: 1;
+    flex-basis: 0;
+
+}
+
+.newsletterlist .mat-list-text p {
+    max-width: 640px;
 }
 
 .newsletterlist .listheader {
@@ -125,3 +131,10 @@ body {
     padding-right:10px;
     min-width: 26px;
 }
+
+.header {
+    background-color:#f8f9fa;
+    border-bottom-color: rgba(0, 0, 0, 0.12);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+  }

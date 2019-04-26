@@ -8,36 +8,35 @@ import * as loki from 'lokijs';
 import * as lokiIndexedAdpater from 'lokijs/src/loki-indexed-adapter.js';
 
 
+
 import {
     mimeWordEncode, mimeWordDecode,
     mimeWordsEncode, mimeWordsDecode
 } from 'emailjs-mime-codec';
 import { ResolveEnd } from '@angular/router';
+import { environment } from 'src/environments/environment.prod';
 
 
 
 @Injectable()
 export class DbService {
-    private _newGroupsObservable: BehaviorSubject<DisplayGroup[]> = new BehaviorSubject([]);
-    get newMails(): Observable<DisplayGroup[]> { return this._newGroupsObservable.asObservable() }
-
-    private _keepGroupsObservable: BehaviorSubject<DisplayGroup[]> = new BehaviorSubject([]);
-    get keepMails(): Observable<DisplayGroup[]> { return this._keepGroupsObservable.asObservable() }
-
-    private _unsubbedGroupsObservable: BehaviorSubject<DisplayGroup[]> = new BehaviorSubject([]);
-    get unsubbedMails(): Observable<DisplayGroup[]> { return this._unsubbedGroupsObservable.asObservable() }
 
 
+    private _newGroupedByHostObservable: BehaviorSubject<any[]> = new BehaviorSubject([]);
+    get newGroupedByHost(): Observable<any[]> { return this._newGroupedByHostObservable.asObservable() }
+
+    private _keepGroupedByHostObservable: BehaviorSubject<any[]> = new BehaviorSubject([]);
+    get keepGroupedByHost(): Observable<any[]> { return this._keepGroupedByHostObservable.asObservable() }
+
+    private _unsubGroupedByHostObservable: BehaviorSubject<any[]> = new BehaviorSubject([]);
+    get unsubGroupedByHost(): Observable<any[]> { return this._unsubGroupedByHostObservable.asObservable() }
+    
 
     constructor() { }
 
-    db: any;
     memdb: any;
-    name: string;
     memdb_mails: any;
-    memdb_newMails: any;
-    memdb_keepMails: any;
-    memdb_unsubbedMails: any;
+    memdb_indexedAdapter: any;
 
     create(name = "tidymail.db") {
         var self = this;
@@ -45,28 +44,22 @@ export class DbService {
         return new Promise<boolean>(
             (resolve, reject) => {
 
-
-                var adapter = new lokiIndexedAdpater();
+                self.memdb_indexedAdapter = new lokiIndexedAdpater("tidymail.db");
                 self.memdb = new loki("tidymail.db", {
-                    adapter: adapter,
+                    adapter: self.memdb_indexedAdapter,
                     autoload: true,
                     autoloadCallback: databaseInitialize,
                     autosave: true,
                     autosaveInterval: 4000
                 });
 
-                function databaseInitialize(success) {
+                function databaseInitialize() {
                     if (!self.memdb.getCollection("mails")) {
                         self.memdb.addCollection("mails", { unique: ['lastId'] });
                     }
-                    if (!self.memdb.getCollection("newMails")) {
-                        self.memdb.addCollection("newMails", { unique: ['identifier'] });
-                    }
-                    if (!self.memdb.getCollection("keepMails")) {
-                        self.memdb.addCollection("keepMails", { unique: ['identifier'] });
-                    }
-                    if (!self.memdb.getCollection("unsubbedMails")) {
-                        self.memdb.addCollection("unsubbedMails", { unique: ['identifier'] });
+
+                    if (!self.memdb.getCollection("mails")) {
+                        reject(false);
                     }
 
                     resolve(true);
@@ -75,69 +68,93 @@ export class DbService {
         );
     }
 
+    importJSON(serialzedDbJSON) {
+        this.memdb.loadJSON(serialzedDbJSON);
+        this.memdb.saveDatabase();
+    }
+
+    importObject(serialzedDbObject) {
+        this.memdb.loadJSONObject(serialzedDbObject);
+        this.memdb.saveDatabase();
+    }
+
+    serialize() {
+        return this.memdb.serialize();
+    }
+
     deleteDb() {
-        this.memdb.deleteDatabase();
+        var self = this;
+        return new Promise<boolean>(
+            (resolve, reject) => {
+                this.memdb.close();
+                this.memdb.deleteDatabase(function (res) {
+                    res.success ? resolve(true) : reject(false);
+                });
+            }
+        );
+
     }
 
     newGroupsSortedView: any;
     unsubGroupsSortedView: any;
     keepGroupsSortedView: any;
 
-
     async init() {
+        var self = this;
         this.memdb_mails = this.memdb.getCollection("mails");
-        this.memdb_newMails = this.memdb.getCollection("newMails");
-        this.memdb_keepMails = this.memdb.getCollection("keepMails");
-        this.memdb_unsubbedMails = this.memdb.getCollection("unsubbedMails");
 
-        this.newGroupsSortedView = this.memdb_newMails.addDynamicView('newGroups');
-        this.newGroupsSortedView.applySimpleSort('identifier');
-        this._newGroupsObservable.next(this.newGroupsSortedView.data());
+        this.newGroupsSortedView = this.memdb_mails.addDynamicView('newMails');
+        this.newGroupsSortedView.applyFind({ 'status': 0 });
+        this.newGroupsSortedView.applySimpleSort('hostname');
 
-        this.unsubGroupsSortedView = this.memdb_unsubbedMails.addDynamicView('unsubGroups');
-        this.unsubGroupsSortedView.applySimpleSort('identifier');
-        this._unsubbedGroupsObservable.next(this.unsubGroupsSortedView.data());
+        this.unsubGroupsSortedView = this.memdb_mails.addDynamicView('unsubMails');
+        this.unsubGroupsSortedView.applyFind({ 'status': 1 });
+        this.unsubGroupsSortedView.applySimpleSort('hostname');
 
-        this.keepGroupsSortedView = this.memdb_keepMails.addDynamicView('keepGroups');
-        this.keepGroupsSortedView.applySimpleSort('identifier');
-        this._keepGroupsObservable.next(this.keepGroupsSortedView.data());
+        this.keepGroupsSortedView = this.memdb_mails.addDynamicView('keepMails');
+        this.keepGroupsSortedView.applyFind({ 'status': 2 });
+        this.keepGroupsSortedView.applySimpleSort('hostname');
+
+        this.updateViews()
     }
 
     //adds an email object to storage and observable
-    add(fetchedMailObject) {
+    add(fetchedMailObject, newDate, updateObservable = false) {
         var msg = new Message();
         msg.lastId = fetchedMailObject.uid;
+        msg.size = fetchedMailObject['rfc822.size'];
+        msg.readCount = fetchedMailObject['flags'].findIndex(v => v.includes("Seen")) > -1 ? 1 : 0;
 
         var mailFrom = fetchedMailObject['body[header.fields (from)]'];
         if (mailFrom !== undefined && mailFrom.length > 6) {
             msg.from = mimeWordsDecode(mailFrom.substr(6)).replace(/"/g, '');
         } else {
-            console.log('header not found or invalid for <from>');
-            console.log(fetchedMailObject);
+            if (!environment.production) console.log('header not found or invalid for <from>');
+            if (!environment.production) console.log(fetchedMailObject);
         }
 
         var mailDate = fetchedMailObject['body[header.fields (date)]'];
         if (mailDate !== undefined && mailDate.length > 6) {
             msg.lastDate = Date.parse(mailDate.substr(6));
         } else {
-            console.log('header not found or invalid for <date>');
-            console.log(fetchedMailObject)
+            if (!environment.production) console.log('header not found or invalid for <date>');
+            if (!environment.production) console.log(fetchedMailObject)
         }
 
         var mailSubject = fetchedMailObject['body[header.fields (subject)]'];
         if (mailSubject !== undefined && mailSubject.length > 9) {
             msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
         } else {
-            console.log('header not found or invalid for <subject>');
-            console.log(fetchedMailObject)
+            if (!environment.production) console.log('header not found or invalid for <subject>');
+            if (!environment.production) console.log(fetchedMailObject)
         }
 
         var mailUnsubscribeInfo = fetchedMailObject['body[header.fields (list-unsubscribe)]'];
         if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
             msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
         } else {
-            console.log('header not found or invalid for <list-unsubscribe>');
-            console.log(fetchedMailObject)
+            if (!environment.production) console.log('header not found or invalid for <list-unsubscribe>');
+            if (!environment.production) console.log(fetchedMailObject)
         }
 
         //if no unscribe info here, add mail to ignore list and return
@@ -166,102 +183,89 @@ export class DbService {
             }
 
             if (keyCount === undefined) {
+                //if msg is older than value in config, move directly to unsubscribed
+                if (msg.lastDate !== undefined) {
+                    var d = new Date(msg.lastDate);
+                    if (d < newDate) {
+                        msg.status = 1
+                    }
+                }
+
                 this.memdb_mails.insert(msg);
-                this.addMsgGroup(msg,0,true);
+                //this.addMsgGroup(msg, msg.status, updateObservable);
             } else {
+                //add id to newsletter
                 keyCount.ignoreIds.push(msg.lastId);
+                //update total size
+                keyCount.size = keyCount.size + msg.size;
+                if(msg.readCount == 1) {
+                    keyCount.readCount++;
+                }
+                //update object
                 this.memdb_mails.update(keyCount);
             }
         }
     }
 
-    private getMemDBTable(status: number) {
+    public updateViews() {
+        this.updateView(0);
+        this.updateView(1);
+        this.updateView(2);
+    }
+
+    private createGroupView(dataToTransform) {
+        var data = dataToTransform.mapReduce(function (o) {
+            return {
+                groupIndex: o.hostname.substr(0, 1).toUpperCase(),
+                hostname: o.hostname,
+                from: o.from,
+                totalMails: o.ignoreIds.length + 1,
+                readCount: o.readCount,
+                size: o.size,
+                messages: [],
+                isCollapsed: true
+            }
+        }, function (mails) {
+            var groupedIds = [];
+            var host = ''
+            mails.forEach(element => {
+                if (host == element.hostname) {
+                    groupedIds[groupedIds.length - 1].count++;
+                    groupedIds[groupedIds.length - 1].totalMails += element.totalMails;
+                    groupedIds[groupedIds.length - 1].readCount += element.readCount;
+                    groupedIds[groupedIds.length - 1].size += element.size;
+                } else {
+                    element.count = 1;
+                    groupedIds.push(element);
+                }
+                host = element.hostname;
+            });
+            return groupedIds;
+        });
+
+        return data;
+    }
+
+    public updateView(status: number) {
         switch (status) {
             case 1:
-                return this.memdb_unsubbedMails;
+                this._unsubGroupedByHostObservable.next(this.createGroupView(this.unsubGroupsSortedView));
+                break;
             case 2:
-                return this.memdb_keepMails;
+                this._keepGroupedByHostObservable.next(this.createGroupView(this.keepGroupsSortedView));
+                break;
             default:
-                return this.memdb_newMails;
+                this._newGroupedByHostObservable.next(this.createGroupView(this.newGroupsSortedView));
+                break;
         }
     }
-
-    private updateView(status: number) {
-        switch (status) {
-            case 1:
-                this._unsubbedGroupsObservable.next(this.unsubGroupsSortedView.data());
-            case 2:
-                this._keepGroupsObservable.next(this.keepGroupsSortedView.data());
-            default:
-                this._newGroupsObservable.next(this.newGroupsSortedView.data());
-        }
-    }
-
-
-    //add msg to grouping
-    private addMsgGroup(msg: Message, source: number = 0, updateObervables = true) {
-
-        //Set key group index, here 1st letter
-        var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
-
-        var tt = this.getMemDBTable(source).findOne({ identifier: groupIndex });
-        if (tt == null) {
-            var mg: MessageGroup = new MessageGroup();
-            mg.hostname = msg.hostname;
-            mg.key = msg.hostname;
-            mg.name = extractMailFromName(msg.from);
-            mg.estimatedMessageCount = 1;
-            var dg: DisplayGroup = new DisplayGroup();
-            dg.identifier = groupIndex;
-            dg.messagegroups = [mg];
-            dg.displayName = groupIndex;
-            this.getMemDBTable(source).insert(dg);
-        } else {
-            var mgHost = tt.messagegroups.find(x => x.key === msg.hostname);
-            if (mgHost === undefined) {
-                var mg: MessageGroup = new MessageGroup();
-                mg.key = msg.hostname;
-                mg.hostname = msg.hostname;
-                mg.name = extractMailFromName(msg.from);
-                mg.estimatedMessageCount = 1;
-                tt.messagegroups.push(mg);
-            } else {
-                mgHost.estimatedMessageCount = mgHost.estimatedMessageCount + 1;
-            }
-        }
-
-        if (updateObervables) {
-            this.updateView(source);
-        }
-    }
-
-
-    //remove msg from grouping
-    private removeMsgGroup(msg: Message, source: number = 0, msgId: number = -1) {
-        //Set key group index, here 1st letter
-        var groupIndex = msg.hostname.substring(0, 1).toUpperCase();
-        var dg = this.getMemDBTable(source).by('identifier', groupIndex);
-        if (dg != null) {
-            var memTable = this.getMemDBTable(source);
-            //if only one, remove full group
-            if (dg.messagegroups.length == 1) {
-                memTable.findAndRemove({ 'identifier': groupIndex });
-                this.updateView(source);
-            } else {
-                dg.messagegroups = dg.messagegroups.filter(function (el) { return el.hostname !== msg.hostname });
-                memTable.update(dg);
-            }
-        }
-    }
-
-
 
     keep(msgId: string) {
         let msg = this.memdb_mails.by('lastId', msgId);
         if (msg !== undefined) {
-            this.addMsgGroup(msg, 2);
-            this.removeMsgGroup(msg, msg.status);
             msg.status = 2;
+            this.memdb_mails.update(msg);
+            this.updateViews();
         }
     }
 
@@ -269,26 +273,31 @@ export class DbService {
     delete(msgId: string) {
         let msg = this.memdb_mails.by('lastId', msgId);
         if (msg !== undefined) {
-            //remove from grouping
-            this.removeMsgGroup(msg, msg.status);
             msg.status = 3;
+            this.memdb_mails.update(msg);
+            this.updateViews();
         }
     }
-
 
     unsubscribe(msgId: string) {
         let msg = this.memdb_mails.by('lastId', msgId);
         if (msg !== undefined) {
-            this.addMsgGroup(msg, 1);
-            this.removeMsgGroup(msg, msg.status);
             msg.status = 1;
+            this.memdb_mails.update(msg);
+            this.updateViews();
         }
     }
 
-
-
     getMailsByHostname(hostname) {
         return this.memdb_mails.find({ hostname: hostname });
+    }
+
+    getMsgCounts() {
+        return {
+            newCount: this.memdb_mails.count({ status: 0 }),
+            keepCount: this.memdb_mails.count({ status: 2 }),
+            unsubCount: this.memdb_mails.count({ status: 1 })
+        }
     }
 
     getMailsWithHostnameAndStatus(hostname, status) {
@@ -299,20 +308,88 @@ export class DbService {
         return this.memdb_mails.by('lastId', msgId);
     }
 
-    getProcessedIds() {
+    getLastId() {
+        var lastId = this.memdb_mails.chain()
+            .simplesort('lastId', true)
+            .limit(1)
+            .data();
+
+        if (lastId.length == 1) {
+            return lastId[0].lastId;
+        }
+
+        return null;
+    }
+
+    getMsgCountWithStatus(status) {
+        return this.memdb_mails.count({ status: status });
+    }
+
+    getMsgCount() {
+        return this.memdb_mails.count();
+    }
+
+    getIds() {
         var ids = [];
-        this.memdb_mails.mapReduce(
-            function (obj) { return { id: obj.lastId, ids: obj.ignoreIds } },
-            function (objReduced) {
-                for (var i = 0; i < objReduced.length; i++) {
-                    ids = ids.concat(objReduced[i].ids);
-                    ids.push(objReduced[i].id);
+
+        function getIds(obj) {
+            var ids = [];
+            ids.push(obj.lastId);
+            if (obj.ignoreIds !== undefined) {
+                ids = ids.concat(obj.ignoreIds);
+            }
+            return ids;
+        }
+
+        function concatIds(array) {
+            var ids = [];
+            var i = array.length >>> 0;
+            while (i--) {
+                if (array[i] != null) {
+                    ids = ids.concat(array[i]);
                 }
+            }
+            return ids;
+        }
 
-                return ids.length;
-            });
+        return this.memdb_mails.mapReduce(getIds, concatIds);
+    }
 
-        return ids;
+
+    //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
+    getTotalSize() {
+        return this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.size)).reduce(function(a, b) { return a + b; }, 0);
+    }
+
+    getNewsletterCount() {
+        function getIds(obj) {
+            var ids = [];
+            ids.push(obj.lastId);
+            if (obj.ignoreIds !== undefined) {
+                ids = ids.concat(obj.ignoreIds);
+            }
+            return ids;
+        }
+
+        function concatIds(array) {
+            var ids = [];
+            var i = array.length >>> 0;
+            while (i--) {
+                if (array[i] != null) {
+                    ids = ids.concat(array[i]);
+                }
+            }
+            return ids;
+        }
+
+        var totalReadCount = this.memdb_mails.chain().find({'status': { '$ne' : 4 }}).mapReduce(getIds, concatIds);
+        return totalReadCount.length;
+    }
+
+     //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
+    getTotalReadCount() {
+        var totalReadCount = this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.readCount)).reduce(function(a, b) { return a + b; }, 0);
+        return totalReadCount;
     }
 }
 

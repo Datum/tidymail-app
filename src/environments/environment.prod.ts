@@ -4,6 +4,7 @@ export const environment = {
     defaultSearchQuery: { 'HEADER': ['list-unsubscribe', '@'] },
     gmailSearchQuery: { 'X-GM-RAW': "label:^unsub" } ,
     fetchBatchSize: 100,
-    fetchImapFlags: ['uid', 'flags', 'BODY.PEEK[HEADER.FIELDS (DATE)]', 'BODY.PEEK[HEADER.FIELDS (SUBJECT)]', 'BODY.PEEK[HEADER.FIELDS (FROM)]', 'BODY.PEEK[HEADER.FIELDS (LIST-UNSUBSCRIBE)]'],
+    fetchImapFlags: ['uid', 'flags', 'rfc822.size', 'BODY.PEEK[HEADER.FIELDS (DATE)]', 'BODY.PEEK[HEADER.FIELDS (SUBJECT)]', 'BODY.PEEK[HEADER.FIELDS (FROM)]', 'BODY.PEEK[HEADER.FIELDS (LIST-UNSUBSCRIBE)]'],
+    countAsNewInMonth: 6,
     corsProxy: "https://tidymail.io/backend/cp?url="
   };

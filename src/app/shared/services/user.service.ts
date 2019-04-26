@@ -27,6 +27,7 @@ export class UserService {
             this.userConfig.firsttime = true;
             this.userConfig.token = randomsecret;
             this.userConfig.autoSync = true;
+            this.userConfig.showDeleteConfirm = true;
         } else {
             this.userConfig = JSON.parse(config);
             if(this.userConfig.password !== undefined)
@@ -48,8 +49,8 @@ export class UserService {
     }
 
 
-    storeLastId(lastUid) {
-        this.userConfig.lastUidProcessed = lastUid;
+    saveLastUid(uid:number) {
+        this.userConfig.lastUidProcessed = uid;
         this.save(this.userConfig);
     }
 

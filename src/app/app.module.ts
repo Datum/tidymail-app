@@ -6,12 +6,16 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 
 import { HomeModule } from './modules/home.module'
 import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 
 import { Angulartics2Module } from 'angulartics2';
 import { Angulartics2GoogleAnalytics } from 'angulartics2/ga';
+
+
+
 
 import {
     //GmailService,
@@ -27,7 +31,7 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule,
@@ -35,9 +39,10 @@ import { DialogPassword } from './shared/dialogs/dialog-password';
     ReactiveFormsModule,
     HttpClientModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
+    //BrowserAnimationsModule,
+    NoopAnimationsModule,
     HomeModule,
-    Angulartics2Module.forRoot()
+    Angulartics2Module.forRoot(),
   ],
   providers: [DbService, UserService,ImapService, UIService, SmtpService],
   bootstrap: [AppComponent],

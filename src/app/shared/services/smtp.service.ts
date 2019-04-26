@@ -98,7 +98,6 @@ export class SmtpService {
         return new Promise<string>(
             (resolve, reject) => {
                 self.client.onerror = function (error) {
-                    console.log(error);
                     reject(error);
                 };
                 self.client.onidle = function() {

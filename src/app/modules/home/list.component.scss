@@ -8,9 +8,27 @@
 }
 
 .whiteframe {
-    background:#fff; border-radius: 4px; padding: 12px;
+    padding: 12px;
     margin-top:20px;
 }
+
+.whiteframe mat-card {
+    background-color: #f8f9fa;
+    padding: 0px;
+    margin-bottom: 12px;
+}
+
+.sublist {
+    padding-top: 0px;
+    margin-top: -8px;
+    margin-bottom: 20px;
+    margin-left: 30px;
+ }
+
+ .sublist .mat-list-base {
+     padding-top:0;
+     
+ }
 
 .iconclose {
     margin-left: -5px;
@@ -45,4 +63,34 @@
     font-weight: 400;
     letter-spacing: 0.01785714em;
   
+}
+
+.test {
+    padding: 10px;
+    border:6px solid #fff;
+}
+
+.text-red {
+    color:darkred;
+}
+
+.text-gold {
+    color:darkgoldenrod;
+}
+
+.text-green {
+    color:darkgreen;
+}
+
+
+.group-header {
+    text-align: right;
+    font-size: 0.8em;
+    padding-top:15px;
+    text-transform: uppercase;
+    margin-bottom: -20px;
+}
+
+.group-header .selected {
+    text-decoration: underline;
 }

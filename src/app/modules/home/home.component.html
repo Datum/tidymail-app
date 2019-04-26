@@ -1,55 +1,92 @@
-<div class="row header-row">
-    <div class="col header-row-padding">
-        <img src="assets/logo.svg">
-    </div>
-    <div class="col text-center">
-        <div *ngIf="isSyncing">
-            <div class="progress-content">
-                <small style="margin:0;">{{ statusMessage }} </small>
-                <button (click)="cancel()" mat-icon-button aria-label="Cancel">
-                    <mat-icon>cancel</mat-icon>
-                </button>
+<div class="header">
+    <div class="container">
+        <div class="row header-row">
+            <div class="col header-row-padding">
+                <img src="assets/logo.svg">
             </div>
-            <div>
-                <!--<mat-icon (click)="cancel()" inline clickable>cancel</mat-icon>-->
-                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-            </div>
-        </div>
+            <div class="col text-center">
+                <div *ngIf="!isSyncing && userConfig">
+                    <div class="progress-content mat-h4" style="color: #999; margin-bottom: 0; margin-top: 12px;">
+                        {{ userConfig.email }}
+                    </div>
+                </div>
+                <div *ngIf="isSyncing">
+                    <div class="progress-content">
+                        <small style="margin:0;">{{ statusMessage }} </small>
+                        <button (click)="cancel()" mat-icon-button aria-label="Cancel">
+                            <mat-icon>cancel</mat-icon>
+                        </button>
+                    </div>
+                    <div>
+
+                        <!--<mat-icon (click)="cancel()" inline clickable>cancel</mat-icon>-->
+                        <mat-progress-bar [hidden]="!showProgress" [value]="syncProgress" mode="determinate">
+                        </mat-progress-bar>
+                    </div>
+                </div>
+                <!--
         <div class=" header-row-padding" *ngIf="!isSyncing">
             <button mat-raised-button (click)="sync()">
                 <mat-icon>sync</mat-icon>
                 SCAN NOW
             </button>
         </div>
-    </div>
-    <div class="col text-right header-row-padding">
-        <button [disabled]="isSyncing" mat-raised-button routerLink="/settings">
-            <mat-icon>build</mat-icon>
-            SETTINGS
-        </button>
+        -->
+            </div>
+            <div class="col text-right header-row-padding">
+                <button [disabled]="isSyncing" mat-raised-button routerLink="/settings">
+                    <mat-icon>build</mat-icon>
+                    SETTINGS
+                </button>
+            </div>
+        </div>
+
+
+        <div *ngIf="showChart" class="row" style="margin-top:10px;">
+            <div class="col">
+                <app-stats-mailbox [mailbox]="userMailbox"></app-stats-mailbox>
+            </div>
+            <!--
+        <div class="col">
+                
+        </div>
+        -->
+        </div>
+
+
+
+        <mat-tab-group class="tabbar" mat-align-tabs="center" [(selectedIndex)]="selectedTab">
+            <mat-tab label="{{ 'NEW (' + undhandledMailsCount + ')'}}">
+
+            </mat-tab>
+            <mat-tab label="{{ 'KEEP (' + keepMailsCount + ')'}}">
+
+
+            </mat-tab>
+            <mat-tab label="{{ 'UNSUBSCRIBED (' + unsubMailsCount + ')'}}">
+
+            </mat-tab>
+        </mat-tab-group>
     </div>
 </div>
 
-<mat-tab-group mat-align-tabs="center">
-    <mat-tab label="{{ 'NEW (' + (undhandledMails | async)?.length + ')'}}">
-        <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
+<div style="background-color:#fff;margin-bottom:20px;">
+    <div class="container">
+        <grouped-list [hidden]="selectedTab!=0" (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            (onKeepDomain)="onKeepDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="undhandledMails" [status]="0">
         </grouped-list>
-    </mat-tab>
-    <mat-tab label="{{ 'KEEP (' + (keepMails | async)?.length + ')'}}">
-        <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
+        <grouped-list [hidden]="selectedTab!=1" (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            (onKeepDomain)="onKeepDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="keepMails" [status]="2">
         </grouped-list>
-    </mat-tab>
-    <mat-tab label="{{ 'UNSUBSCRIBED (' + (unsubscribedMails | async)?.length + ')'}}">
-        <grouped-list (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
+        <grouped-list [hidden]="selectedTab!=2" (onDeleteMsg)="onDeleteMsg($event)" (onKeepMsg)="onKeepMsg($event)"
             (onUnsubscribeMsg)="onUnsubscribeMsg($event)" (onDeleteDomain)="onDeleteDomain($event)"
-            (onKeepMsgDomain)="onKeepMsgDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
+            (onKeepDomain)="onKeepDomain($event)" (onUnsubscribeDomain)="onUnsubscribeDomain($event)"
             [groups]="unsubscribedMails" [status]="1">
         </grouped-list>
-    </mat-tab>
-</mat-tab-group>
+
+    </div>
+</div>

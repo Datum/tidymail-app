@@ -9,12 +9,12 @@ import { SettingsComponent } from './settings/settings.component';
 import { RouterModule } from '@angular/router';
 import { ModuleWithProviders } from '@angular/compiler/src/core';
 
-import { MatCardModule, MatInputModule, MatIconModule, MatProgressBarModule, MatTabsModule, MatListModule, MatExpansionModule, MatSnackBarModule } from '@angular/material';
+import { MatCardModule, MatInputModule, MatIconModule, MatProgressBarModule, MatTabsModule, MatListModule, MatExpansionModule, MatSnackBarModule, MatGridListModule, MatChipsModule } from '@angular/material';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule } from '@angular/material/dialog';
 
 
@@ -22,6 +22,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DialogAlert } from '../shared/dialogs/dialog-alert';
 import { DialogPassword } from '../shared/dialogs/dialog-password';
 import { ListComponent } from './home/list.component';
+import { ChartComponent } from '../shared/charts/chart.component';
+import { ChartsModule } from 'ng4-charts';
+import { FileSizePipe, GroupByPipe, TimeAgoPipe, GroupByExpressionPipe } from '../shared';
+import { StatsMailboxComponent } from './home/stats-mailbox.component';
 
 
 const dataRouting: ModuleWithProviders = RouterModule.forChild([
@@ -51,6 +55,12 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         ListComponent,
         DialogAlert,
         DialogPassword,
+        ChartComponent,
+        StatsMailboxComponent,
+        FileSizePipe,
+        GroupByPipe,
+        TimeAgoPipe,
+        GroupByExpressionPipe,
     ],
     imports: [
         CommonModule,
@@ -61,16 +71,19 @@ const dataRouting: ModuleWithProviders = RouterModule.forChild([
         MatStepperModule,
         MatInputModule,
         MatFormFieldModule,
+        MatSelectModule,
         MatButtonModule,
         MatCheckboxModule,
-        MatProgressSpinnerModule,
         MatDialogModule,
         MatIconModule,
         MatProgressBarModule,
         MatTabsModule,
         MatListModule,
         MatExpansionModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatGridListModule,
+        MatChipsModule,
+        ChartsModule
     ]
 })
 export class HomeModule { }

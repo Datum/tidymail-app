@@ -14,5 +14,8 @@ export class UserConfig {
     rewardJoinDate:number;
     lastUidProcessed:number;
     trashBoxPath:string;
+    sentBoxPath:string;
     autoSync:boolean;
+    showDeleteConfirm:boolean;
+    totalMails:number;
 }

@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone, HostListener } from '@angular/core';
 import { MatSnackBar } from "@angular/material";
-import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService } from 'src/app/shared';
-import { Observable } from 'rxjs';
+import { UserService, ImapService, DbService, UIService, DisplayGroup, UserConfig, SmtpService, ChartData } from 'src/app/shared';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { MailBox } from 'src/app/shared/models/mailbox.model';
+
 
 @Component({
     selector: 'app-home',
@@ -11,7 +13,6 @@ import { environment } from '../../../environments/environment';
     styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-
     constructor(
         private _userService: UserService,
         private _imapService: ImapService,
@@ -19,21 +20,35 @@ export class HomeComponent implements OnInit {
         private _uiService: UIService,
         private _smtpService: SmtpService,
         private http: HttpClient,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private _zone: NgZone
     ) { }
 
-
+    email: string;
     isConnected: boolean = false;
     isSmtpConnected: boolean = false;
     isSyncing: boolean = false;
+    showProgress: boolean = false;
+    syncProgress: number = 0;
     bCancel: boolean = false;
     statusMessage: string;
     userConfig: UserConfig;
+    selectedTab: number = 0;
+    showChart: boolean = true;
+    workCount:number = 0;
 
 
-    undhandledMails: Observable<DisplayGroup[]>;
-    keepMails: Observable<DisplayGroup[]>;
-    unsubscribedMails: Observable<DisplayGroup[]>;
+    undhandledMails: Observable<any[]>;
+    keepMails: Observable<any[]>;
+    unsubscribedMails: Observable<any[]>;
+
+    undhandledMailsCount: number = 0;
+    keepMailsCount: number = 0;
+    unsubMailsCount: number = 0;
+
+    private _mailboxObservable: BehaviorSubject<MailBox> = new BehaviorSubject(new MailBox());
+    get userMailbox(): Observable<MailBox> { return this._mailboxObservable.asObservable() }
+
 
     async ngOnInit() {
 
@@ -53,21 +68,49 @@ export class HomeComponent implements OnInit {
         //bind lists
         await this.bind();
 
+        this._mailboxObservable.next(this.getMailBoxInfo());
+
         //by default start a sync
         if (!this.userConfig.firsttime) {
-            if(this.userConfig.autoSync || this.userConfig.autoSync === undefined) {
+            if (this.userConfig.autoSync || this.userConfig.autoSync === undefined) {
                 await this.sync();
             }
         }
     }
 
-    async bind() {
+    private getMailBoxInfo() {
+        var mb = new MailBox();
+        mb.email = this.userConfig.email;
+        mb.totalMails = this.userConfig.totalMails === undefined ? 0 : this.userConfig.totalMails;
+        mb.totalNewsletters = this._dbService.getNewsletterCount();
+        mb.totalNewsletterSize = this._dbService.getTotalSize();
+        mb.newsletterReadPercentage = parseFloat((this._dbService.getTotalReadCount() / mb.totalNewsletters * 100).toFixed(2));
+        mb.totalSenders = this._dbService.getMsgCount();
+        mb.totalNewNewsletters = this._dbService.getMsgCountWithStatus(0);
+        mb.workedNewsletters = this.workCount;
+        return mb;
+    }
 
+    async bind() {
+        var self = this;
         await this._dbService.init();
 
-        this.undhandledMails = this._dbService.newMails;
-        this.keepMails = this._dbService.keepMails;
-        this.unsubscribedMails = this._dbService.unsubbedMails;
+        this.undhandledMails = this._dbService.newGroupedByHost;
+        this.keepMails = this._dbService.keepGroupedByHost;
+        this.unsubscribedMails = this._dbService.unsubGroupedByHost;
+
+        this.undhandledMails.subscribe(function (msgs) {
+            if (msgs.length > 0)
+                self.undhandledMailsCount = msgs.map(item => item.count).reduce((prev, next) => prev + next);
+        })
+        this.keepMails.subscribe(function (msgs) {
+            if (msgs.length > 0)
+                self.keepMailsCount = msgs.map(item => item.count).reduce((prev, next) => prev + next);
+        })
+        this.unsubscribedMails.subscribe(function (msgs) {
+            if (msgs.length > 0)
+                self.unsubMailsCount = msgs.map(item => item.count).reduce((prev, next) => prev + next);
+        })
     }
 
     async connect() {
@@ -80,13 +123,10 @@ export class HomeComponent implements OnInit {
             this.statusMessage = "connecting to server...";
 
             //create client with config
-            await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.trashBoxPath);
+            await this._imapService.create(this.userConfig.username, this.userConfig.password, this.userConfig.imapurl, this.userConfig.imapport, this.userConfig.trashBoxPath, this.userConfig.sentBoxPath);
 
             //open
             await this._imapService.open();
-
-            //set sync mode for UI
-            this.isSyncing = false;
 
             this.isConnected = true;
         }
@@ -109,65 +149,105 @@ export class HomeComponent implements OnInit {
             await this._smtpService.open();
 
             this.isSmtpConnected = true;
-
-            //set sync mode for UI
-            this.isSyncing = false;
         }
     }
 
     async sync() {
         var self = this;
         try {
+            await this._zone.runOutsideAngular(async () => {
 
-            console.time('start.sync');
+                //set sync mode for UI
+                this.isSyncing = true;
+                this.showProgress = true;
 
-            //connect if needed
-            await this.connect();
+                if (!environment.production) console.time('start.sync');
 
-            //set sync mode for UI
-            this.isSyncing = true;
+                //connect if needed
+                await this.connect();
 
-            //set ui info
-            this.statusMessage = "searching for new newsletters...";
+                //get mailbox stats, by default inbox
+                var mailboxInfo = await this._imapService.selectMailBox();
 
-            //get all ids with given search term
-            var ids = await this._imapService.getMailIds(false);
+                //store to config
+                this.userConfig.totalMails = mailboxInfo.exists;
+                this._userService.save(this.userConfig);
 
-            //exclude all processed
-            var processedKeys = await this._dbService.getProcessedIds();
+                //set ui info
+                this.statusMessage = "searching for new newsletters...";
 
-            ids = ids.filter(function (el) {
-                return processedKeys.indexOf(el) < 0;
-            });
-            //get total count of mails to process
-            var totalCount = ids.length;
+                //get last id
+                var lastProcessedId = this._dbService.getLastId();
 
-            //start with newest first
-            ids = ids.reverse();
+                //get all ids with given search term newer than lastProcessed
+                var ids = await this._imapService.getMailIds(lastProcessedId);
 
-            //download all mails
-            var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
-                for (var i = 0; i < fetchedMails.length; i++) {
-                    self.statusMessage = (workedCount + i) + '/' + totalCount + ' (' + Math.round(((workedCount + i) / totalCount) * 100) + '%)';
+                if (!environment.production) console.time('start.loaddb');
+                //exclude all processed
+                var processedKeys = await this._dbService.getIds();
+                if (!environment.production) console.timeEnd('start.loaddb');
 
-                    if (cancelled) {
-                        break;
+                if (!environment.production) console.time('start.filter');
+                ids = ids.filter(function (el) {
+                    return processedKeys.indexOf(el) < 0;
+                });
+                //get total count of mails to process
+                if (!environment.production) console.timeEnd('start.filter');
+
+
+                //start with newest first
+                ids = ids.reverse();
+
+                var totalCount = ids.length;
+                var iUpdateFrequency = 1000;
+                var index = 0;
+                var lastId = ids.length > 0 ? ids[0] : 1;
+
+                var dNewTab = new Date();
+                dNewTab = new Date(dNewTab.setMonth(dNewTab.getMonth() - environment.countAsNewInMonth));
+
+                //download all mails
+                var fullResult = await self._imapService.getMailContent(ids, async function (workedCount, dynamicTotalCount, fetchedMails, cancelled) {
+                    self.statusMessage = (workedCount) + '/' + totalCount + ' (' + Math.round(((workedCount) / totalCount) * 100) + '%)';
+                    self.syncProgress = Math.round(((workedCount) / totalCount) * 100);
+                    for (var i = 0; i < fetchedMails.length; i++) {
+                        if (cancelled) {
+                            break;
+                        }
+
+                        self._dbService.add(fetchedMails[i], dNewTab);
+
+                        index++;
+
+
+                        if (index % iUpdateFrequency == 0) {
+                            self._dbService.updateViews();
+                            self._mailboxObservable.next(self.getMailBoxInfo());
+                        }
                     }
+                    //self._dbService.updateView(0);
+                });
 
-                    self._dbService.add(fetchedMails[i]);
-                }
+                //force view update for new mail
+                this._dbService.updateView(0);
+                this._mailboxObservable.next(this.getMailBoxInfo());
+
+                //set cancel back
+                this.bCancel = false;
+
+                //set sync mode OFF for UI
+                this.isSyncing = false;
+                this.showProgress = false;
+
+                //close client
+                //await this._imapService.close();
+
+                //this._userService.saveLastUid(lastId);
+
+                if (!environment.production) console.timeEnd('start.sync');
             });
 
-            //set cancel back
-            this.bCancel = false;
 
-            //set sync mode OFF for UI
-            this.isSyncing = false;
-
-            //close client
-            //await this._imapService.close();
-
-            console.timeEnd('start.sync');
         } catch (error) {
             console.error(error);
             self._uiService.showAlert(error);
@@ -182,8 +262,118 @@ export class HomeComponent implements OnInit {
 
 
 
-    async onDeleteMsg(msgId) {
-        await this.connect();
+
+
+
+
+
+    unsubQueue: any = [];
+    private addUnsubscribeQueue(msgId) {
+        this.unsubQueue.push(msgId);
+        if (this.unsubQueue.length == 1) {
+            this.doUnsubscription();
+        }
+    }
+
+
+    onKeepMsg(id) {
+        this.workCount++;
+        this._dbService.keep(id);
+        this._mailboxObservable.next(this.getMailBoxInfo());
+    }
+
+
+    onUnsubscribeMsg(msgId) {
+        this.workCount++;
+        this.addUnsubscribeQueue(msgId);
+        this._dbService.unsubscribe(msgId);
+        this._mailboxObservable.next(this.getMailBoxInfo());
+    }
+
+
+    onDeleteMsg(msgId) {
+        this.workCount++;
+        this.addDeleteQueue(msgId);
+        this._dbService.delete(msgId);
+        this._mailboxObservable.next(this.getMailBoxInfo());
+    }
+
+
+    showDeleteConfirmation() {
+        var self = this;
+        return new Promise<boolean>(
+            (resolve, reject) => {
+                if (this.userConfig.showDeleteConfirm || this.userConfig.showDeleteConfirm === undefined) {
+                    this._uiService.showAlert("The Emails will be moved to your mailbox trash folder. Are you sure ?", "Confirmation", "They will be deleted after certain time depending on your settings.", "Remember?", function (result) {
+                        if (result.checked) {
+                            self.userConfig.showDeleteConfirm = false;
+                            self._userService.save(self.userConfig);
+                        }
+
+                        resolve(result.state == 'ok' ? true : false);
+                    });
+                } else {
+                    resolve(true);
+                }
+            }
+        );
+    }
+
+
+    deleteQueue: any = [];
+
+    private addDeleteQueue(msgId) {
+        this.deleteQueue.push(msgId);
+        if (this.deleteQueue.length == 1) {
+            this.doDeletion();
+        }
+    }
+
+
+
+    private async doUnsubscription() {
+        if (this.unsubQueue.length == 0)
+            return;
+
+        var self = this;
+        var msgId = this.unsubQueue[0];
+
+        var msg = this._dbService.getMsgById(msgId);
+        if (msg !== undefined) {
+            var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
+            if (unSubInfo.email != "") {
+                //connect to smtp if needed
+                await this.connectSmtp();
+
+                //connect to imap if needed
+                await this.connect();
+
+                //send unsubscribe mail
+                await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
+
+                //delete unsubscribe mail from sent box
+                await this._imapService.deleteSentMails(unSubInfo.email);
+            } else {
+                if (unSubInfo.url != "") {
+                    await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
+                }
+            }
+
+        }
+
+        this.unsubQueue.shift();
+        this.doUnsubscription();
+
+    }
+
+
+    private async doDeletion() {
+        if (this.deleteQueue.length == 0)
+            return;
+
+
+        var self = this;
+        var msgId = this.deleteQueue[0];
 
         var msg = this._dbService.getMsgById(msgId);
         if (msg !== undefined) {
@@ -191,101 +381,50 @@ export class HomeComponent implements OnInit {
                 var toDelete = msg.ignoreIds;
                 toDelete.push(msgId);
                 await this._imapService.moveTrash(msg.ignoreIds);
-
-                //move to delete
-                this._dbService.delete(msgId);
+                
             } catch (error) {
                 console.log(error);
             }
+
         }
+
+        this.deleteQueue.shift();
+        this.doDeletion();
     }
 
-    async onKeepMsg(id) {
-        await this._dbService.keep(id);
-    }
 
-    async onUnsubscribeMsg(id) {
-        var self = this;
-        var msg = await this._dbService.getMsgById(id);
-        if (msg !== undefined) {
-            var unSubInfo = getUnsubscriptionInfo(msg.unsubscribeEmail);
-            if (unSubInfo.email != "") {
-                await this.connectSmtp();
-                await this._smtpService.send(self.userConfig.email, unSubInfo.email, unSubInfo.subject == "" ? "Unsubscribe" : unSubInfo.subject);
-                await this._dbService.unsubscribe(id);
-                let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, {duration: 2000});
-            } else {
-                if (unSubInfo.url != "") {
-                    await this.http.get(environment.corsProxy + encodeURI(unSubInfo.url), { responseType: 'text' }).toPromise();
-                    await this._dbService.unsubscribe(id);
-                    let snackBarRef = this.snackBar.open('Successfully unsubscribed!', null, {duration: 2000});
-                }
-            }
-            
-        }
-    }
-
-    async onDeleteDomain(hostname) {
-        this.isSyncing = true;
-
-        //check if imap connected
-        await this.connect();
-
+    onDeleteDomain(obj) {
         //get all messages for domain
-        var allMessagesToDelete = await this._dbService.getMailsByHostname(hostname);
-
-        //delete msg and all in ignored list in imap
-        for (var i = 0; i < allMessagesToDelete.length; i++) {
-            this.statusMessage = 'Delete ' + i + ' of ' + allMessagesToDelete.length;
-            try {
-                var toDelete = allMessagesToDelete[i].ignoreIds;
-                toDelete.push(allMessagesToDelete[i].lastId);
-                if (toDelete.length > 0) {
-                    //move to trash
-                    await this._imapService.moveTrash(allMessagesToDelete[i].ignoreIds);
-
-                    //if moved in imap update status in db
-                    this._dbService.delete(allMessagesToDelete[i].lastId);
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-
-
-        this.isSyncing = false;
-    }
-
-    async onKeepMsgDomain(hostname) {
-        this.isSyncing = true;
-
-        //get all messages for domain
-        var allMessageToKeep = await this._dbService.getMailsByHostname(hostname);
+        var allMessageToKeep = this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
 
         for (var i = 0; i < allMessageToKeep.length; i++) {
-            await this.onKeepMsg(allMessageToKeep[i].lastId);
+            this.onDeleteMsg(allMessageToKeep[i].lastId);
         }
-
-        this.isSyncing = false;
     }
 
-
-    async onUnsubscribeDomain(hostname) {
-        this.isSyncing = true;
+    onKeepDomain(obj) {
         //get all messages for domain
-        var allMessagesToUnSubscribe = await this._dbService.getMailsByHostname(hostname);
-        for (var i = 0; i < allMessagesToUnSubscribe.length; i++) {
-            await this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
+        var allMessageToKeep = this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
+
+        for (var i = 0; i < allMessageToKeep.length; i++) {
+            this.onKeepMsg(allMessageToKeep[i].lastId);
         }
-        this.isSyncing = false;
     }
 
+
+    onUnsubscribeDomain(obj) {
+        //get all messages for domain
+        var allMessagesToUnSubscribe = this._dbService.getMailsWithHostnameAndStatus(obj.hostname, obj.status);
+
+        for (var i = 0; i < allMessagesToUnSubscribe.length; i++) {
+            this.onUnsubscribeMsg(allMessagesToUnSubscribe[i].lastId);
+        }
+    }
 }
 
 
 function getUnsubscriptionInfo(unsubString) {
-    var r = { email: '', url: '', subject: '' };
+    var r = { email: '', url: '', subject: '', body: '' };
     var parts = unsubString.split(',');
 
     for (var i = 0; i < parts.length; i++) {
@@ -301,12 +440,25 @@ function getUnsubscriptionInfo(unsubString) {
 
             var iWithParameter = r.email.indexOf('?');
             if (iWithParameter != -1) {
-                var params = r.email.substr(iWithParameter + 1);
-                var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
-                if (paramsObject.subject) {
-                    r.subject = paramsObject.subject;
+                try {
+                    var params = r.email.substr(iWithParameter + 1);
+                    //if any space in it truncate all behind space
+                    params = params.split(' ')[0].trim();
+                    var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
+                    if (paramsObject.subject) {
+                        r.subject = paramsObject.subject;
+                    }
+                    if (paramsObject.body) {
+                        r.body = paramsObject.body;
+                    }
+                    r.email = r.email.substring(0, iWithParameter);
+                } catch (error) {
+                    var queryString = r.email.substr(iWithParameter + 1).toLowerCase();
+                    if (queryString.indexOf('subject=') != -1) {
+                        r.subject = queryString.substr(queryString.indexOf('subject=') + 8);
+                    }
+                    r.email = r.email.substring(0, iWithParameter);
                 }
-                r.email = r.email.substring(0, iWithParameter);
             }
             //check if email has subject included
 
