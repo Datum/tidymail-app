@@ -41,8 +41,8 @@ export class StatsMailboxComponent implements OnInit {
 
     private getMailBoxChartData(info) {
         var chartData = new ChartData();
-        chartData.numbers = [info.totalMails - info.totalNewsletters, info.totalNewsletters]
-        chartData.labels = ["OTHERS (" + (info.totalMails - info.totalNewsletters) + ")", "NEWSLETTERS (" + info.totalNewsletters + ")"];
+        chartData.numbers = [info.totalMails, info.totalNewsletters]
+        chartData.labels = ["OTHERS (" + info.totalMails + ")", "NEWSLETTERS (" + info.totalNewsletters + ")"];
         return chartData;
     }
 }
