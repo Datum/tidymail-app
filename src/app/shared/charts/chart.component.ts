@@ -39,7 +39,7 @@ export class ChartComponent implements OnInit {
                 circumference: 1 * Math.PI,
                 cutoutPercentage: 60
             },
-            self.percentage=Math.ceil(((res.numbers[0]-res.numbers[1])*100)/res.numbers[0]);
+            self.percentage=Math.ceil(((res.numbers[1])*100)/res.numbers[0]);
             // self.colors = ['#304ffe','#c5cae9'];
         })
 
