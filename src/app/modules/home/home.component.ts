@@ -444,12 +444,14 @@ function getUnsubscriptionInfo(unsubString) {
                     var params = r.email.substr(iWithParameter + 1);
                     //if any space in it truncate all behind space
                     params = params.split(' ')[0].trim();
-                    var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
-                    if (paramsObject.subject) {
-                        r.subject = paramsObject.subject;
+                    // var paramsObject = JSON.parse('{"' + decodeURI(params.replace(/&/g, "\",\"").replace(/(?<!=)=(?!=)/g, "\":\"")) + '"}');
+                    // var paramsObject=JSON.parse("test");
+                    let searchParams  = new URLSearchParams(params);
+                    if (searchParams.has("subject")) {
+                        r.subject = searchParams.get("subject");
                     }
-                    if (paramsObject.body) {
-                        r.body = paramsObject.body;
+                    if (searchParams.has("body")) {
+                        r.body = searchParams.get("body");
                     }
                     r.email = r.email.substring(0, iWithParameter);
                 } catch (error) {
