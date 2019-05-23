@@ -39,6 +39,7 @@ export class ImapService {
     useGmailSearchSyntax: boolean = false;
     trashBoxPath: string;
     sentBoxPath: string;
+    username:string;
 
 
     create(username, password, host = "imap.gmail.com", port = 993, trashBox = null, sentBox = null) {
@@ -54,6 +55,7 @@ export class ImapService {
 
         this.trashBoxPath = trashBox;
         this.sentBoxPath = sentBox;
+        this.username = username;
 
         this.useGmailSearchSyntax = (host == "imap.gmail.com");
 
@@ -184,13 +186,18 @@ export class ImapService {
 
         searchObject = JSON.parse(JSON.stringify(searchObject));
 
+
+        //ugly hack, if yahoo, remove header search because error would occur
+        if(this.username.indexOf('yahoo.com') != -1) {
+            delete searchObject['HEADER'];
+        }
+
         //add "since" or "after" filter to search
         if (lastUid !== undefined) {
             //if uid smaller than 1, set to 1
             if (lastUid < 1) lastUid = 1;
             searchObject['UID'] = lastUid.toString() + ":*";
         }
-
 
         //search for ids with given criteria
         return this.client.search('INBOX', searchObject, { byUid: true });
