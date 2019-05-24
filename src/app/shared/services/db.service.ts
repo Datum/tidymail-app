@@ -30,7 +30,7 @@ export class DbService {
 
     private _unsubGroupedByHostObservable: BehaviorSubject<any[]> = new BehaviorSubject([]);
     get unsubGroupedByHost(): Observable<any[]> { return this._unsubGroupedByHostObservable.asObservable() }
-    
+
 
     constructor() { }
 
@@ -125,38 +125,55 @@ export class DbService {
         msg.size = fetchedMailObject['rfc822.size'];
         msg.readCount = fetchedMailObject['flags'].findIndex(v => v.includes("Seen")) > -1 ? 1 : 0;
 
-        var mailFrom = fetchedMailObject['body[header.fields (from)]'];
-        if (mailFrom !== undefined && mailFrom.length > 6) {
-            msg.from = mimeWordsDecode(mailFrom.substr(6)).replace(/"/g, '');
-        } else {
-            if (!environment.production) console.log('header not found or invalid for <from>');
-            if (!environment.production) console.log(fetchedMailObject);
+
+
+
+        var headerContents = fetchedMailObject['body[header.fields (date subject from list-unsubscribe)]'];
+        var headerFields = headerContents.split(/\r?\n/);
+
+        for (var i = 0; i < headerFields.length; i++) {
+            if (headerFields[i].startsWith("From:")) {
+
+                var mailFrom = headerFields[i];
+                if (mailFrom !== undefined && mailFrom.length > 6) {
+                    msg.from = mimeWordsDecode(mailFrom.substr(6)).replace(/"/g, '');
+                } else {
+                    if (!environment.production) console.log('header not found or invalid for <from>');
+                    if (!environment.production) console.log(fetchedMailObject);
+                }
+            }
+            if (headerFields[i].startsWith("Date:")) {
+
+                var mailDate = headerFields[i];
+                if (mailDate !== undefined && mailDate.length > 6) {
+                    msg.lastDate = Date.parse(mailDate.substr(6));
+                } else {
+                    if (!environment.production) console.log('header not found or invalid for <date>');
+                    if (!environment.production) console.log(fetchedMailObject)
+                }
+            }
+            if (headerFields[i].startsWith("Subject:")) {
+                var mailSubject = headerFields[i];
+                if (mailSubject !== undefined && mailSubject.length > 9) {
+                    msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
+                } else {
+                    if (!environment.production) console.log('header not found or invalid for <subject>');
+                    if (!environment.production) console.log(fetchedMailObject)
+                }
+            }
+
+            if (headerFields[i].startsWith("List-Unsubscribe:")) {
+                var mailUnsubscribeInfo = headerFields[i];
+                if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
+                    msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
+                } else {
+                    if (!environment.production) console.log('header not found or invalid for <list-unsubscribe>');
+                    if (!environment.production) console.log(fetchedMailObject)
+                }
+            }
         }
 
-        var mailDate = fetchedMailObject['body[header.fields (date)]'];
-        if (mailDate !== undefined && mailDate.length > 6) {
-            msg.lastDate = Date.parse(mailDate.substr(6));
-        } else {
-            if (!environment.production) console.log('header not found or invalid for <date>');
-            if (!environment.production) console.log(fetchedMailObject)
-        }
-
-        var mailSubject = fetchedMailObject['body[header.fields (subject)]'];
-        if (mailSubject !== undefined && mailSubject.length > 9) {
-            msg.lastSubject = mimeWordsDecode(mailSubject.substr(9));
-        } else {
-            if (!environment.production) console.log('header not found or invalid for <subject>');
-            if (!environment.production) console.log(fetchedMailObject)
-        }
-
-        var mailUnsubscribeInfo = fetchedMailObject['body[header.fields (list-unsubscribe)]'];
-        if (mailUnsubscribeInfo !== undefined && mailUnsubscribeInfo.length > 18) {
-            msg.unsubscribeEmail = mimeWordsDecode(mailUnsubscribeInfo.substr(18));
-        } else {
-            if (!environment.production) console.log('header not found or invalid for <list-unsubscribe>');
-            if (!environment.production) console.log(fetchedMailObject)
-        }
-
+      
         //if no unscribe info here, add mail to ignore list and return
         if (msg.unsubscribeEmail === undefined) {
             msg.status = 4;
@@ -198,7 +215,7 @@ export class DbService {
                 keyCount.ignoreIds.push(msg.lastId);
                 //update total size
                 keyCount.size = keyCount.size + msg.size;
-                if(msg.readCount == 1) {
+                if (msg.readCount == 1) {
                     keyCount.readCount++;
                 }
                 //update object
@@ -358,7 +375,7 @@ export class DbService {
 
     //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
     getTotalSize() {
-        return this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.size)).reduce(function(a, b) { return a + b; }, 0);
+        return this.memdb_mails.find({ 'status': { '$ne': 3 } }).map(msg => (msg.size)).reduce(function (a, b) { return a + b; }, 0);
     }
 
     getNewsletterCount() {
@@ -382,13 +399,13 @@ export class DbService {
             return ids;
         }
 
-        var totalReadCount = this.memdb_mails.chain().find({'status': { '$ne' : 4 }}).mapReduce(getIds, concatIds);
+        var totalReadCount = this.memdb_mails.chain().find({ 'status': { '$ne': 4 } }).mapReduce(getIds, concatIds);
         return totalReadCount.length;
     }
 
-     //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
+    //get total size of all active newsletters (new,keep,unsubscribe (but not deleted))
     getTotalReadCount() {
-        var totalReadCount = this.memdb_mails.find({'status': { '$ne' : 3 }}).map(msg => (msg.readCount)).reduce(function(a, b) { return a + b; }, 0);
+        var totalReadCount = this.memdb_mails.find({ 'status': { '$ne': 3 } }).map(msg => (msg.readCount)).reduce(function (a, b) { return a + b; }, 0);
         return totalReadCount;
     }
 }
