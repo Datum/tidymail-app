@@ -27,7 +27,7 @@
     "@types/moment": "^2.13.0",
     "angulartics2": "^7.4.1",
     "bootstrap": "^4.3.1",
-    "chart.js": "^2.8.0",
+    "chart.js": "^2.9.4",
     "core-js": "^2.5.4",
     "emailjs-imap-client": "git+https://github.com/Datum/emailjs-imap-client.git",
     "emailjs-imap-handler": "git+https://github.com/Datum/emailjs-imap-handler.git",
