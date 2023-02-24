@@ -22,6 +22,12 @@ Tidy Mail puts privacy first and therefore all code that accesses a users email 
 ## Build
 - run `ng build --prod --base-href /app/`
 
+## Docker
+To use the application with Docker, simply execute the following commands.
+
+- run `npm run docker:build`
+- run `npm run docker:start`
+
 ## License
 
 Code released under [the AGPL license](https://github.com/Datum/tidymail-app/blob/master/LICENSE).
